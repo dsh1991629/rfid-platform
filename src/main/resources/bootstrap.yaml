@@ -1,0 +1,38 @@
+server:
+  servlet:
+    context-path: /rfid
+
+spring:
+  application:
+    name: rfid-platform
+  cloud:
+    nacos:
+      config:
+        file-extension: yaml
+        server-addr: 43.142.143.171:8848
+        group: DEFAULT_GROUP
+        namespace: public
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+  group-configs:
+    - group: 'rfid-platform'
+      paths-to-match: '/**'
+      packages-to-scan: com.rfid.platform.controller
+
+
+# knife4j的增强配置，不需要增强可以不配
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+
+
+#mybatis-plus:
+#  configuration:
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl

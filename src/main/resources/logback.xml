@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!-- 级别从高到低 OFF 、 FATAL 、 ERROR 、 WARN 、 INFO 、 DEBUG 、 TRACE 、 ALL -->
+<!-- 日志输出规则 根据当前ROOT 级别，日志输出时，级别高于root默认的级别时 会输出 -->
+<!-- 以下 每个配置的 filter 是过滤掉输出文件里面，会出现高级别文件，依然出现低级别的日志信息，通过filter 过滤只记录本级别的日志 -->
+<!-- scan 当此属性设置为true时，配置文件如果发生改变，将会被重新加载，默认值为true。 -->
+<!-- scanPeriod 设置监测配置文件是否有修改的时间间隔，如果没有给出时间单位，默认单位是毫秒。当scan为true时，此属性生效。默认的时间间隔为1分钟。 -->
+<!-- debug 当此属性设置为true时，将打印出logback内部日志信息，实时查看logback运行状态。默认值为false。 -->
+<configuration scan="true" scanPeriod="60 seconds" debug="false">
+
+    <!--*****************************************************************************-->
+    <!--自定义项 开始-->
+    <!--*****************************************************************************-->
+
+    <!-- 定义日志文件 输出位置 1.需修改-->
+    <property name="log.home_dir" value="logs"/>
+    <property name="log.app_name" value="rfid-platform"/>
+    <!-- 日志最大的历史 30天 -->
+    <property name="log.maxHistory" value="30"/>
+    <property name="log.maxSize" value="15MB"/>
+    <!-- 日志界别 -->
+    <property name="log.level" value="info"/>
+
+    <!-- 彩色日志 -->
+    <!-- 配置格式变量：CONSOLE_LOG_PATTERN 彩色日志格式 -->
+    <!-- magenta:洋红 -->
+    <!-- boldMagenta:粗红-->
+    <!-- cyan:青色 -->
+    <!-- white:白色 -->
+    <!-- magenta:洋红 -->
+    <property name="CONSOLE_LOG_PATTERN" value="%yellow(%date{yyyy-MM-dd HH:mm:ss}) |%boldBlue(%X{tid:-N/A}) |%highlight(%-5level) |%magenta(%thread) |%blue(%file:%line) |%green(%logger) |%cyan(%msg%n)"/>
+    <!--*****************************************************************************-->
+    <!--自定义项 结束-->
+    <!--*****************************************************************************-->
+
+    <!-- ConsoleAppender 控制台输出日志 -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>
+                <!-- 设置日志输出格式 -->
+                ${CONSOLE_LOG_PATTERN}
+            </pattern>
+        </encoder>
+    </appender>
+
+    <!-- 按照每天生成日志文件。存储事件日志 -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- 设置日志不超过${log.max.size}时的保存路径，注意，如果是web项目会保存到Tomcat的bin目录 下 -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!--日志文件输出的文件名 -->
+            <FileNamePattern>${log.home_dir}/${log.app_name}_%d{yyyy-MM-dd}.log</FileNamePattern>
+            <!--日志文件保留天数 -->
+            <MaxHistory>30</MaxHistory>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+<!--            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%X{tid:-N/A}] [%thread] %-5level %logger - %msg%n</pattern>-->
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS}|%X{tid:-N/A}|%thread|%-5level|%logger|-%msg%n</pattern>
+        </encoder>
+        <!--日志文件最大的大小 -->
+<!--        <triggeringPolicy-->
+<!--                class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">-->
+<!--            <MaxFileSize>10MB</MaxFileSize>-->
+<!--        </triggeringPolicy>-->
+    </appender>
+
+    <!--异步打印日志-->
+    <appender name="ASYNC_FILE" class="ch.qos.logback.classic.AsyncAppender">
+        <!-- 不丢失日志.默认的,如果队列的80%已满,则会丢弃TRACT、DEBUG、INFO级别的日志 -->
+        <discardingThreshold>0</discardingThreshold>
+        <!-- 更改默认的队列的深度,该值会影响性能.默认值为256 -->
+        <queueSize>512</queueSize>
+        <!-- 添加附加的appender,最多只能添加一个 -->
+        <appender-ref ref="FILE"/>
+    </appender>
+
+    <!-- 日志输出级别 -->
+    <root level="INFO">
+        <!--  引用之前的设置 -->
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="ASYNC_FILE"/>
+    </root>
+
+</configuration>
