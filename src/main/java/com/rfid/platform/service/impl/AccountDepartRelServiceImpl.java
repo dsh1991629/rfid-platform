@@ -9,31 +9,38 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class AccountDepartRelServiceImpl extends ServiceImpl<AccountDepartRelMapper, AccountDepartRelBean> implements AccountDepartRelService {
 
     @Override
-    public boolean save(AccountDepartRelBean entity) {
+    public boolean saveAccountDepartRel(AccountDepartRelBean entity) {
         return super.save(entity);
     }
 
     @Override
-    public boolean removeById(Long id) {
+    public boolean removeAccountDepartRelByPk(Long id) {
         return super.removeById(id);
     }
 
     @Override
-    public boolean updateById(AccountDepartRelBean entity) {
+    public boolean updateAccountDepartRelByPk(AccountDepartRelBean entity) {
         return super.updateById(entity);
     }
 
     @Override
-    public AccountDepartRelBean getById(Long id) {
+    public AccountDepartRelBean getAccountDepartRelByPk(Long id) {
         return super.getById(id);
     }
 
     @Override
-    public IPage<AccountDepartRelBean> page(Page<AccountDepartRelBean> page, LambdaQueryWrapper<AccountDepartRelBean> query) {
+    public IPage<AccountDepartRelBean> pageAccountDepartRel(Page<AccountDepartRelBean> page, LambdaQueryWrapper<AccountDepartRelBean> query) {
         return super.page(page, query);
     }
-} 
+
+    @Override
+    public List<AccountDepartRelBean> listAccountDepartRel(LambdaQueryWrapper<AccountDepartRelBean> queryWrapper) {
+        return super.list(queryWrapper);
+    }
+}

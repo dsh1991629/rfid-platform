@@ -43,4 +43,9 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, RoleBean> implement
     public List<RoleBean> listRole(LambdaQueryWrapper<RoleBean> queryWrapper) {
         return super.list(queryWrapper);
     }
+
+    @Override
+    public Boolean existRole(LambdaQueryWrapper<RoleBean> nameCheckWrapper) {
+        return super.exists(nameCheckWrapper);
+    }
 }

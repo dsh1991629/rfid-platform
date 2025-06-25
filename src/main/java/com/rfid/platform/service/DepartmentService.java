@@ -5,15 +5,21 @@ import com.rfid.platform.entity.DepartmentBean;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
+import java.util.List;
+
 public interface DepartmentService {
 
-    boolean save(DepartmentBean entity);
+    boolean saveDepartment(DepartmentBean entity);
 
-    boolean removeById(Long id);
+    boolean removeDepartmentByPk(Long id);
 
-    boolean updateById(DepartmentBean entity);
+    boolean updateDepartmentByPk(DepartmentBean entity);
 
-    DepartmentBean getById(Long id);
+    DepartmentBean getDepartmentByPk(Long id);
 
-    IPage<DepartmentBean> page(Page<DepartmentBean> page, LambdaQueryWrapper<DepartmentBean> query);
-} 
+    IPage<DepartmentBean> pageDepartment(Page<DepartmentBean> page, LambdaQueryWrapper<DepartmentBean> query);
+
+    List<DepartmentBean> listDepartment(LambdaQueryWrapper<DepartmentBean> queryWrapper);
+
+    Boolean existDepartment(LambdaQueryWrapper<DepartmentBean> nameCheckWrapper);
+}

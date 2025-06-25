@@ -20,4 +20,6 @@ public interface RoleService {
     IPage<RoleBean> pageRole(Page<RoleBean> page, LambdaQueryWrapper<RoleBean> query);
 
     List<RoleBean> listRole(LambdaQueryWrapper<RoleBean> queryWrapper);
+
+    Boolean existRole(LambdaQueryWrapper<RoleBean> nameCheckWrapper);
 } 

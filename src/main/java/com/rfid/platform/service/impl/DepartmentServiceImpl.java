@@ -9,31 +9,43 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class DepartmentServiceImpl extends ServiceImpl<DepartmentMapper, DepartmentBean> implements DepartmentService {
 
     @Override
-    public boolean save(DepartmentBean entity) {
+    public boolean saveDepartment(DepartmentBean entity) {
         return super.save(entity);
     }
 
     @Override
-    public boolean removeById(Long id) {
+    public boolean removeDepartmentByPk(Long id) {
         return super.removeById(id);
     }
 
     @Override
-    public boolean updateById(DepartmentBean entity) {
+    public boolean updateDepartmentByPk(DepartmentBean entity) {
         return super.updateById(entity);
     }
 
     @Override
-    public DepartmentBean getById(Long id) {
+    public DepartmentBean getDepartmentByPk(Long id) {
         return super.getById(id);
     }
 
     @Override
-    public IPage<DepartmentBean> page(Page<DepartmentBean> page, LambdaQueryWrapper<DepartmentBean> query) {
+    public IPage<DepartmentBean> pageDepartment(Page<DepartmentBean> page, LambdaQueryWrapper<DepartmentBean> query) {
         return super.page(page, query);
     }
-} 
+
+    @Override
+    public List<DepartmentBean> listDepartment(LambdaQueryWrapper<DepartmentBean> queryWrapper) {
+        return super.list(queryWrapper);
+    }
+
+    @Override
+    public Boolean existDepartment(LambdaQueryWrapper<DepartmentBean> nameCheckWrapper) {
+        return super.exists(nameCheckWrapper);
+    }
+}

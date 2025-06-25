@@ -5,15 +5,19 @@ import com.rfid.platform.entity.AccountDepartRelBean;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
+import java.util.List;
+
 public interface AccountDepartRelService {
 
-    boolean save(AccountDepartRelBean entity);
+    boolean saveAccountDepartRel(AccountDepartRelBean entity);
 
-    boolean removeById(Long id);
+    boolean removeAccountDepartRelByPk(Long id);
 
-    boolean updateById(AccountDepartRelBean entity);
+    boolean updateAccountDepartRelByPk(AccountDepartRelBean entity);
 
-    AccountDepartRelBean getById(Long id);
+    AccountDepartRelBean getAccountDepartRelByPk(Long id);
 
-    IPage<AccountDepartRelBean> page(Page<AccountDepartRelBean> page, LambdaQueryWrapper<AccountDepartRelBean> query);
-} 
+    IPage<AccountDepartRelBean> pageAccountDepartRel(Page<AccountDepartRelBean> page, LambdaQueryWrapper<AccountDepartRelBean> query);
+
+    List<AccountDepartRelBean> listAccountDepartRel(LambdaQueryWrapper<AccountDepartRelBean> queryWrapper);
+}

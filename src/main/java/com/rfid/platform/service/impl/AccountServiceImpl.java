@@ -9,32 +9,46 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Optional;
+
 @Service
 public class AccountServiceImpl extends ServiceImpl<AccountMapper, AccountBean> implements AccountService {
 
     @Override
-    public boolean save(AccountBean entity) {
+    public boolean saveAccount(AccountBean entity) {
         return super.save(entity);
     }
 
     @Override
-    public boolean removeById(Long id) {
+    public boolean removeAccountByPk(Long id) {
         return super.removeById(id);
     }
 
     @Override
-    public boolean updateById(AccountBean entity) {
+    public boolean updateAccountByPk(AccountBean entity) {
         return super.updateById(entity);
     }
 
     @Override
-    public AccountBean getById(Long id) {
+    public AccountBean getAccountByPk(Long id) {
         return super.getById(id);
     }
 
     @Override
-    public IPage<AccountBean> page(Page<AccountBean> page, LambdaQueryWrapper<AccountBean> query) {
-        // 简单分页，实际可根据query自定义条件
+    public IPage<AccountBean> pageAccount(Page<AccountBean> page, LambdaQueryWrapper<AccountBean> query) {
         return super.page(page, query);
     }
-} 
+
+    @Override
+    public List<AccountBean> listAccount(LambdaQueryWrapper<AccountBean> queryWrapper) {
+        return super.list(queryWrapper);
+    }
+
+    @Override
+    public String getAccountNameByPk(Long id) {
+        return Optional.ofNullable(super.getById(id))
+                .map(AccountBean::getName)
+                .orElse("");
+    }
+}

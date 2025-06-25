@@ -10,6 +10,7 @@ import com.rfid.platform.common.PlatformConstant;
 import com.rfid.platform.entity.RoleBean;
 import com.rfid.platform.persistence.RoleDTO;
 import com.rfid.platform.persistence.SelectDTO;
+import com.rfid.platform.service.AccountService;
 import com.rfid.platform.service.RoleService;
 import com.rfid.platform.util.TimeUtil;
 import org.apache.commons.lang3.StringUtils;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @RestController
@@ -30,6 +32,9 @@ public class RoleController {
 
     @Autowired
     private RoleService roleService;
+
+    @Autowired
+    private AccountService accountService;
     
 
     @PostMapping(value = "/create")
@@ -40,6 +45,17 @@ public class RoleController {
             if (StringUtils.isBlank(roleDTO.getName())) {
                 result.setCode(PlatformConstant.RET_CODE.FAILED);
                 result.setMessage("角色名称不能为空");
+                return result;
+            }
+
+            // 检查角色名称是否已存在
+            LambdaQueryWrapper<RoleBean> nameCheckWrapper = new LambdaQueryWrapper<>();
+            nameCheckWrapper.eq(RoleBean::getName, roleDTO.getName());
+            Boolean existingRoles = roleService.existRole(nameCheckWrapper);
+
+            if (existingRoles) {
+                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setMessage("角色名称已存在，不能重复");
                 return result;
             }
             
@@ -104,7 +120,19 @@ public class RoleController {
                 result.setMessage("角色名称不能为空");
                 return result;
             }
-            
+
+
+            // 检查部门名称是否已存在（排除当前部门）
+            LambdaQueryWrapper<RoleBean> nameCheckWrapper = new LambdaQueryWrapper<>();
+            nameCheckWrapper.eq(RoleBean::getName, roleDTO.getName()).ne(RoleBean::getId, roleDTO.getId());
+            Boolean existRoles = roleService.existRole(nameCheckWrapper);
+
+            if (existRoles) {
+                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setMessage("角色名称已存在，不能重复");
+                return result;
+            }
+
             // DTO转Bean
             RoleBean roleBean = BeanUtil.copyProperties(roleDTO, RoleBean.class);
             
@@ -143,6 +171,9 @@ public class RoleController {
                 // 格式化创建时间
                 if (roleBean.getCreateTime() != null) {
                     resultDTO.setCreateDate(roleBean.getCreateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+                }
+                if (Objects.nonNull(roleBean.getCreateId())) {
+                    resultDTO.setCreateAccountName(accountService.getAccountNameByPk(roleBean.getCreateId()));
                 }
                 result.setData(resultDTO);
                 result.setMessage("查询成功");
@@ -192,8 +223,11 @@ public class RoleController {
                 if (roleBean.getCreateTime() != null) {
                     dto.setCreateDate(TimeUtil.getDateFormatterString(roleBean.getCreateTime()));
                 }
+                if (Objects.nonNull(roleBean.getCreateId())) {
+                    dto.setCreateAccountName(accountService.getAccountNameByPk(roleBean.getCreateId()));
+                }
                 return dto;
-            }).collect(Collectors.toList());
+            }).collect(Collectors.toUnmodifiableList());
             
             pageResultDTO.setData(roleDTOList);
             result.setData(pageResultDTO);
@@ -220,7 +254,7 @@ public class RoleController {
                 selectDTO.setId(roleBean.getId());
                 selectDTO.setName(roleBean.getName());
                 return selectDTO;
-            }).collect(Collectors.toList());
+            }).collect(Collectors.toUnmodifiableList());
             
             result.setData(selectDTOList);
             result.setMessage("查询成功");

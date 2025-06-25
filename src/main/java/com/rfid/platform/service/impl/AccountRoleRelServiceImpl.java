@@ -9,31 +9,38 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class AccountRoleRelServiceImpl extends ServiceImpl<AccountRoleRelMapper, AccountRoleRelBean> implements AccountRoleRelService {
 
     @Override
-    public boolean save(AccountRoleRelBean entity) {
+    public boolean saveAccountRoleRel(AccountRoleRelBean entity) {
         return super.save(entity);
     }
 
     @Override
-    public boolean removeById(Long id) {
+    public boolean removeAccountRoleRelByPk(Long id) {
         return super.removeById(id);
     }
 
     @Override
-    public boolean updateById(AccountRoleRelBean entity) {
+    public boolean updateAccountRoleRelByPk(AccountRoleRelBean entity) {
         return super.updateById(entity);
     }
 
     @Override
-    public AccountRoleRelBean getById(Long id) {
+    public AccountRoleRelBean getAccountRoleRelByPk(Long id) {
         return super.getById(id);
     }
 
     @Override
-    public IPage<AccountRoleRelBean> page(Page<AccountRoleRelBean> page, LambdaQueryWrapper<AccountRoleRelBean> query) {
+    public IPage<AccountRoleRelBean> pageAccountRoleRel(Page<AccountRoleRelBean> page, LambdaQueryWrapper<AccountRoleRelBean> query) {
         return super.page(page, query);
     }
-} 
+
+    @Override
+    public List<AccountRoleRelBean> listAccountRoleRel(LambdaQueryWrapper<AccountRoleRelBean> queryWrapper) {
+        return super.list(queryWrapper);
+    }
+}

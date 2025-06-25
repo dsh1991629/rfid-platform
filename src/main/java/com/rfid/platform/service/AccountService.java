@@ -9,13 +9,17 @@ import java.util.List;
 
 public interface AccountService {
 
-    boolean save(AccountBean entity);
+    boolean saveAccount(AccountBean entity);
 
-    boolean removeById(Long id);
+    boolean removeAccountByPk(Long id);
 
-    boolean updateById(AccountBean entity);
+    boolean updateAccountByPk(AccountBean entity);
 
-    AccountBean getById(Long id);
+    AccountBean getAccountByPk(Long id);
 
-    IPage<AccountBean> page(Page<AccountBean> page, LambdaQueryWrapper<AccountBean> query);
+    IPage<AccountBean> pageAccount(Page<AccountBean> page, LambdaQueryWrapper<AccountBean> query);
+
+    List<AccountBean> listAccount(LambdaQueryWrapper<AccountBean> queryWrapper);
+
+    String getAccountNameByPk(Long id);
 } 
