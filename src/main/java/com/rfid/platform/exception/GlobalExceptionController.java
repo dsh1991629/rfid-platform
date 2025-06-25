@@ -27,8 +27,8 @@ public class GlobalExceptionController {
     private ExceptionModel getExceptionModel(HttpStatus httpStatus, HttpServletRequest request, Exception ex) {
         String message = ex.getMessage();
         ExceptionModel exceptionModel = new ExceptionModel();
-        exceptionModel.setErrorCode(String.valueOf(httpStatus.value()));
-        exceptionModel.setErrorMessage(message);
+        exceptionModel.setCode(String.valueOf(httpStatus.value()));
+        exceptionModel.setMessage(message);
         exceptionModel.setUrl(request.getRequestURL() == null ? "" : request.getRequestURL().toString());
         return exceptionModel;
 

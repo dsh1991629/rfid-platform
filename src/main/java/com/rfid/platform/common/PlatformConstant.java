@@ -15,4 +15,9 @@ public class PlatformConstant {
         Integer TIMEOUT_SECONDS = 60 * 60 * 24;
     }
 
+    public interface RET_CODE {
+        String SUCCESS = "00";
+        String FAILED = "99";
+    }
+
 }

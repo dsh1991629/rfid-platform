@@ -8,8 +8,8 @@ import java.io.Serializable;
 public class ExceptionModel implements Serializable {
 
 	private Integer status;
-	private String errorCode;
-	private String errorMessage;
+	private String code;
+	private String message;
 	private String url;
 
 }

@@ -9,31 +9,38 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class RoleServiceImpl extends ServiceImpl<RoleMapper, RoleBean> implements RoleService {
 
     @Override
-    public boolean save(RoleBean entity) {
+    public boolean saveRole(RoleBean entity) {
         return super.save(entity);
     }
 
     @Override
-    public boolean removeById(Long id) {
+    public boolean removeRoleByPk(Long id) {
         return super.removeById(id);
     }
 
     @Override
-    public boolean updateById(RoleBean entity) {
+    public boolean updateRoleByPk(RoleBean entity) {
         return super.updateById(entity);
     }
 
     @Override
-    public RoleBean getById(Long id) {
+    public RoleBean getRoleByPk(Long id) {
         return super.getById(id);
     }
 
     @Override
-    public IPage<RoleBean> page(Page<RoleBean> page, LambdaQueryWrapper<RoleBean> query) {
+    public IPage<RoleBean> pageRole(Page<RoleBean> page, LambdaQueryWrapper<RoleBean> query) {
         return super.page(page, query);
     }
-} 
+
+    @Override
+    public List<RoleBean> listRole(LambdaQueryWrapper<RoleBean> queryWrapper) {
+        return super.list(queryWrapper);
+    }
+}

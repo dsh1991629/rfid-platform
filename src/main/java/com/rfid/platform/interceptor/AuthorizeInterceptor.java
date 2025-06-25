@@ -85,8 +85,8 @@ public class AuthorizeInterceptor implements HandlerInterceptor {
 
     private void handleResponse(HttpServletRequest req, HttpServletResponse res, ExceptionEnum exceptionEnum) {
         ExceptionModel model = new ExceptionModel();
-        model.setErrorCode(exceptionEnum.getCode());
-        model.setErrorMessage(exceptionEnum.getDes());
+        model.setCode(exceptionEnum.getCode());
+        model.setMessage(exceptionEnum.getDes());
         model.setStatus(403);
         ResponseEntity<ExceptionModel> re = new ResponseEntity<>(model, HttpStatus.FORBIDDEN);
         handleHttpEntityResponse(re, new ServletWebRequest(req, res));
