@@ -5,15 +5,21 @@ import com.rfid.platform.entity.MenuBean;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
+import java.util.List;
+
 public interface MenuService {
 
-    boolean save(MenuBean entity);
+    boolean saveMenu(MenuBean entity);
 
-    boolean removeById(Long id);
+    boolean removeMenuByPk(Long id);
 
-    boolean updateById(MenuBean entity);
+    boolean updateMenuByPk(MenuBean entity);
 
-    MenuBean getById(Long id);
+    MenuBean getMenuByPk(Long id);
 
-    IPage<MenuBean> page(Page<MenuBean> page, LambdaQueryWrapper<MenuBean> query);
+    IPage<MenuBean> pageMenu(Page<MenuBean> page, LambdaQueryWrapper<MenuBean> query);
+
+    List<MenuBean> listMenu(LambdaQueryWrapper<MenuBean> queryWrapper);
+
+    Boolean existMenu(LambdaQueryWrapper<MenuBean> nameCheckWrapper);
 } 
