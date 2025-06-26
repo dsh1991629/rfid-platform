@@ -108,11 +108,6 @@ public class MenuController {
                 result.setMessage("菜单ID不能为空");
                 return result;
             }
-            if (StringUtils.isBlank(menuDTO.getName())) {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
-                result.setMessage("菜单名称不能为空");
-                return result;
-            }
 
             // 检查菜单名称是否已存在（排除当前菜单）
             LambdaQueryWrapper<MenuBean> nameCheckWrapper = new LambdaQueryWrapper<>();

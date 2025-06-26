@@ -51,4 +51,10 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, AccountBean> 
                 .map(AccountBean::getName)
                 .orElse("");
     }
+
+
+    @Override
+    public Boolean existAccount(LambdaQueryWrapper<AccountBean> nameCheckWrapper) {
+        return super.exists(nameCheckWrapper);
+    }
 }

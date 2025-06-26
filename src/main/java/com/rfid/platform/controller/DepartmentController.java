@@ -114,11 +114,6 @@ public class DepartmentController {
                 result.setMessage("部门ID不能为空");
                 return result;
             }
-            if (StringUtils.isBlank(departmentDTO.getName())) {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
-                result.setMessage("部门名称不能为空");
-                return result;
-            }
 
             // 检查部门名称是否已存在（排除当前部门）
             LambdaQueryWrapper<DepartmentBean> nameCheckWrapper = new LambdaQueryWrapper<>();

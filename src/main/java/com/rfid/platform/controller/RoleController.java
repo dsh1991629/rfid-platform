@@ -115,12 +115,6 @@ public class RoleController {
                 result.setMessage("角色ID不能为空");
                 return result;
             }
-            if (StringUtils.isBlank(roleDTO.getName())) {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
-                result.setMessage("角色名称不能为空");
-                return result;
-            }
-
 
             // 检查部门名称是否已存在（排除当前部门）
             LambdaQueryWrapper<RoleBean> nameCheckWrapper = new LambdaQueryWrapper<>();

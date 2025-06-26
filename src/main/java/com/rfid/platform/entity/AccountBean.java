@@ -32,7 +32,7 @@ public class AccountBean implements Serializable {
     private String phone;
 
     @TableField(value = "AVATAR")
-    private byte[] avatar;
+    private String avatar;
 
     @TableField(value = "STATE")
     private Integer state;

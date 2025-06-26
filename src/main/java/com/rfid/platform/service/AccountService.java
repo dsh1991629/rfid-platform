@@ -22,4 +22,6 @@ public interface AccountService {
     List<AccountBean> listAccount(LambdaQueryWrapper<AccountBean> queryWrapper);
 
     String getAccountNameByPk(Long id);
+
+    Boolean existAccount(LambdaQueryWrapper<AccountBean> nameCheckWrapper);
 } 
