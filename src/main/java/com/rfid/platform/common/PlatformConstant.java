@@ -2,7 +2,11 @@ package com.rfid.platform.common;
 
 public class PlatformConstant {
 
-    private PlatformConstant (){}
+    public interface CACHE_KEY {
+        String CAPTCHA_KEY = "captcha:";
+        String TOKEN_KEY = "token:";
+    }
+
 
     public interface HTTP_CONFIG {
         String HEADER_LANGUAGE_KEY = "lang";
@@ -11,7 +15,7 @@ public class PlatformConstant {
     }
 
     public interface TOKEN_CONFIG {
-        String CACHE_KEY = "rfid:token:";
+        String TOKEN_CACHE_KEY = "rfid:token:";
         Integer TIMEOUT_SECONDS = 60 * 60 * 24;
     }
 
@@ -19,10 +23,4 @@ public class PlatformConstant {
         String SUCCESS = "00";
         String FAILED = "99";
     }
-
-    public interface CACHE_KEY {
-        String CAPTCHA_KEY = "rfid:captcha:";
-
-    }
-
 }

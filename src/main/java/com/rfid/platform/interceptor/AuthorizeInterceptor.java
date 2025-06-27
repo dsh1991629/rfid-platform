@@ -62,7 +62,7 @@ public class AuthorizeInterceptor implements HandlerInterceptor {
             return false;
         }
 
-        String key = PlatformConstant.TOKEN_CONFIG.CACHE_KEY + token;
+        String key = PlatformConstant.TOKEN_CONFIG.TOKEN_CACHE_KEY + token;
         if (!redisTemplate.hasKey(key)) {
             handleResponse(request, response, ExceptionEnum.AUTHENTICATION_FAILED);
             return false;
