@@ -20,4 +20,6 @@ public interface AccountDepartRelService {
     IPage<AccountDepartRelBean> pageAccountDepartRel(Page<AccountDepartRelBean> page, LambdaQueryWrapper<AccountDepartRelBean> query);
 
     List<AccountDepartRelBean> listAccountDepartRel(LambdaQueryWrapper<AccountDepartRelBean> queryWrapper);
+
+    Boolean removeAccountDepartRelByWrapper(LambdaQueryWrapper<AccountDepartRelBean> departRelWrapper);
 }

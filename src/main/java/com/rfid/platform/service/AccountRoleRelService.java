@@ -20,4 +20,8 @@ public interface AccountRoleRelService {
     IPage<AccountRoleRelBean> pageAccountRoleRel(Page<AccountRoleRelBean> page, LambdaQueryWrapper<AccountRoleRelBean> query);
 
     List<AccountRoleRelBean> listAccountRoleRel(LambdaQueryWrapper<AccountRoleRelBean> queryWrapper);
+
+    Boolean removeAccountRoleRelByWrapper(LambdaQueryWrapper<AccountRoleRelBean> delWrapper);
+
+    Boolean saveAccountRoleRels(List<AccountRoleRelBean> accountRoleRelBeans);
 }

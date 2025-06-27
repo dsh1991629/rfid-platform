@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.rfid.platform.entity.RoleBean;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.rfid.platform.persistence.RoleDTO;
 
 import java.util.List;
 
@@ -22,4 +23,6 @@ public interface RoleService {
     List<RoleBean> listRole(LambdaQueryWrapper<RoleBean> queryWrapper);
 
     Boolean existRole(LambdaQueryWrapper<RoleBean> nameCheckWrapper);
+
+    List<RoleDTO> listRolesByAccountId(Long accountId);
 } 

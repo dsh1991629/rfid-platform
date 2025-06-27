@@ -43,4 +43,14 @@ public class AccountRoleRelServiceImpl extends ServiceImpl<AccountRoleRelMapper,
     public List<AccountRoleRelBean> listAccountRoleRel(LambdaQueryWrapper<AccountRoleRelBean> queryWrapper) {
         return super.list(queryWrapper);
     }
+
+    @Override
+    public Boolean removeAccountRoleRelByWrapper(LambdaQueryWrapper<AccountRoleRelBean> delWrapper) {
+        return super.remove(delWrapper);
+    }
+
+    @Override
+    public Boolean saveAccountRoleRels(List<AccountRoleRelBean> accountRoleRelBeans) {
+        return super.saveBatch(accountRoleRelBeans);
+    }
 }

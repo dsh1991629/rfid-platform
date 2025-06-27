@@ -9,11 +9,11 @@ import java.util.List;
 
 public interface AccountService {
 
-    boolean saveAccount(AccountBean entity);
+    boolean saveAccount(AccountBean entity, Long departmentId, List<Long> roleIds);
 
     boolean removeAccountByPk(Long id);
 
-    boolean updateAccountByPk(AccountBean entity);
+    boolean updateAccountByPk(AccountBean entity, Long departmentId, List<Long> roleIds);
 
     AccountBean getAccountByPk(Long id);
 

@@ -43,4 +43,9 @@ public class AccountDepartRelServiceImpl extends ServiceImpl<AccountDepartRelMap
     public List<AccountDepartRelBean> listAccountDepartRel(LambdaQueryWrapper<AccountDepartRelBean> queryWrapper) {
         return super.list(queryWrapper);
     }
+
+    @Override
+    public Boolean removeAccountDepartRelByWrapper(LambdaQueryWrapper<AccountDepartRelBean> departRelWrapper) {
+        return super.remove(departRelWrapper);
+    }
 }
