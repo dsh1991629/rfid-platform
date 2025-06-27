@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rfid.platform.common.AccountContext;
 import com.rfid.platform.common.LanguageContext;
 import com.rfid.platform.common.PlatformConstant;
-import com.rfid.platform.config.RfidPlatformAuthorityProperties;
+import com.rfid.platform.config.RfidPlatformProperties;
 import com.rfid.platform.exception.ExceptionEnum;
 import com.rfid.platform.exception.ExceptionModel;
 import jakarta.servlet.http.HttpServletRequest;
@@ -31,7 +31,7 @@ public class AuthorizeInterceptor implements HandlerInterceptor {
 
 
     @Autowired
-    private RfidPlatformAuthorityProperties rfidPlatformAuthorityProperties;
+    private RfidPlatformProperties rfidPlatformProperties;
 
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
@@ -49,7 +49,7 @@ public class AuthorizeInterceptor implements HandlerInterceptor {
 
         // 不需要鉴权的uri
         String uri = request.getRequestURI();
-        List<String> ignoreSuffix = rfidPlatformAuthorityProperties.getIgnoreUri();
+        List<String> ignoreSuffix = rfidPlatformProperties.getIgnoreUri();
         for (String suffix : ignoreSuffix) {
             if (uri.endsWith(suffix)) {
                 return true;

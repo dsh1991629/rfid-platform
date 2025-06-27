@@ -10,8 +10,10 @@ import java.util.List;
 @Configuration
 @ConfigurationProperties(prefix = "rfid.platform")
 @Data
-public class RfidPlatformAuthorityProperties {
+public class RfidPlatformProperties {
 
     private List<String> ignoreUri = new ArrayList<>();
+
+    private Integer captchaBit = 1;
 
 }

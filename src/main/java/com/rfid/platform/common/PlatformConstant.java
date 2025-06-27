@@ -20,4 +20,9 @@ public class PlatformConstant {
         String FAILED = "99";
     }
 
+    public interface CACHE_KEY {
+        String CAPTCHA_KEY = "rfid:captcha:";
+
+    }
+
 }
