@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.rfid.platform.entity.MenuBean;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.rfid.platform.persistence.MenuDTO;
 
 import java.util.List;
 
@@ -22,4 +23,6 @@ public interface MenuService {
     List<MenuBean> listMenu(LambdaQueryWrapper<MenuBean> queryWrapper);
 
     Boolean existMenu(LambdaQueryWrapper<MenuBean> nameCheckWrapper);
-} 
+
+    List<MenuDTO> queryMenusByRole(Long roleId);
+}

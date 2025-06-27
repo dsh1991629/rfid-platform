@@ -4,17 +4,18 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.rfid.platform.entity.RoleBean;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.rfid.platform.persistence.MenuDTO;
 import com.rfid.platform.persistence.RoleDTO;
 
 import java.util.List;
 
 public interface RoleService {
 
-    boolean saveRole(RoleBean entity);
+    boolean saveRole(RoleBean entity, List<MenuDTO> menuDTOS);
 
     boolean removeRoleByPk(Long id);
 
-    boolean updateRoleByPk(RoleBean entity);
+    boolean updateRoleByPk(RoleBean entity, List<MenuDTO> menuDTOS);
 
     RoleBean getRoleByPk(Long id);
 
@@ -24,5 +25,5 @@ public interface RoleService {
 
     Boolean existRole(LambdaQueryWrapper<RoleBean> nameCheckWrapper);
 
-    List<RoleDTO> listRolesByAccountId(Long accountId);
-} 
+    RoleDTO queryRoleByAccountId(Long accountId);
+}

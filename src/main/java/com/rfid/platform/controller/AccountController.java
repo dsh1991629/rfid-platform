@@ -12,10 +12,12 @@ import com.rfid.platform.entity.AccountBean;
 import com.rfid.platform.entity.AccountDepartRelBean;
 import com.rfid.platform.persistence.AccountDTO;
 import com.rfid.platform.persistence.DepartmentDTO;
+import com.rfid.platform.persistence.MenuDTO;
 import com.rfid.platform.persistence.RoleDTO;
 import com.rfid.platform.service.AccountDepartRelService;
 import com.rfid.platform.service.AccountService;
 import com.rfid.platform.service.DepartmentService;
+import com.rfid.platform.service.MenuService;
 import com.rfid.platform.service.RoleService;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -26,7 +28,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -46,6 +47,9 @@ public class AccountController {
 
     @Autowired
     private AccountDepartRelService accountDepartRelService;
+
+    @Autowired
+    private MenuService menuService;
 
 
     @PostMapping(value = "/create")
@@ -80,13 +84,7 @@ public class AccountController {
 
 
             AccountBean accountBean = BeanUtil.copyProperties(accountDTO, AccountBean.class);
-            Long departmentId = accountDTO.getDepartment().getId();
-            List<Long> roleIds = new ArrayList<>();
-            if (CollectionUtils.isNotEmpty(accountDTO.getRoles())) {
-                roleIds.addAll(accountDTO.getRoles().stream().map(RoleDTO::getId).collect(Collectors.toUnmodifiableList()));
-            }
-
-            boolean success = accountService.saveAccount(accountBean, departmentId, roleIds);
+            boolean success = accountService.saveAccount(accountBean, accountDTO.getDepartment(), accountDTO.getRole());
             if (success) {
                 result.setData(accountBean.getId());
                 result.setMessage("账户创建成功");
@@ -150,13 +148,7 @@ public class AccountController {
             }
 
             AccountBean accountBean = BeanUtil.copyProperties(accountDTO, AccountBean.class);
-            Long departmentId = accountDTO.getDepartment().getId();
-            List<Long> roleIds = new ArrayList<>();
-            if (CollectionUtils.isNotEmpty(accountDTO.getRoles())) {
-                roleIds.addAll(accountDTO.getRoles().stream().map(RoleDTO::getId).collect(Collectors.toUnmodifiableList()));
-            }
-
-            boolean success = accountService.updateAccountByPk(accountBean, departmentId, roleIds);
+            boolean success = accountService.updateAccountByPk(accountBean, accountDTO.getDepartment(), accountDTO.getRole());
             result.setData(success);
             if (success) {
                 result.setMessage("账户更新成功");
@@ -194,9 +186,11 @@ public class AccountController {
                     resultDTO.setDepartment(departmentDTO);
                 }
 
-                List<RoleDTO> roleDTOS = roleService.listRolesByAccountId(accountBean.getId());
-                if (CollectionUtils.isNotEmpty(roleDTOS)) {
-                    resultDTO.setRoles(roleDTOS);
+                RoleDTO roleDTO = roleService.queryRoleByAccountId(accountBean.getId());
+                if (Objects.nonNull(roleDTO)) {
+                    List<MenuDTO> menuDTOS = menuService.queryMenusByRole(roleDTO.getId());
+                    roleDTO.setMenus(menuDTOS);
+                    resultDTO.setRole(roleDTO);
                 }
 
                 result.setData(resultDTO);
@@ -260,9 +254,11 @@ public class AccountController {
                             dto.setDepartment(departmentDTO);
                         }
 
-                        List<RoleDTO> roleDTOS = roleService.listRolesByAccountId(bean.getId());
-                        if (CollectionUtils.isNotEmpty(roleDTOS)) {
-                            dto.setRoles(roleDTOS);
+                        RoleDTO roleDTO = roleService.queryRoleByAccountId(bean.getId());
+                        if (Objects.nonNull(roleDTO)) {
+                            List<MenuDTO> menuDTOS = menuService.queryMenusByRole(roleDTO.getId());
+                            roleDTO.setMenus(menuDTOS);
+                            dto.setRole(roleDTO);
                         }
                         return dto;
                     })
@@ -313,9 +309,11 @@ public class AccountController {
                     resultDTO.setDepartment(departmentDTO);
                 }
 
-                List<RoleDTO> roleDTOS = roleService.listRolesByAccountId(e.getId());
-                if (CollectionUtils.isNotEmpty(roleDTOS)) {
-                    resultDTO.setRoles(roleDTOS);
+                RoleDTO roleDTO = roleService.queryRoleByAccountId(e.getId());
+                if (Objects.nonNull(roleDTO)) {
+                    List<MenuDTO> menuDTOS = menuService.queryMenusByRole(roleDTO.getId());
+                    roleDTO.setMenus(menuDTOS);
+                    resultDTO.setRole(roleDTO);
                 }
                 return resultDTO;
             }).collect(Collectors.toUnmodifiableList());

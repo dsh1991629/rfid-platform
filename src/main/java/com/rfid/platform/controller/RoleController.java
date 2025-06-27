@@ -3,23 +3,21 @@ package com.rfid.platform.controller;
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.rfid.platform.common.BaseResult;
 import com.rfid.platform.common.PageResult;
 import com.rfid.platform.common.PlatformConstant;
-import com.rfid.platform.entity.AccountRoleRelBean;
 import com.rfid.platform.entity.RoleBean;
-import com.rfid.platform.persistence.AccountDTO;
+import com.rfid.platform.persistence.MenuDTO;
 import com.rfid.platform.persistence.RoleDTO;
 import com.rfid.platform.persistence.SelectDTO;
 import com.rfid.platform.service.AccountRoleRelService;
 import com.rfid.platform.service.AccountService;
+import com.rfid.platform.service.MenuService;
 import com.rfid.platform.service.RoleService;
 import com.rfid.platform.util.TimeUtil;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.bouncycastle.jcajce.provider.symmetric.AES;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -43,7 +41,7 @@ public class RoleController {
     private AccountService accountService;
 
     @Autowired
-    private AccountRoleRelService accountRoleRelService;
+    private MenuService menuService;
 
 
     @PostMapping(value = "/create")
@@ -72,7 +70,7 @@ public class RoleController {
             RoleBean roleBean = BeanUtil.copyProperties(roleDTO, RoleBean.class);
 
             // 保存角色
-            boolean success = roleService.saveRole(roleBean);
+            boolean success = roleService.saveRole(roleBean, roleDTO.getMenus());
             if (success) {
                 result.setData(roleBean.getId());
                 result.setMessage("创建成功");
@@ -140,7 +138,7 @@ public class RoleController {
             RoleBean roleBean = BeanUtil.copyProperties(roleDTO, RoleBean.class);
 
             // 更新角色
-            boolean success = roleService.updateRoleByPk(roleBean);
+            boolean success = roleService.updateRoleByPk(roleBean, roleDTO.getMenus());
             result.setData(success);
             if (success) {
                 result.setMessage("更新成功");
@@ -178,6 +176,12 @@ public class RoleController {
                 if (Objects.nonNull(roleBean.getCreateId())) {
                     resultDTO.setCreateAccountName(accountService.getAccountNameByPk(roleBean.getCreateId()));
                 }
+
+                List<MenuDTO> menuDTOS = menuService.queryMenusByRole(roleBean.getId());
+                if (CollectionUtils.isNotEmpty(menuDTOS)) {
+                    roleDTO.setMenus(menuDTOS);
+                }
+
                 result.setData(resultDTO);
                 result.setMessage("查询成功");
             } else {
@@ -229,6 +233,12 @@ public class RoleController {
                 if (Objects.nonNull(roleBean.getCreateId())) {
                     dto.setCreateAccountName(accountService.getAccountNameByPk(roleBean.getCreateId()));
                 }
+
+                List<MenuDTO> menuDTOS = menuService.queryMenusByRole(roleBean.getId());
+                if (CollectionUtils.isNotEmpty(menuDTOS)) {
+                    dto.setMenus(menuDTOS);
+                }
+
                 return dto;
             }).collect(Collectors.toUnmodifiableList());
 
@@ -269,50 +279,19 @@ public class RoleController {
     }
 
 
-    @PostMapping(value = "/list/account")
-    public BaseResult<List<RoleDTO>> rolesByAccount(@RequestBody AccountDTO accountDTO) {
-        BaseResult<List<RoleDTO>> result = new BaseResult<>();
-        try {
-            // 参数校验
-            if (accountDTO.getId() == null) {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
-                result.setMessage("账户ID不能为空");
-                return result;
-            }
+    @PostMapping(value = "/menus")
+    public BaseResult<List<MenuDTO>> queryRoleSelect(@RequestBody RoleDTO roleDTO) {
+        BaseResult<List<MenuDTO>> result = new BaseResult<>();
 
-            LambdaQueryWrapper<AccountRoleRelBean> roleRelWrapper = Wrappers.lambdaQuery();
-            roleRelWrapper.eq(AccountRoleRelBean::getAccountId, accountDTO.getId());
-            List<AccountRoleRelBean> accountRoleRelBeans = accountRoleRelService.listAccountRoleRel(roleRelWrapper);
-
-            if (CollectionUtils.isEmpty(accountRoleRelBeans)) {
-                result.setData(List.of());
-                result.setMessage("查询成功");
-                return result;
-            }
-
-            List<RoleDTO> roleDTOS = accountRoleRelBeans.stream().map(e -> {
-                // 查询角色详情
-                RoleBean roleBean = roleService.getRoleByPk(e.getId());
-
-                RoleDTO resultDTO = BeanUtil.copyProperties(roleBean, RoleDTO.class);
-                // 格式化创建时间
-                if (roleBean.getCreateTime() != null) {
-                    resultDTO.setCreateDate(roleBean.getCreateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-                }
-                if (Objects.nonNull(roleBean.getCreateId())) {
-                    resultDTO.setCreateAccountName(accountService.getAccountNameByPk(roleBean.getCreateId()));
-                }
-
-                return resultDTO;
-            }).collect(Collectors.toUnmodifiableList());
-
-            result.setData(roleDTOS);
-            result.setMessage("查询成功");
-            return result;
-        } catch (Exception e) {
+        // 参数校验
+        if (roleDTO.getId() == null) {
             result.setCode(PlatformConstant.RET_CODE.FAILED);
-            result.setMessage("系统异常：" + e.getMessage());
+            result.setMessage("角色ID不能为空");
+            return result;
         }
+        List<MenuDTO> menuDTOS = menuService.queryMenusByRole(roleDTO.getId());
+        result.setData(menuDTOS);
         return result;
     }
+
 }

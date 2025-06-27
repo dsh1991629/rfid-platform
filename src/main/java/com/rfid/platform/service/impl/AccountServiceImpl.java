@@ -5,13 +5,18 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.rfid.platform.entity.AccountBean;
 import com.rfid.platform.entity.AccountDepartRelBean;
 import com.rfid.platform.entity.AccountRoleRelBean;
+import com.rfid.platform.entity.RoleMenuRelBean;
 import com.rfid.platform.mapper.AccountMapper;
+import com.rfid.platform.persistence.DepartmentDTO;
+import com.rfid.platform.persistence.MenuDTO;
+import com.rfid.platform.persistence.RoleDTO;
 import com.rfid.platform.service.AccountDepartRelService;
 import com.rfid.platform.service.AccountRoleRelService;
 import com.rfid.platform.service.AccountService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.rfid.platform.service.RoleMenuRelService;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -34,28 +39,40 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, AccountBean> 
     @Lazy
     private AccountDepartRelService accountDepartRelService;
 
+    @Autowired
+    @Lazy
+    private RoleMenuRelService roleMenuRelService;
+
 
     @Transactional
     @Override
-    public boolean saveAccount(AccountBean entity, Long departmentId, List<Long> roleIds) {
+    public boolean saveAccount(AccountBean entity, DepartmentDTO departmentDTO, RoleDTO roleDTO) {
         super.save(entity);
         Long accountId = entity.getId();
 
-        if (Objects.nonNull(departmentId)) {
+        if (Objects.nonNull(departmentDTO) && Objects.nonNull(departmentDTO.getId())) {
             AccountDepartRelBean accountDepartRelBean = new AccountDepartRelBean();
             accountDepartRelBean.setAccountId(accountId);
-            accountDepartRelBean.setDepartmentId(departmentId);
+            accountDepartRelBean.setDepartmentId(departmentDTO.getId());
             accountDepartRelService.saveAccountDepartRel(accountDepartRelBean);
         }
 
-        if (CollectionUtils.isNotEmpty(roleIds)) {
-            List<AccountRoleRelBean> accountRoleRelBeans = roleIds.stream().map(e -> {
-                AccountRoleRelBean accountRoleRelBean = new AccountRoleRelBean();
-                accountRoleRelBean.setAccountId(accountId);
-                accountRoleRelBean.setRoleId(e);
-                return accountRoleRelBean;
-            }).collect(Collectors.toUnmodifiableList());
-            accountRoleRelService.saveAccountRoleRels(accountRoleRelBeans);
+        if (Objects.nonNull(roleDTO) && Objects.nonNull(roleDTO.getId())) {
+            AccountRoleRelBean accountRoleRelBean = new AccountRoleRelBean();
+            accountRoleRelBean.setAccountId(accountId);
+            accountRoleRelBean.setRoleId(roleDTO.getId());
+            accountRoleRelService.saveAccountRoleRel(accountRoleRelBean);
+
+            List<MenuDTO> menuDTOS = roleDTO.getMenus();
+            if (CollectionUtils.isNotEmpty(menuDTOS)) {
+                List<RoleMenuRelBean> roleMenuRelBeans = menuDTOS.stream().map(e -> {
+                    RoleMenuRelBean roleMenuRelBean = new RoleMenuRelBean();
+                    roleMenuRelBean.setRoleId(roleDTO.getId());
+                    roleMenuRelBean.setMenuId(e.getId());
+                    return roleMenuRelBean;
+                }).collect(Collectors.toUnmodifiableList());
+                roleMenuRelService.saveRoleMenuRels(roleMenuRelBeans);
+            }
         }
 
         return true;
@@ -77,32 +94,29 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, AccountBean> 
 
     @Transactional
     @Override
-    public boolean updateAccountByPk(AccountBean entity, Long departmentId, List<Long> roleIds) {
+    public boolean updateAccountByPk(AccountBean entity, DepartmentDTO departmentDTO, RoleDTO roleDTO) {
         super.updateById(entity);
 
-        if (Objects.nonNull(departmentId)) {
+        if (Objects.nonNull(departmentDTO) && Objects.nonNull(departmentDTO.getId())) {
             LambdaQueryWrapper<AccountDepartRelBean> departRelWrapper = Wrappers.lambdaQuery();
             departRelWrapper.eq(AccountDepartRelBean::getAccountId, entity.getId());
             accountDepartRelService.removeAccountDepartRelByWrapper(departRelWrapper);
 
             AccountDepartRelBean accountDepartRelBean = new AccountDepartRelBean();
             accountDepartRelBean.setAccountId(entity.getId());
-            accountDepartRelBean.setDepartmentId(departmentId);
+            accountDepartRelBean.setDepartmentId(departmentDTO.getId());
             accountDepartRelService.saveAccountDepartRel(accountDepartRelBean);
         }
 
-        if (CollectionUtils.isNotEmpty(roleIds)) {
+        if (Objects.nonNull(roleDTO) && Objects.nonNull(roleDTO.getId())) {
             LambdaQueryWrapper<AccountRoleRelBean> roleRelWrapper = Wrappers.lambdaQuery();
             roleRelWrapper.eq(AccountRoleRelBean::getAccountId, entity.getId());
             accountRoleRelService.removeAccountRoleRelByWrapper(roleRelWrapper);
 
-            List<AccountRoleRelBean> accountRoleRelBeans = roleIds.stream().map(e -> {
-                AccountRoleRelBean accountRoleRelBean = new AccountRoleRelBean();
-                accountRoleRelBean.setAccountId(entity.getId());
-                accountRoleRelBean.setRoleId(e);
-                return accountRoleRelBean;
-            }).collect(Collectors.toUnmodifiableList());
-            accountRoleRelService.saveAccountRoleRels(accountRoleRelBeans);
+            AccountRoleRelBean accountRoleRelBean = new AccountRoleRelBean();
+            accountRoleRelBean.setAccountId(entity.getId());
+            accountRoleRelBean.setRoleId(roleDTO.getId());
+            accountRoleRelService.saveAccountRoleRel(accountRoleRelBean);
         }
 
         return true;

@@ -29,5 +29,6 @@ public class AccountDTO implements Serializable {
 
     private DepartmentDTO department;
 
-    private List<RoleDTO> roles = new ArrayList<>();
+    private RoleDTO role;
+
 }

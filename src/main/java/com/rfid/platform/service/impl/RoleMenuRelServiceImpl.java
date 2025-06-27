@@ -9,6 +9,8 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class RoleMenuRelServiceImpl extends ServiceImpl<RoleMenuRelMapper, RoleMenuRelBean> implements RoleMenuRelService {
 
@@ -36,4 +38,19 @@ public class RoleMenuRelServiceImpl extends ServiceImpl<RoleMenuRelMapper, RoleM
     public IPage<RoleMenuRelBean> page(Page<RoleMenuRelBean> page, LambdaQueryWrapper<RoleMenuRelBean> query) {
         return super.page(page, query);
     }
-} 
+
+    @Override
+    public boolean saveRoleMenuRels(List<RoleMenuRelBean> roleMenuRelBeans) {
+        return super.saveBatch(roleMenuRelBeans);
+    }
+
+    @Override
+    public List<RoleMenuRelBean> listRoleMenuRels(LambdaQueryWrapper<RoleMenuRelBean> menuRelWrapper) {
+        return super.list(menuRelWrapper);
+    }
+
+    @Override
+    public boolean removeRoleMenuRels(LambdaQueryWrapper<RoleMenuRelBean> delWrapper) {
+        return super.remove(delWrapper);
+    }
+}
