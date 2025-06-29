@@ -13,6 +13,9 @@ public interface DepartmentService {
     boolean saveDepartment(DepartmentBean entity);
 
     boolean removeDepartmentByPk(Long id);
+    
+    // 新增：级联删除部门及其所有子部门
+    boolean removeDepartmentCascade(Long id);
 
     boolean updateDepartmentByPk(DepartmentBean entity);
 

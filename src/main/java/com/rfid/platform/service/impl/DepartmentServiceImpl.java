@@ -15,6 +15,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Objects;
@@ -34,7 +35,39 @@ public class DepartmentServiceImpl extends ServiceImpl<DepartmentMapper, Departm
 
     @Override
     public boolean removeDepartmentByPk(Long id) {
-        return super.removeById(id);
+        // 调用级联删除方法
+        return removeDepartmentCascade(id);
+    }
+
+
+    @Transactional
+    @Override
+    public boolean removeDepartmentCascade(Long id) {
+        try {
+            // 递归删除所有子部门
+            deleteChildrenRecursively(id);
+            // 删除当前部门
+            return super.removeById(id);
+        } catch (Exception e) {
+            throw new RuntimeException("删除部门失败：" + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * 递归删除所有子部门
+     * @param parentId 父部门ID
+     */
+    private void deleteChildrenRecursively(Long parentId) {
+        // 查找所有子部门
+        LambdaQueryWrapper<DepartmentBean> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(DepartmentBean::getParentId, parentId);
+        List<DepartmentBean> childDepartments = super.list(queryWrapper);
+        
+        // 递归删除每个子部门及其子部门
+        for (DepartmentBean child : childDepartments) {
+            deleteChildrenRecursively(child.getId());
+            super.removeById(child.getId());
+        }
     }
 
     @Override

@@ -88,11 +88,19 @@ public class DepartmentController {
                 return result;
             }
             
-            // 删除部门
-            boolean success = departmentService.removeDepartmentByPk(departmentDTO.getId());
+            // 检查部门是否存在
+            DepartmentBean existingDepartment = departmentService.getDepartmentByPk(departmentDTO.getId());
+            if (existingDepartment == null) {
+                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setMessage("部门不存在");
+                return result;
+            }
+            
+            // 级联删除部门及其所有子部门
+            boolean success = departmentService.removeDepartmentCascade(departmentDTO.getId());
             result.setData(success);
             if (success) {
-                result.setMessage("删除成功");
+                result.setMessage("删除成功（包含所有子部门）");
             } else {
                 result.setCode(PlatformConstant.RET_CODE.FAILED);
                 result.setMessage("删除失败");
