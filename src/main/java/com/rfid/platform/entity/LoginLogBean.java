@@ -22,6 +22,9 @@ public class LoginLogBean implements Serializable {
     @TableField(value = "ACCOUNT_CODE")
     private String accountCode;
 
+    @TableField(value = "ACCOUNT_IP")
+    private String accountIp;
+
     @TableField(value = "LOGIN_TIME")
     private LocalDateTime loginTime;
 

@@ -15,6 +15,7 @@ import com.rfid.platform.persistence.MenuDTO;
 import com.rfid.platform.persistence.RoleDTO;
 import com.rfid.platform.service.AccountService;
 import com.rfid.platform.service.DepartmentService;
+import com.rfid.platform.service.LoginLogService;
 import com.rfid.platform.service.MenuService;
 import com.rfid.platform.service.RoleService;
 import com.rfid.platform.util.JwtUtil;
@@ -70,6 +71,9 @@ public class LoginController {
     private MenuService menuService;
 
     @Autowired
+    private LoginLogService loginLogService;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
 
@@ -96,13 +100,26 @@ public class LoginController {
 
     @PostMapping(value = "/login")
     public BaseResult<LoginRetDTO> login(@RequestBody LoginReqDTO loginReqDTO) {
-        BaseResult<LoginRetDTO> response = new BaseResult<>();
+        BaseResult<LoginRetDTO> response = new BaseResult<>(); 
+        String clientIp = RequestUtil.getClientIpAddress();
         
         try {
             // 验证参数
             if (StringUtils.isBlank(loginReqDTO.getAccount())) {
                 response.setCode(PlatformConstant.RET_CODE.FAILED);
                 response.setMessage("账号不能为空");
+                return response;
+            }
+            
+            // 检查账号是否被锁定
+            String lockKey = PlatformConstant.CACHE_KEY.ACCOUNT_LOCK + loginReqDTO.getAccount();
+            Object lockTime = redisTemplate.opsForValue().get(lockKey);
+            if (lockTime != null) {
+                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setMessage("账号已被锁定，请30分钟后再试");
+                // 异步记录登录日志
+                loginLogService.recordLoginLogAsync(null, loginReqDTO.getAccount(), clientIp,
+                    PlatformConstant.LOGIN_STATUS.LOCKED, "账号已被锁定", null);
                 return response;
             }
             
@@ -151,27 +168,54 @@ public class LoginController {
             if (CollectionUtils.isEmpty(accounts)) {
                 response.setCode(PlatformConstant.RET_CODE.FAILED);
                 response.setMessage("用户不存在");
+                // 异步记录登录日志
+                loginLogService.recordLoginLogAsync(null, loginReqDTO.getAccount(), clientIp,
+                    PlatformConstant.LOGIN_STATUS.FAILED, "用户不存在", null);
                 return response;
             }
             AccountBean account = accounts.get(0);
             if (account.getState() != null && account.getState() == 0) {
                 response.setCode(PlatformConstant.RET_CODE.FAILED);
                 response.setMessage("用户已被禁用");
+                // 异步记录登录日志
+                loginLogService.recordLoginLogAsync(account.getId(), loginReqDTO.getAccount(), clientIp,
+                    PlatformConstant.LOGIN_STATUS.FAILED, "用户已被禁用", null);
                 return response;
             }
             
             // 验证密码
             if (!passwordEncoder.matches(loginReqDTO.getPassword(), account.getPassword())) {
-                response.setCode(PlatformConstant.RET_CODE.FAILED);
-                response.setMessage("密码错误");
+                // 记录登录失败次数
+                String failCountKey = PlatformConstant.CACHE_KEY.LOGIN_FAIL_COUNT + loginReqDTO.getAccount();
+                Integer failCount = (Integer) redisTemplate.opsForValue().get(failCountKey);
+                failCount = failCount == null ? 1 : failCount + 1;
+                
+                if (failCount >= PlatformConstant.LOGIN_CONFIG.MAX_LOGIN_FAIL_COUNT) {
+                    // 锁定账号
+                    redisTemplate.opsForValue().set(lockKey, System.currentTimeMillis(), 
+                        PlatformConstant.LOGIN_CONFIG.LOCK_DURATION_MINUTES, TimeUnit.MINUTES);
+                    redisTemplate.delete(failCountKey); // 清除失败次数
+                    
+                    response.setCode(PlatformConstant.RET_CODE.FAILED);
+                    response.setMessage("密码错误次数过多，账号已被锁定30分钟");
+                    // 异步记录登录日志
+                    loginLogService.recordLoginLogAsync(account.getId(), loginReqDTO.getAccount(), clientIp,
+                        PlatformConstant.LOGIN_STATUS.LOCKED, "密码错误次数过多，账号被锁定", null);
+                } else {
+                    redisTemplate.opsForValue().set(failCountKey, failCount, 30, TimeUnit.MINUTES);
+                    response.setCode(PlatformConstant.RET_CODE.FAILED);
+                    response.setMessage("密码错误，还可尝试" + (PlatformConstant.LOGIN_CONFIG.MAX_LOGIN_FAIL_COUNT - failCount) + "次");
+                    // 异步记录登录日志
+                    loginLogService.recordLoginLogAsync(account.getId(), loginReqDTO.getAccount(), clientIp,
+                        PlatformConstant.LOGIN_STATUS.FAILED, "密码错误", null);
+                }
                 return response;
             }
             
-            // 使用Spring Security进行认证
-            Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginReqDTO.getAccount(), loginReqDTO.getPassword())
-            );
-            
+            // 登录成功，清除失败次数
+            String failCountKey = PlatformConstant.CACHE_KEY.LOGIN_FAIL_COUNT + loginReqDTO.getAccount();
+            redisTemplate.delete(failCountKey);
+
             // 生成JWT token
             String accessToken = jwtUtil.generateToken(account.getCode(), account.getId());
             String refreshToken = jwtUtil.generateRefreshToken(account.getCode(), account.getId());
@@ -179,6 +223,10 @@ public class LoginController {
             // 将token存储到Redis中，用于后续验证
             String tokenKey = PlatformConstant.CACHE_KEY.TOKEN_KEY + accessToken;
             redisTemplate.opsForValue().set(tokenKey, account.getId(), 24, TimeUnit.HOURS);
+            
+            // 异步记录登录成功日志
+            loginLogService.recordLoginLogAsync(account.getId(), account.getCode(), clientIp,
+                PlatformConstant.LOGIN_STATUS.SUCCESS, null, accessToken);
             
             // 构建返回结果
             LoginRetDTO loginRetDTO = new LoginRetDTO();
@@ -204,9 +252,15 @@ public class LoginController {
         } catch (AuthenticationException e) {
             response.setCode(PlatformConstant.RET_CODE.FAILED);
             response.setMessage("认证失败: " + e.getMessage());
+            // 异步记录登录日志
+            loginLogService.recordLoginLogAsync(null, loginReqDTO.getAccount(), clientIp,
+                PlatformConstant.LOGIN_STATUS.FAILED, "认证失败: " + e.getMessage(), null);
         } catch (Exception e) {
             response.setCode(PlatformConstant.RET_CODE.FAILED);
             response.setMessage("登录失败: " + e.getMessage());
+            // 异步记录登录日志
+            loginLogService.recordLoginLogAsync(null, loginReqDTO.getAccount(), clientIp,
+                PlatformConstant.LOGIN_STATUS.FAILED, "登录失败: " + e.getMessage(), null);
         }
         
         return response;
@@ -505,11 +559,11 @@ public class LoginController {
     @PostMapping(value = "/logout")
     public BaseResult<String> logout() {
         BaseResult<String> response = new BaseResult<>();
-
+    
         try {
             // 通过工具类获取token
             String accessToken = RequestUtil.getTokenFromHeader();
-
+    
             // 验证token格式
             try {
                 if (!jwtUtil.validateToken(accessToken)) {
@@ -522,19 +576,22 @@ public class LoginController {
                 response.setMessage("token解析失败");
                 return response;
             }
-
+    
+            // 异步更新登出时间
+            loginLogService.updateLogoutTimeAsync(accessToken);
+            
             // 从Redis中删除token
             String tokenKey = PlatformConstant.CACHE_KEY.TOKEN_KEY + accessToken;
             redisTemplate.delete(tokenKey);
-
+    
             response.setMessage("退出登录成功");
             response.setData("退出登录成功");
-
+    
         } catch (Exception e) {
             response.setCode(PlatformConstant.RET_CODE.FAILED);
             response.setMessage("退出登录失败: " + e.getMessage());
         }
-
+    
         return response;
     }
 

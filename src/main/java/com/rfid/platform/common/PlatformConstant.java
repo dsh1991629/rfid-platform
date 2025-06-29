@@ -6,6 +6,8 @@ public class PlatformConstant {
         String CAPTCHA_KEY = "captcha:";
         String TOKEN_KEY = "token:";
         String RESET_PASSWORD = "reset_password:";
+        String LOGIN_FAIL_COUNT = "login_fail_count:";
+        String ACCOUNT_LOCK = "account_lock:";
     }
 
 
@@ -23,5 +25,16 @@ public class PlatformConstant {
     public interface RET_CODE {
         String SUCCESS = "00";
         String FAILED = "99";
+    }
+
+    public interface LOGIN_CONFIG {
+        int MAX_LOGIN_FAIL_COUNT = 5; // 最大登录失败次数
+        int LOCK_DURATION_MINUTES = 30; // 锁定时长（分钟）
+    }
+
+    public interface LOGIN_STATUS {
+        String SUCCESS = "SUCCESS";
+        String FAILED = "FAILED";
+        String LOCKED = "LOCKED";
     }
 }
