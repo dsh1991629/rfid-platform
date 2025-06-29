@@ -9,8 +9,12 @@ import com.rfid.platform.persistence.CaptchaDTO;
 import com.rfid.platform.persistence.DepartmentDTO;
 import com.rfid.platform.persistence.LoginReqDTO;
 import com.rfid.platform.persistence.LoginRetDTO;
+import com.rfid.platform.persistence.MenuDTO;
+import com.rfid.platform.persistence.RoleDTO;
 import com.rfid.platform.service.AccountService;
 import com.rfid.platform.service.DepartmentService;
+import com.rfid.platform.service.MenuService;
+import com.rfid.platform.service.RoleService;
 import com.rfid.platform.util.JwtUtil;
 import com.wf.captcha.SpecCaptcha;
 import org.apache.commons.collections4.CollectionUtils;
@@ -28,6 +32,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -54,8 +59,16 @@ public class LoginController {
     private DepartmentService departmentService;
 
     @Autowired
+    private RoleService roleService;
+
+    @Autowired
+    private MenuService menuService;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
+
+    
     @PostMapping(value = "/captcha")
     public BaseResult<CaptchaDTO> captcha() {
         BaseResult<CaptchaDTO> response = new BaseResult<>();
@@ -73,7 +86,6 @@ public class LoginController {
 
         return response;
     }
-
 
 
     @PostMapping(value = "/login")
@@ -168,7 +180,14 @@ public class LoginController {
             loginRetDTO.setAccessToken(accessToken);
             loginRetDTO.setRefreshToken(refreshToken);
             loginRetDTO.setExpiresIn(86400L); // 24小时
-            
+
+            RoleDTO roleDTO = roleService.queryRoleByAccountId(account.getId());
+            if (Objects.nonNull(roleDTO)) {
+                loginRetDTO.setRole(roleDTO);
+                List<MenuDTO> menuDTOS = menuService.queryMenusByRole(roleDTO.getId());
+                loginRetDTO.setMenus(menuDTOS);
+            }
+
             // 获取用户部门信息
             DepartmentDTO departmentDTO = departmentService.queryDepartmentByAccountId(account.getId());
             loginRetDTO.setDepartment(departmentDTO);
