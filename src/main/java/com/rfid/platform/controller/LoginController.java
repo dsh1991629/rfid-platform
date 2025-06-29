@@ -38,6 +38,9 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import com.rfid.platform.persistence.ChangePasswordReqDTO;
+import com.rfid.platform.util.RequestUtil;
+
 @RestController
 @RequestMapping(value = "/rfid")
 public class LoginController {
@@ -68,6 +71,7 @@ public class LoginController {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
 
 
     
@@ -376,6 +380,115 @@ public class LoginController {
             
             response.setMessage("密码重置成功");
             response.setData("密码重置成功");
+            
+        } catch (Exception e) {
+            response.setCode(PlatformConstant.RET_CODE.FAILED);
+            response.setMessage("操作失败: " + e.getMessage());
+        }
+        
+        return response;
+    }
+
+    /**
+     * 已登录状态下重设密码
+     */
+    @PostMapping(value = "/changePassword")
+    public BaseResult<String> changePassword(@RequestBody ChangePasswordReqDTO changePasswordReqDTO) {
+        BaseResult<String> response = new BaseResult<>();
+        
+        try {
+            // 验证参数
+            if (StringUtils.isBlank(changePasswordReqDTO.getOldPassword())) {
+                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setMessage("原密码不能为空");
+                return response;
+            }
+            
+            if (StringUtils.isBlank(changePasswordReqDTO.getNewPassword())) {
+                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setMessage("新密码不能为空");
+                return response;
+            }
+            
+            if (StringUtils.isBlank(changePasswordReqDTO.getConfirmPassword())) {
+                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setMessage("确认密码不能为空");
+                return response;
+            }
+            
+            if (!changePasswordReqDTO.getNewPassword().equals(changePasswordReqDTO.getConfirmPassword())) {
+                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setMessage("两次输入的新密码不一致");
+                return response;
+            }
+            
+            if (changePasswordReqDTO.getOldPassword().equals(changePasswordReqDTO.getNewPassword())) {
+                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setMessage("新密码不能与原密码相同");
+                return response;
+            }
+            
+            // 验证新密码强度
+            if (changePasswordReqDTO.getNewPassword().length() < 6) {
+                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setMessage("新密码长度不能少于6位");
+                return response;
+            }
+            
+            // 通过工具类获取token
+            String accessToken = RequestUtil.getTokenFromHeader();
+            if (StringUtils.isBlank(accessToken)) {
+                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setMessage("未登录或登录已过期");
+                return response;
+            }
+            
+            // 验证token并获取用户ID
+            Long accountId = null;
+            try {
+                accountId = jwtUtil.getUserIdFromToken(accessToken);
+            } catch (Exception e) {
+                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setMessage("token解析失败，请重新登录");
+                return response;
+            }
+            
+            // 获取用户信息
+            AccountBean account = accountService.getAccountByPk(accountId);
+            if (account == null) {
+                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setMessage("用户不存在");
+                return response;
+            }
+            
+            if (account.getState() != null && account.getState() == 0) {
+                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setMessage("用户已被禁用");
+                return response;
+            }
+            
+            // 验证原密码
+            if (!passwordEncoder.matches(changePasswordReqDTO.getOldPassword(), account.getPassword())) {
+                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setMessage("原密码错误");
+                return response;
+            }
+            
+            // 加密新密码
+            String encodedNewPassword = passwordEncoder.encode(changePasswordReqDTO.getNewPassword());
+            
+            // 更新密码
+            account.setPassword(encodedNewPassword);
+            boolean updateResult = accountService.updateAccountByPk(account, null, null);
+            
+            if (!updateResult) {
+                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setMessage("密码修改失败");
+                return response;
+            }
+            
+            response.setMessage("密码修改成功");
+            response.setData("密码修改成功");
             
         } catch (Exception e) {
             response.setCode(PlatformConstant.RET_CODE.FAILED);
