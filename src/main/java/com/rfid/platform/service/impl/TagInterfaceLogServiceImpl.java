@@ -13,27 +13,27 @@ import org.springframework.stereotype.Service;
 public class TagInterfaceLogServiceImpl extends ServiceImpl<TagInterfaceLogMapper, TagInterfaceLogBean> implements TagInterfaceLogService {
 
     @Override
-    public boolean save(TagInterfaceLogBean entity) {
+    public boolean saveTagInterfaceLog(TagInterfaceLogBean entity) {
         return super.save(entity);
     }
 
     @Override
-    public boolean removeById(Long id) {
+    public boolean removeTagInterfaceLogByPk(Long id) {
         return super.removeById(id);
     }
 
     @Override
-    public boolean updateById(TagInterfaceLogBean entity) {
+    public boolean updateTagInterfaceLogByPk(TagInterfaceLogBean entity) {
         return super.updateById(entity);
     }
 
     @Override
-    public TagInterfaceLogBean getById(Long id) {
+    public TagInterfaceLogBean getTagInterfaceLogByPk(Long id) {
         return super.getById(id);
     }
 
     @Override
-    public IPage<TagInterfaceLogBean> page(Page<TagInterfaceLogBean> page, LambdaQueryWrapper<TagInterfaceLogBean> query) {
+    public IPage<TagInterfaceLogBean> pageTagInterfaceLog(Page<TagInterfaceLogBean> page, LambdaQueryWrapper<TagInterfaceLogBean> query) {
         return super.page(page, query);
     }
 } 

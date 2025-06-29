@@ -7,13 +7,13 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 public interface TagInterfaceLogService {
 
-    boolean save(TagInterfaceLogBean entity);
+    boolean saveTagInterfaceLog(TagInterfaceLogBean entity);
 
-    boolean removeById(Long id);
+    boolean removeTagInterfaceLogByPk(Long id);
 
-    boolean updateById(TagInterfaceLogBean entity);
+    boolean updateTagInterfaceLogByPk(TagInterfaceLogBean entity);
 
-    TagInterfaceLogBean getById(Long id);
+    TagInterfaceLogBean getTagInterfaceLogByPk(Long id);
 
-    IPage<TagInterfaceLogBean> page(Page<TagInterfaceLogBean> page, LambdaQueryWrapper<TagInterfaceLogBean> query);
+    IPage<TagInterfaceLogBean> pageTagInterfaceLog(Page<TagInterfaceLogBean> page, LambdaQueryWrapper<TagInterfaceLogBean> query);
 } 

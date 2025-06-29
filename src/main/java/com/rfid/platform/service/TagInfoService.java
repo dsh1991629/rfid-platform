@@ -7,13 +7,11 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 public interface TagInfoService {
 
-    boolean save(TagInfoBean entity);
+    boolean saveTagInfo(TagInfoBean entity);
 
-    boolean removeById(Long id);
+    boolean updateTagInfoByPk(TagInfoBean entity);
 
-    boolean updateById(TagInfoBean entity);
+    TagInfoBean getTagInfoByPk(Long id);
 
-    TagInfoBean getById(Long id);
-
-    IPage<TagInfoBean> page(Page<TagInfoBean> page, LambdaQueryWrapper<TagInfoBean> query);
+    IPage<TagInfoBean> pageTagInfo(Page<TagInfoBean> page, LambdaQueryWrapper<TagInfoBean> query);
 } 

@@ -13,27 +13,22 @@ import org.springframework.stereotype.Service;
 public class TagInfoServiceImpl extends ServiceImpl<TagInfoMapper, TagInfoBean> implements TagInfoService {
 
     @Override
-    public boolean save(TagInfoBean entity) {
+    public boolean saveTagInfo(TagInfoBean entity) {
         return super.save(entity);
     }
 
     @Override
-    public boolean removeById(Long id) {
-        return super.removeById(id);
-    }
-
-    @Override
-    public boolean updateById(TagInfoBean entity) {
+    public boolean updateTagInfoByPk(TagInfoBean entity) {
         return super.updateById(entity);
     }
 
     @Override
-    public TagInfoBean getById(Long id) {
+    public TagInfoBean getTagInfoByPk(Long id) {
         return super.getById(id);
     }
 
     @Override
-    public IPage<TagInfoBean> page(Page<TagInfoBean> page, LambdaQueryWrapper<TagInfoBean> query) {
+    public IPage<TagInfoBean> pageTagInfo(Page<TagInfoBean> page, LambdaQueryWrapper<TagInfoBean> query) {
         return super.page(page, query);
     }
 } 

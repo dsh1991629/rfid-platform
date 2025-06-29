@@ -66,7 +66,7 @@ public class TagImportController {
                 TagImportInfoBean importInfo = new TagImportInfoBean();
                 importInfo.setEcpCode(dto.getEpcCode());
                 importInfo.setSkuCode(dto.getSkuCode());
-                importInfo.setImportType(1); // 1表示Excel导入
+                importInfo.setImportType(2); // 2表示Excel导入
                 importInfo.setExecNo(execNo);
                 importInfo.setImportTime(LocalDateTime.now());
 
@@ -79,7 +79,7 @@ public class TagImportController {
                     tagInfo.setInTime(LocalDateTime.now());
                     
                     // 调用tagInfoService保存
-                    boolean saved = tagInfoService.save(tagInfo);
+                    boolean saved = tagInfoService.saveTagInfo(tagInfo);
                     if (saved) {
                         successCount++;
                         importInfo.setImportResult("S");

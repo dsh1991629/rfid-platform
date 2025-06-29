@@ -13,27 +13,27 @@ import org.springframework.stereotype.Service;
 public class TagStorageOperationServiceImpl extends ServiceImpl<TagStorageOperationMapper, TagStorageOperationBean> implements TagStorageOperationService {
 
     @Override
-    public boolean save(TagStorageOperationBean entity) {
+    public boolean saveTagStorageOperation(TagStorageOperationBean entity) {
         return super.save(entity);
     }
 
     @Override
-    public boolean removeById(Long id) {
+    public boolean removeTagStorageOperationByPk(Long id) {
         return super.removeById(id);
     }
 
     @Override
-    public boolean updateById(TagStorageOperationBean entity) {
+    public boolean updateTagStorageOperationByPk(TagStorageOperationBean entity) {
         return super.updateById(entity);
     }
 
     @Override
-    public TagStorageOperationBean getById(Long id) {
+    public TagStorageOperationBean getTagStorageOperationByPk(Long id) {
         return super.getById(id);
     }
 
     @Override
-    public IPage<TagStorageOperationBean> page(Page<TagStorageOperationBean> page, LambdaQueryWrapper<TagStorageOperationBean> query) {
+    public IPage<TagStorageOperationBean> pageTagStorageOperation(Page<TagStorageOperationBean> page, LambdaQueryWrapper<TagStorageOperationBean> query) {
         return super.page(page, query);
     }
 }

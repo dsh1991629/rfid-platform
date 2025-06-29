@@ -7,13 +7,13 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 public interface TagStorageOperationService {
 
-    boolean save(TagStorageOperationBean entity);
+    boolean saveTagStorageOperation(TagStorageOperationBean entity);
 
-    boolean removeById(Long id);
+    boolean removeTagStorageOperationByPk(Long id);
 
-    boolean updateById(TagStorageOperationBean entity);
+    boolean updateTagStorageOperationByPk(TagStorageOperationBean entity);
 
-    TagStorageOperationBean getById(Long id);
+    TagStorageOperationBean getTagStorageOperationByPk(Long id);
 
-    IPage<TagStorageOperationBean> page(Page<TagStorageOperationBean> page, LambdaQueryWrapper<TagStorageOperationBean> query);
+    IPage<TagStorageOperationBean> pageTagStorageOperation(Page<TagStorageOperationBean> page, LambdaQueryWrapper<TagStorageOperationBean> query);
 } 

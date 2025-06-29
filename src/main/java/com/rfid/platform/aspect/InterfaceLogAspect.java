@@ -48,7 +48,7 @@ public class InterfaceLogAspect {
         logBean.setReqContent(JSON.toJSONString(reqParams));
         
         // 保存接口日志
-        tagInterfaceLogService.save(logBean);
+        tagInterfaceLogService.saveTagInterfaceLog(logBean);
         
         Object result = null;
         try {
@@ -73,7 +73,7 @@ public class InterfaceLogAspect {
             throw e; // 重新抛出异常
         } finally {
             // 更新日志
-            tagInterfaceLogService.updateById(logBean);
+            tagInterfaceLogService.updateTagInterfaceLogByPk(logBean);
             // 清除ThreadLocal
             ExecNoContext.clear();
         }
