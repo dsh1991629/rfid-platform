@@ -152,10 +152,36 @@ public class MenuController {
 
                 // 格式化创建时间
                 if (menuBean.getCreateTime() != null) {
-                    menuDTO.setCreateDate(TimeUtil.getDateFormatterString(menuBean.getCreateTime()));
+                    ret.setCreateDate(TimeUtil.getDateFormatterString(menuBean.getCreateTime()));
                 }
+                
+                // 设置创建人姓名
+                if (menuBean.getCreateId() != null) {
+                    ret.setCreateAccountName(accountService.getAccountNameByPk(menuBean.getCreateId()));
+                }
+                
+                // 获取子菜单
+                LambdaQueryWrapper<MenuBean> childrenWrapper = new LambdaQueryWrapper<>();
+                childrenWrapper.eq(MenuBean::getParentId, menuBean.getId())
+                              .orderByAsc(MenuBean::getPriority, MenuBean::getId);
+                List<MenuBean> childrenMenus = menuService.listMenu(childrenWrapper);
+                
+                // 转换子菜单为DTO
+                List<MenuDTO> childrenDTOs = childrenMenus.stream().map(childMenu -> {
+                    MenuDTO childDTO = BeanUtil.copyProperties(childMenu, MenuDTO.class);
+                    if (childMenu.getCreateTime() != null) {
+                        childDTO.setCreateDate(TimeUtil.getDateFormatterString(childMenu.getCreateTime()));
+                    }
+                    if (childMenu.getCreateId() != null) {
+                        childDTO.setCreateAccountName(accountService.getAccountNameByPk(childMenu.getCreateId()));
+                    }
+                    return childDTO;
+                }).collect(Collectors.toList());
+                
+                // 设置子菜单
+                ret.setChildren(childrenDTOs);
 
-                result.setData(menuDTO);
+                result.setData(ret);
             } else {
                 result.setCode(PlatformConstant.RET_CODE.FAILED);
                 result.setMessage("菜单不存在");
