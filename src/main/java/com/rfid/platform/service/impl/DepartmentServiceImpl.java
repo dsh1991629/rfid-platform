@@ -3,7 +3,7 @@ package com.rfid.platform.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.rfid.platform.entity.AccountDepartRelBean;
+import com.rfid.platform.entity.AccountDepartmentRelBean;
 import com.rfid.platform.entity.DepartmentBean;
 import com.rfid.platform.mapper.DepartmentMapper;
 import com.rfid.platform.persistence.DepartmentDTO;
@@ -64,14 +64,14 @@ public class DepartmentServiceImpl extends ServiceImpl<DepartmentMapper, Departm
 
     @Override
     public DepartmentDTO queryDepartmentByAccountId(Long accountId) {
-        LambdaQueryWrapper<AccountDepartRelBean> relWrapper = Wrappers.lambdaQuery();
-        relWrapper.eq(AccountDepartRelBean::getAccountId, accountId);
-        List<AccountDepartRelBean> accountDepartRelBeans = accountDepartRelService.listAccountDepartRel(relWrapper);
-        if (CollectionUtils.isEmpty(accountDepartRelBeans)) {
+        LambdaQueryWrapper<AccountDepartmentRelBean> relWrapper = Wrappers.lambdaQuery();
+        relWrapper.eq(AccountDepartmentRelBean::getAccountId, accountId);
+        List<AccountDepartmentRelBean> accountDepartmentRelBeans = accountDepartRelService.listAccountDepartRel(relWrapper);
+        if (CollectionUtils.isEmpty(accountDepartmentRelBeans)) {
             return null;
         }
-        AccountDepartRelBean accountDepartRelBean = accountDepartRelBeans.get(0);
-        Long departmentId = accountDepartRelBean.getDepartmentId();
+        AccountDepartmentRelBean accountDepartmentRelBean = accountDepartmentRelBeans.get(0);
+        Long departmentId = accountDepartmentRelBean.getDepartmentId();
         DepartmentBean departmentBean = super.getById(departmentId);
         if (Objects.nonNull(departmentBean)) {
             DepartmentDTO departmentDTO = BeanUtil.copyProperties(departmentBean, DepartmentDTO.class);

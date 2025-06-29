@@ -1,7 +1,7 @@
 package com.rfid.platform.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.rfid.platform.entity.AccountDepartRelBean;
+import com.rfid.platform.entity.AccountDepartmentRelBean;
 import com.rfid.platform.mapper.AccountDepartRelMapper;
 import com.rfid.platform.service.AccountDepartRelService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -12,10 +12,10 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-public class AccountDepartRelServiceImpl extends ServiceImpl<AccountDepartRelMapper, AccountDepartRelBean> implements AccountDepartRelService {
+public class AccountDepartRelServiceImpl extends ServiceImpl<AccountDepartRelMapper, AccountDepartmentRelBean> implements AccountDepartRelService {
 
     @Override
-    public boolean saveAccountDepartRel(AccountDepartRelBean entity) {
+    public boolean saveAccountDepartRel(AccountDepartmentRelBean entity) {
         return super.save(entity);
     }
 
@@ -25,27 +25,27 @@ public class AccountDepartRelServiceImpl extends ServiceImpl<AccountDepartRelMap
     }
 
     @Override
-    public boolean updateAccountDepartRelByPk(AccountDepartRelBean entity) {
+    public boolean updateAccountDepartRelByPk(AccountDepartmentRelBean entity) {
         return super.updateById(entity);
     }
 
     @Override
-    public AccountDepartRelBean getAccountDepartRelByPk(Long id) {
+    public AccountDepartmentRelBean getAccountDepartRelByPk(Long id) {
         return super.getById(id);
     }
 
     @Override
-    public IPage<AccountDepartRelBean> pageAccountDepartRel(Page<AccountDepartRelBean> page, LambdaQueryWrapper<AccountDepartRelBean> query) {
+    public IPage<AccountDepartmentRelBean> pageAccountDepartRel(Page<AccountDepartmentRelBean> page, LambdaQueryWrapper<AccountDepartmentRelBean> query) {
         return super.page(page, query);
     }
 
     @Override
-    public List<AccountDepartRelBean> listAccountDepartRel(LambdaQueryWrapper<AccountDepartRelBean> queryWrapper) {
+    public List<AccountDepartmentRelBean> listAccountDepartRel(LambdaQueryWrapper<AccountDepartmentRelBean> queryWrapper) {
         return super.list(queryWrapper);
     }
 
     @Override
-    public Boolean removeAccountDepartRelByWrapper(LambdaQueryWrapper<AccountDepartRelBean> departRelWrapper) {
+    public Boolean removeAccountDepartRelByWrapper(LambdaQueryWrapper<AccountDepartmentRelBean> departRelWrapper) {
         return super.remove(departRelWrapper);
     }
 }

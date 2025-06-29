@@ -3,7 +3,7 @@ package com.rfid.platform.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.rfid.platform.entity.AccountBean;
-import com.rfid.platform.entity.AccountDepartRelBean;
+import com.rfid.platform.entity.AccountDepartmentRelBean;
 import com.rfid.platform.entity.AccountRoleRelBean;
 import com.rfid.platform.entity.RoleMenuRelBean;
 import com.rfid.platform.mapper.AccountMapper;
@@ -51,10 +51,10 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, AccountBean> 
         Long accountId = entity.getId();
 
         if (Objects.nonNull(departmentDTO) && Objects.nonNull(departmentDTO.getId())) {
-            AccountDepartRelBean accountDepartRelBean = new AccountDepartRelBean();
-            accountDepartRelBean.setAccountId(accountId);
-            accountDepartRelBean.setDepartmentId(departmentDTO.getId());
-            accountDepartRelService.saveAccountDepartRel(accountDepartRelBean);
+            AccountDepartmentRelBean accountDepartmentRelBean = new AccountDepartmentRelBean();
+            accountDepartmentRelBean.setAccountId(accountId);
+            accountDepartmentRelBean.setDepartmentId(departmentDTO.getId());
+            accountDepartRelService.saveAccountDepartRel(accountDepartmentRelBean);
         }
 
         if (Objects.nonNull(roleDTO) && Objects.nonNull(roleDTO.getId())) {
@@ -85,8 +85,8 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, AccountBean> 
         delWrapper.eq(AccountRoleRelBean::getAccountId, id);
         accountRoleRelService.removeAccountRoleRelByWrapper(delWrapper);
 
-        LambdaQueryWrapper<AccountDepartRelBean> departRelWrapper = Wrappers.lambdaQuery();
-        departRelWrapper.eq(AccountDepartRelBean::getAccountId, id);
+        LambdaQueryWrapper<AccountDepartmentRelBean> departRelWrapper = Wrappers.lambdaQuery();
+        departRelWrapper.eq(AccountDepartmentRelBean::getAccountId, id);
         accountDepartRelService.removeAccountDepartRelByWrapper(departRelWrapper);
 
         return super.removeById(id);
@@ -98,14 +98,14 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, AccountBean> 
         super.updateById(entity);
 
         if (Objects.nonNull(departmentDTO) && Objects.nonNull(departmentDTO.getId())) {
-            LambdaQueryWrapper<AccountDepartRelBean> departRelWrapper = Wrappers.lambdaQuery();
-            departRelWrapper.eq(AccountDepartRelBean::getAccountId, entity.getId());
+            LambdaQueryWrapper<AccountDepartmentRelBean> departRelWrapper = Wrappers.lambdaQuery();
+            departRelWrapper.eq(AccountDepartmentRelBean::getAccountId, entity.getId());
             accountDepartRelService.removeAccountDepartRelByWrapper(departRelWrapper);
 
-            AccountDepartRelBean accountDepartRelBean = new AccountDepartRelBean();
-            accountDepartRelBean.setAccountId(entity.getId());
-            accountDepartRelBean.setDepartmentId(departmentDTO.getId());
-            accountDepartRelService.saveAccountDepartRel(accountDepartRelBean);
+            AccountDepartmentRelBean accountDepartmentRelBean = new AccountDepartmentRelBean();
+            accountDepartmentRelBean.setAccountId(entity.getId());
+            accountDepartmentRelBean.setDepartmentId(departmentDTO.getId());
+            accountDepartRelService.saveAccountDepartRel(accountDepartmentRelBean);
         }
 
         if (Objects.nonNull(roleDTO) && Objects.nonNull(roleDTO.getId())) {

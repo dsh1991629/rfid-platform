@@ -1,6 +1,7 @@
 package com.rfid.platform.entity;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -10,6 +11,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.IdType;
 
 @Data
+@TableName("DEPARTMENT")
 public class DepartmentBean implements Serializable {
 
     @TableId(value = "ID", type = IdType.AUTO)

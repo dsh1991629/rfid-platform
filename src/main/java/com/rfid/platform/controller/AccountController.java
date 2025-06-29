@@ -9,7 +9,7 @@ import com.rfid.platform.common.BaseResult;
 import com.rfid.platform.common.PageResult;
 import com.rfid.platform.common.PlatformConstant;
 import com.rfid.platform.entity.AccountBean;
-import com.rfid.platform.entity.AccountDepartRelBean;
+import com.rfid.platform.entity.AccountDepartmentRelBean;
 import com.rfid.platform.persistence.AccountDTO;
 import com.rfid.platform.persistence.DepartmentDTO;
 import com.rfid.platform.persistence.MenuDTO;
@@ -285,17 +285,17 @@ public class AccountController {
                 return result;
             }
 
-            LambdaQueryWrapper<AccountDepartRelBean> departRelWrapper = Wrappers.lambdaQuery();
-            departRelWrapper.eq(AccountDepartRelBean::getDepartmentId, accountDTO.getDepartment().getId());
-            List<AccountDepartRelBean> accountDepartRelBeans = accountDepartRelService.listAccountDepartRel(departRelWrapper);
+            LambdaQueryWrapper<AccountDepartmentRelBean> departRelWrapper = Wrappers.lambdaQuery();
+            departRelWrapper.eq(AccountDepartmentRelBean::getDepartmentId, accountDTO.getDepartment().getId());
+            List<AccountDepartmentRelBean> accountDepartmentRelBeans = accountDepartRelService.listAccountDepartRel(departRelWrapper);
 
-            if (CollectionUtils.isEmpty(accountDepartRelBeans)) {
+            if (CollectionUtils.isEmpty(accountDepartmentRelBeans)) {
                 result.setData(List.of());
                 result.setMessage("查询成功");
                 return result;
             }
 
-            List<AccountDTO> accountDTOS = accountDepartRelBeans.stream().map(e -> {
+            List<AccountDTO> accountDTOS = accountDepartmentRelBeans.stream().map(e -> {
                 AccountBean accountBean = accountService.getAccountByPk(e.getId());
 
                 AccountDTO resultDTO = BeanUtil.copyProperties(accountBean, AccountDTO.class);

@@ -1,7 +1,7 @@
 package com.rfid.platform.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.rfid.platform.entity.AccountDepartRelBean;
+import com.rfid.platform.entity.AccountDepartmentRelBean;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
@@ -9,17 +9,17 @@ import java.util.List;
 
 public interface AccountDepartRelService {
 
-    boolean saveAccountDepartRel(AccountDepartRelBean entity);
+    boolean saveAccountDepartRel(AccountDepartmentRelBean entity);
 
     boolean removeAccountDepartRelByPk(Long id);
 
-    boolean updateAccountDepartRelByPk(AccountDepartRelBean entity);
+    boolean updateAccountDepartRelByPk(AccountDepartmentRelBean entity);
 
-    AccountDepartRelBean getAccountDepartRelByPk(Long id);
+    AccountDepartmentRelBean getAccountDepartRelByPk(Long id);
 
-    IPage<AccountDepartRelBean> pageAccountDepartRel(Page<AccountDepartRelBean> page, LambdaQueryWrapper<AccountDepartRelBean> query);
+    IPage<AccountDepartmentRelBean> pageAccountDepartRel(Page<AccountDepartmentRelBean> page, LambdaQueryWrapper<AccountDepartmentRelBean> query);
 
-    List<AccountDepartRelBean> listAccountDepartRel(LambdaQueryWrapper<AccountDepartRelBean> queryWrapper);
+    List<AccountDepartmentRelBean> listAccountDepartRel(LambdaQueryWrapper<AccountDepartmentRelBean> queryWrapper);
 
-    Boolean removeAccountDepartRelByWrapper(LambdaQueryWrapper<AccountDepartRelBean> departRelWrapper);
+    Boolean removeAccountDepartRelByWrapper(LambdaQueryWrapper<AccountDepartmentRelBean> departRelWrapper);
 }

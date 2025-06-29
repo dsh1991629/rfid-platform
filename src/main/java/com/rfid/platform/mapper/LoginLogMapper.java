@@ -1,9 +1,9 @@
 package com.rfid.platform.mapper;
 
-import com.rfid.platform.entity.AccountDepartmentRelBean;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.rfid.platform.entity.LoginLogBean;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper
-public interface AccountDepartRelMapper extends BaseMapper<AccountDepartmentRelBean> {
+public interface LoginLogMapper extends BaseMapper<LoginLogBean> {
 } 
