@@ -5,6 +5,7 @@ import com.rfid.platform.annotation.InterfaceLog;
 import com.rfid.platform.common.BaseResult;
 import com.rfid.platform.common.ExecNoContext;
 import com.rfid.platform.common.PlatformConstant;
+import com.rfid.platform.entity.TagImportInfoBean;
 import com.rfid.platform.entity.TagInfoBean;
 import com.rfid.platform.persistence.TagImportExcelDTO;
 import com.rfid.platform.service.TagImportInfoService;
@@ -19,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -44,7 +46,7 @@ public class TagImportController {
 
         // 获取AOP中生成的execNo
         String execNo = ExecNoContext.getExecNo();
-        log.info("当前执行编号: " + execNo);
+        log.info("当前执行编号: {}", execNo);
         
         try {
             // 使用EasyExcel读取文件，跳过第一行标题
@@ -56,8 +58,18 @@ public class TagImportController {
             
             int successCount = 0;
             int failCount = 0;
-            
+
+            List<TagImportInfoBean> tagImportInfoBeans = new ArrayList<>();
+
             for (TagImportExcelDTO dto : dataList) {
+                // 创建导入详细记录
+                TagImportInfoBean importInfo = new TagImportInfoBean();
+                importInfo.setEcpCode(dto.getEpcCode());
+                importInfo.setSkuCode(dto.getSkuCode());
+                importInfo.setImportType(1); // 1表示Excel导入
+                importInfo.setExecNo(execNo);
+                importInfo.setImportTime(LocalDateTime.now());
+
                 try {
                     // 创建TagInfoBean对象
                     TagInfoBean tagInfo = new TagInfoBean();
@@ -70,14 +82,24 @@ public class TagImportController {
                     boolean saved = tagInfoService.save(tagInfo);
                     if (saved) {
                         successCount++;
+                        importInfo.setImportResult("S");
                     } else {
                         failCount++;
+                        importInfo.setImportResult("F");
                     }
                 } catch (Exception e) {
                     failCount++;
-                    // 可以记录具体的错误信息
-                    System.err.println("保存数据失败: " + e.getMessage());
+                    importInfo.setImportResult("F");
                 }
+
+                tagImportInfoBeans.add(importInfo);
+            }
+
+            // 保存导入详细记录
+            try {
+                tagImportInfoService.saveTagImportInfos(tagImportInfoBeans);
+            } catch (Exception e) {
+                log.error("[{}] 保存导入记录失败: {}", execNo, e.getMessage());
             }
 
             baseResult.setMessage("导入完成");

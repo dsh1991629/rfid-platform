@@ -9,6 +9,8 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class TagImportInfoServiceImpl extends ServiceImpl<TagImportInfoMapper, TagImportInfoBean> implements TagImportInfoService {
 
@@ -36,4 +38,9 @@ public class TagImportInfoServiceImpl extends ServiceImpl<TagImportInfoMapper, T
     public IPage<TagImportInfoBean> page(Page<TagImportInfoBean> page, LambdaQueryWrapper<TagImportInfoBean> query) {
         return super.page(page, query);
     }
-} 
+
+    @Override
+    public boolean saveTagImportInfos(List<TagImportInfoBean> tagImportInfoBeans) {
+        return super.saveBatch(tagImportInfoBeans, 100);
+    }
+}

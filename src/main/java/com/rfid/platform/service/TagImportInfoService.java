@@ -5,6 +5,8 @@ import com.rfid.platform.entity.TagImportInfoBean;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
+import java.util.List;
+
 public interface TagImportInfoService {
 
     boolean save(TagImportInfoBean entity);
@@ -16,4 +18,6 @@ public interface TagImportInfoService {
     TagImportInfoBean getById(Long id);
 
     IPage<TagImportInfoBean> page(Page<TagImportInfoBean> page, LambdaQueryWrapper<TagImportInfoBean> query);
+
+    boolean saveTagImportInfos(List<TagImportInfoBean> tagImportInfoBeans);
 } 

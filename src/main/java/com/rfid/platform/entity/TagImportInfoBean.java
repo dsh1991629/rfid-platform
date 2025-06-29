@@ -26,6 +26,9 @@ public class TagImportInfoBean implements Serializable {
     @TableField(value = "IMPORT_TYPE")
     private Integer importType;
 
+    @TableField(value = "IMPORT_RESULT")
+    private String importResult;
+
     @TableField(value = "EXEC_NO")
     private String execNo;
 
