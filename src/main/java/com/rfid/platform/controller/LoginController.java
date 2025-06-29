@@ -7,6 +7,8 @@ import com.rfid.platform.config.RfidPlatformProperties;
 import com.rfid.platform.entity.AccountBean;
 import com.rfid.platform.persistence.CaptchaDTO;
 import com.rfid.platform.persistence.DepartmentDTO;
+import com.rfid.platform.persistence.ForgotPasswordReqDTO;
+import com.rfid.platform.persistence.ResetPasswordReqDTO;
 import com.rfid.platform.persistence.LoginReqDTO;
 import com.rfid.platform.persistence.LoginRetDTO;
 import com.rfid.platform.persistence.MenuDTO;
@@ -201,6 +203,183 @@ public class LoginController {
         } catch (Exception e) {
             response.setCode(PlatformConstant.RET_CODE.FAILED);
             response.setMessage("登录失败: " + e.getMessage());
+        }
+        
+        return response;
+    }
+
+    /**
+     * 忘记密码 - 发送重置密码邮件
+     */
+    @PostMapping(value = "/forgotPassword")
+    public BaseResult<String> forgotPassword(@RequestBody ForgotPasswordReqDTO forgotPasswordReqDTO) {
+        BaseResult<String> response = new BaseResult<>();
+        
+        try {
+            // 验证参数
+            if (StringUtils.isBlank(forgotPasswordReqDTO.getAccount())) {
+                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setMessage("账号不能为空");
+                return response;
+            }
+            
+            if (StringUtils.isBlank(forgotPasswordReqDTO.getCaptchaCode())) {
+                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setMessage("验证码不能为空");
+                return response;
+            }
+            
+            if (StringUtils.isBlank(forgotPasswordReqDTO.getCaptchaKey())) {
+                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setMessage("验证码key不能为空");
+                return response;
+            }
+            
+            // 验证验证码
+            String captchaKey = PlatformConstant.CACHE_KEY.CAPTCHA_KEY + forgotPasswordReqDTO.getCaptchaKey();
+            String cachedCaptcha = (String) redisTemplate.opsForValue().get(captchaKey);
+            
+            if (StringUtils.isBlank(cachedCaptcha)) {
+                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setMessage("验证码已过期");
+                return response;
+            }
+
+            if (!cachedCaptcha.equalsIgnoreCase(forgotPasswordReqDTO.getCaptchaCode())) {
+                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setMessage("验证码错误");
+                return response;
+            }
+            
+            // 删除已使用的验证码
+            redisTemplate.delete(captchaKey);
+            
+            // 查询用户信息（支持用户名或邮箱）
+            LambdaQueryWrapper<AccountBean> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(AccountBean::getCode, forgotPasswordReqDTO.getAccount())
+                       .or()
+                       .eq(AccountBean::getEmail, forgotPasswordReqDTO.getAccount());
+            List<AccountBean> accounts = accountService.listAccount(queryWrapper);
+            
+            if (CollectionUtils.isEmpty(accounts)) {
+                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setMessage("用户不存在");
+                return response;
+            }
+            
+            AccountBean account = accounts.get(0);
+            if (account.getState() != null && account.getState() == 0) {
+                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setMessage("用户已被禁用");
+                return response;
+            }
+
+            // 生成重置密码token
+            String resetToken = UUID.randomUUID().toString().replace("-", "");
+            String resetTokenKey = PlatformConstant.CACHE_KEY.RESET_PASSWORD + resetToken;
+            
+            // 将重置token存储到Redis中，有效期30分钟
+            redisTemplate.opsForValue().set(resetTokenKey, account.getId(), 30, TimeUnit.MINUTES);
+
+            response.setMessage("重置密码邮件已发送");
+            response.setData(resetToken);
+            
+        } catch (Exception e) {
+            response.setCode(PlatformConstant.RET_CODE.FAILED);
+            response.setMessage("操作失败: " + e.getMessage());
+        }
+        
+        return response;
+    }
+    
+    /**
+     * 忘记密码重置密码
+     */
+    @PostMapping(value = "/forgetResetPassword")
+    public BaseResult<String> resetPassword(@RequestBody ResetPasswordReqDTO resetPasswordReqDTO) {
+        BaseResult<String> response = new BaseResult<>();
+        
+        try {
+            // 验证参数
+            if (StringUtils.isBlank(resetPasswordReqDTO.getResetToken())) {
+                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setMessage("重置token不能为空");
+                return response;
+            }
+            
+            if (StringUtils.isBlank(resetPasswordReqDTO.getNewPassword())) {
+                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setMessage("新密码不能为空");
+                return response;
+            }
+            
+            if (StringUtils.isBlank(resetPasswordReqDTO.getConfirmPassword())) {
+                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setMessage("确认密码不能为空");
+                return response;
+            }
+            
+            if (!resetPasswordReqDTO.getNewPassword().equals(resetPasswordReqDTO.getConfirmPassword())) {
+                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setMessage("两次输入的密码不一致");
+                return response;
+            }
+            
+            // 验证密码强度（可选）
+            if (resetPasswordReqDTO.getNewPassword().length() < 6) {
+                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setMessage("密码长度不能少于6位");
+                return response;
+            }
+            
+            // 验证重置token
+            String resetTokenKey = PlatformConstant.CACHE_KEY.RESET_PASSWORD + resetPasswordReqDTO.getResetToken();
+            Object accountIdObj = redisTemplate.opsForValue().get(resetTokenKey);
+            
+            if (accountIdObj == null) {
+                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setMessage("重置token已过期或无效");
+                return response;
+            }
+            
+            Long accountId = (Long) accountIdObj;
+            
+            // 获取用户信息
+            AccountBean account = accountService.getAccountByPk(accountId);
+            if (account == null) {
+                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setMessage("用户不存在");
+                return response;
+            }
+            
+            if (account.getState() != null && account.getState() == 0) {
+                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setMessage("用户已被禁用");
+                return response;
+            }
+            
+            // 加密新密码
+            String encodedPassword = passwordEncoder.encode(resetPasswordReqDTO.getNewPassword());
+            
+            // 更新密码
+            account.setPassword(encodedPassword);
+            boolean updateResult = accountService.updateAccountByPk(account, null, null);
+            
+            if (!updateResult) {
+                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setMessage("密码重置失败");
+                return response;
+            }
+            
+            // 删除重置token
+            redisTemplate.delete(resetTokenKey);
+            
+            response.setMessage("密码重置成功");
+            response.setData("密码重置成功");
+            
+        } catch (Exception e) {
+            response.setCode(PlatformConstant.RET_CODE.FAILED);
+            response.setMessage("操作失败: " + e.getMessage());
         }
         
         return response;

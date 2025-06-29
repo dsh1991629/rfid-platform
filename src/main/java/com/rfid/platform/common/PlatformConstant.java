@@ -5,6 +5,7 @@ public class PlatformConstant {
     public interface CACHE_KEY {
         String CAPTCHA_KEY = "captcha:";
         String TOKEN_KEY = "token:";
+        String RESET_PASSWORD = "reset_password:";
     }
 
 
