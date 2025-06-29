@@ -3,11 +3,13 @@ package com.rfid.platform.controller;
 import com.alibaba.excel.EasyExcel;
 import com.rfid.platform.annotation.InterfaceLog;
 import com.rfid.platform.common.BaseResult;
+import com.rfid.platform.common.ExecNoContext;
 import com.rfid.platform.common.PlatformConstant;
 import com.rfid.platform.entity.TagInfoBean;
 import com.rfid.platform.persistence.TagImportExcelDTO;
 import com.rfid.platform.service.TagImportInfoService;
 import com.rfid.platform.service.TagInfoService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,6 +21,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping(value = "/rfid/tag")
 public class TagImportController {
@@ -38,6 +41,10 @@ public class TagImportController {
             baseResult.setMessage("文件为空");
             return baseResult;
         }
+
+        // 获取AOP中生成的execNo
+        String execNo = ExecNoContext.getExecNo();
+        log.info("当前执行编号: " + execNo);
         
         try {
             // 使用EasyExcel读取文件，跳过第一行标题

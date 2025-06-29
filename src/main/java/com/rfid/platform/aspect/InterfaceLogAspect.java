@@ -2,6 +2,7 @@ package com.rfid.platform.aspect;
 
 import com.alibaba.fastjson2.JSON;
 import com.rfid.platform.annotation.InterfaceLog;
+import com.rfid.platform.common.ExecNoContext;
 import com.rfid.platform.entity.TagInterfaceLogBean;
 import com.rfid.platform.service.TagInterfaceLogService;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -28,6 +29,9 @@ public class InterfaceLogAspect {
     public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
         // 生成执行编号
         String execNo = UUID.randomUUID().toString().replace("-", "");
+        
+        // 将execNo设置到ThreadLocal中
+        ExecNoContext.setExecNo(execNo);
         
         // 获取注解信息
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
@@ -65,11 +69,13 @@ public class InterfaceLogAspect {
             respData.put("error", e.getMessage());
             respData.put("execNo", execNo);
             logBean.setRespContent(JSON.toJSONString(respData));
-
+            
             throw e; // 重新抛出异常
         } finally {
             // 更新日志
             tagInterfaceLogService.updateById(logBean);
+            // 清除ThreadLocal
+            ExecNoContext.clear();
         }
         
         return result;
@@ -80,7 +86,7 @@ public class InterfaceLogAspect {
      */
     private Map<String, Object> buildRequestParams(ProceedingJoinPoint joinPoint, String execNo) {
         Map<String, Object> reqParams = new HashMap<>();
-        
+
         // 获取方法参数
         Object[] args = joinPoint.getArgs();
         String[] paramNames = ((MethodSignature) joinPoint.getSignature()).getParameterNames();
@@ -102,6 +108,7 @@ public class InterfaceLogAspect {
         }
         
         reqParams.put("execNo", execNo);
+
         return reqParams;
     }
 }
