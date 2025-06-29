@@ -497,4 +497,53 @@ public class LoginController {
         
         return response;
     }
+
+
+    /**
+     * 退出登录
+     */
+    @PostMapping(value = "/logout")
+    public BaseResult<String> logout() {
+        BaseResult<String> response = new BaseResult<>();
+
+        try {
+            // 通过工具类获取token
+            String accessToken = RequestUtil.getTokenFromHeader();
+
+            // 验证token格式
+            try {
+                if (!jwtUtil.validateToken(accessToken)) {
+                    response.setCode(PlatformConstant.RET_CODE.FAILED);
+                    response.setMessage("token无效");
+                    return response;
+                }
+            } catch (Exception e) {
+                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setMessage("token解析失败");
+                return response;
+            }
+
+            // 从Redis中删除token
+            String tokenKey = PlatformConstant.CACHE_KEY.TOKEN_KEY + accessToken;
+            redisTemplate.delete(tokenKey);
+
+            response.setMessage("退出登录成功");
+            response.setData("退出登录成功");
+
+        } catch (Exception e) {
+            response.setCode(PlatformConstant.RET_CODE.FAILED);
+            response.setMessage("退出登录失败: " + e.getMessage());
+        }
+
+        return response;
+    }
+
+
+
+
+
+
+
+
+
 }
