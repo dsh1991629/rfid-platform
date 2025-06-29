@@ -35,6 +35,5 @@ public class TagInfoBean implements Serializable {
     @TableField(value = "CREATE_ID", fill = FieldFill.INSERT)
     private Long createId;
 
-    @TableField(value = "CREATE_TIME", fill = FieldFill.INSERT)
     private LocalDateTime createTime;
 } 
