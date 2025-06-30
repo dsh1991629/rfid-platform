@@ -2,28 +2,22 @@ package com.rfid.platform.controller;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.rfid.platform.common.BaseResult;
-import com.rfid.platform.common.PageResult;
 import com.rfid.platform.common.PlatformConstant;
 import com.rfid.platform.entity.MenuBean;
 import com.rfid.platform.persistence.MenuDTO;
 import com.rfid.platform.persistence.MenuTreeDTO;
 import com.rfid.platform.service.AccountService;
 import com.rfid.platform.service.MenuService;
-import com.rfid.platform.util.TimeUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(value = "/rfid/menu")
@@ -135,117 +129,6 @@ public class MenuController {
         return result;
     }
 
-    @PostMapping("/detail")
-    public BaseResult<MenuDTO> menuDetail(@RequestBody MenuDTO menuDTO) {
-        BaseResult<MenuDTO> result = new BaseResult<>();
-        try {
-            // 参数校验
-            if (menuDTO.getId() == null) {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
-                result.setMessage("菜单ID不能为空");
-                return result;
-            }
-
-            MenuBean menuBean = menuService.getMenuByPk(menuDTO.getId());
-            if (menuBean != null) {
-                MenuDTO ret = BeanUtil.copyProperties(menuBean, MenuDTO.class);
-
-                // 格式化创建时间
-                if (menuBean.getCreateTime() != null) {
-                    ret.setCreateDate(TimeUtil.getDateFormatterString(menuBean.getCreateTime()));
-                }
-                
-                // 设置创建人姓名
-                if (menuBean.getCreateId() != null) {
-                    ret.setCreateAccountName(accountService.getAccountNameByPk(menuBean.getCreateId()));
-                }
-                
-                // 获取子菜单
-                LambdaQueryWrapper<MenuBean> childrenWrapper = new LambdaQueryWrapper<>();
-                childrenWrapper.eq(MenuBean::getParentId, menuBean.getId())
-                              .orderByAsc(MenuBean::getPriority, MenuBean::getId);
-                List<MenuBean> childrenMenus = menuService.listMenu(childrenWrapper);
-                
-                // 转换子菜单为DTO
-                List<MenuDTO> childrenDTOs = childrenMenus.stream().map(childMenu -> {
-                    MenuDTO childDTO = BeanUtil.copyProperties(childMenu, MenuDTO.class);
-                    if (childMenu.getCreateTime() != null) {
-                        childDTO.setCreateDate(TimeUtil.getDateFormatterString(childMenu.getCreateTime()));
-                    }
-                    if (childMenu.getCreateId() != null) {
-                        childDTO.setCreateAccountName(accountService.getAccountNameByPk(childMenu.getCreateId()));
-                    }
-                    return childDTO;
-                }).collect(Collectors.toList());
-                
-                // 设置子菜单
-                ret.setChildren(childrenDTOs);
-
-                result.setData(ret);
-            } else {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
-                result.setMessage("菜单不存在");
-            }
-        } catch (Exception e) {
-            result.setCode(PlatformConstant.RET_CODE.FAILED);
-            result.setMessage("查询菜单详情异常: " + e.getMessage());
-        }
-        return result;
-    }
-
-    @PostMapping("/page")
-    public BaseResult<PageResult<MenuDTO>> pageMenu(@RequestParam(defaultValue = "1") Integer pageNum,
-                                                    @RequestParam(defaultValue = "10") Integer pageSize,
-                                                    @RequestBody MenuDTO menuDTO) {
-
-        BaseResult<PageResult<MenuDTO>> result = new BaseResult<>();
-        try {
-            Page<MenuBean> page = new Page<>(pageNum, pageSize);
-            // 构建查询条件
-            LambdaQueryWrapper<MenuBean> queryWrapper = new LambdaQueryWrapper<>();
-            if (StringUtils.isNotBlank(menuDTO.getName())) {
-                queryWrapper.like(MenuBean::getName, menuDTO.getName());
-            }
-            if (menuDTO.getId() != null) {
-                queryWrapper.eq(MenuBean::getId, menuDTO.getId());
-            }
-            if (StringUtils.isNotBlank(menuDTO.getCode())) {
-                queryWrapper.eq(MenuBean::getCode, menuDTO.getCode());
-            }
-            if (menuDTO.getParentId() != null) {
-                queryWrapper.eq(MenuBean::getParentId, menuDTO.getParentId());
-            }
-            queryWrapper.orderByDesc(MenuBean::getCreateTime);
-
-
-            IPage<MenuBean> pageResult = menuService.pageMenu(page, queryWrapper);
-
-            // 转换为DTO
-            List<MenuDTO> menuDTOList = pageResult.getRecords().stream().map(menuBean -> {
-                MenuDTO ret = BeanUtil.copyProperties(menuBean, MenuDTO.class);
-                if (menuBean.getCreateTime() != null) {
-                    ret.setCreateDate(TimeUtil.getDateFormatterString(menuBean.getCreateTime()));
-                }
-                if (menuBean.getCreateId() != null) {
-                    ret.setCreateAccountName(accountService.getAccountNameByPk(menuBean.getCreateId()));
-                }
-                return ret;
-            }).collect(Collectors.toList());
-
-            PageResult<MenuDTO> pageResultDTO = new PageResult<>();
-            pageResultDTO.setPageNum(pageNum);
-            pageResultDTO.setPageSize(pageSize);
-            pageResultDTO.setTotal(pageResult.getTotal());
-            pageResultDTO.setPages(pageResult.getPages());
-            pageResultDTO.setData(menuDTOList);
-
-            result.setData(pageResultDTO);
-        } catch (Exception e) {
-            result.setCode(PlatformConstant.RET_CODE.FAILED);
-            result.setMessage("分页查询菜单异常: " + e.getMessage());
-        }
-        return result;
-    }
 
     @PostMapping("/tree")
     public BaseResult<List<MenuTreeDTO>> menuTree() {

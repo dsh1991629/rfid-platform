@@ -24,7 +24,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -130,6 +129,7 @@ public class RoleController {
             if (existRoles) {
                 result.setCode(PlatformConstant.RET_CODE.FAILED);
                 result.setMessage("角色名称已存在，不能重复");
+                result.setData(false);
                 return result;
             }
 
@@ -144,6 +144,7 @@ public class RoleController {
             } else {
                 result.setCode(PlatformConstant.RET_CODE.FAILED);
                 result.setMessage("更新失败");
+                result.setData(false);
             }
         } catch (Exception e) {
             result.setCode(PlatformConstant.RET_CODE.FAILED);
@@ -153,46 +154,6 @@ public class RoleController {
         return result;
     }
 
-    @PostMapping(value = "/detail")
-    public BaseResult<RoleDTO> queryRoleDetail(@RequestBody RoleDTO roleDTO) {
-        BaseResult<RoleDTO> result = new BaseResult<>();
-        try {
-            // 参数校验
-            if (roleDTO.getId() == null) {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
-                result.setMessage("角色ID不能为空");
-                return result;
-            }
-
-            // 查询角色详情
-            RoleBean roleBean = roleService.getRoleByPk(roleDTO.getId());
-            if (roleBean != null) {
-                RoleDTO resultDTO = BeanUtil.copyProperties(roleBean, RoleDTO.class);
-                // 格式化创建时间
-                if (roleBean.getCreateTime() != null) {
-                    resultDTO.setCreateDate(roleBean.getCreateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-                }
-                if (Objects.nonNull(roleBean.getCreateId())) {
-                    resultDTO.setCreateAccountName(accountService.getAccountNameByPk(roleBean.getCreateId()));
-                }
-
-                List<MenuDTO> menuDTOS = menuService.queryMenusByRole(roleBean.getId());
-                if (CollectionUtils.isNotEmpty(menuDTOS)) {
-                    roleDTO.setMenus(menuDTOS);
-                }
-
-                result.setData(resultDTO);
-                result.setMessage("查询成功");
-            } else {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
-                result.setMessage("角色不存在");
-            }
-        } catch (Exception e) {
-            result.setCode(PlatformConstant.RET_CODE.FAILED);
-            result.setMessage("系统异常：" + e.getMessage());
-        }
-        return result;
-    }
 
     @PostMapping(value = "/page")
     public BaseResult<PageResult<RoleDTO>> queryRolePage(@RequestBody RoleDTO roleDTO,

@@ -354,8 +354,8 @@ public class LoginController {
      * 忘记密码重置密码
      */
     @PostMapping(value = "/forgetResetPassword")
-    public BaseResult<String> resetPassword(@RequestBody ResetPasswordReqDTO resetPasswordReqDTO) {
-        BaseResult<String> response = new BaseResult<>();
+    public BaseResult<Boolean> resetPassword(@RequestBody ResetPasswordReqDTO resetPasswordReqDTO) {
+        BaseResult<Boolean> response = new BaseResult<>();
         
         try {
             // 验证参数
@@ -433,7 +433,7 @@ public class LoginController {
             redisTemplate.delete(resetTokenKey);
             
             response.setMessage("密码重置成功");
-            response.setData("密码重置成功");
+            response.setData(true);
             
         } catch (Exception e) {
             response.setCode(PlatformConstant.RET_CODE.FAILED);
@@ -557,8 +557,8 @@ public class LoginController {
      * 退出登录
      */
     @PostMapping(value = "/logout")
-    public BaseResult<String> logout() {
-        BaseResult<String> response = new BaseResult<>();
+    public BaseResult<Boolean> logout() {
+        BaseResult<Boolean> response = new BaseResult<>();
     
         try {
             // 通过工具类获取token
@@ -569,11 +569,13 @@ public class LoginController {
                 if (!jwtUtil.validateToken(accessToken)) {
                     response.setCode(PlatformConstant.RET_CODE.FAILED);
                     response.setMessage("token无效");
+                    response.setData(false);
                     return response;
                 }
             } catch (Exception e) {
                 response.setCode(PlatformConstant.RET_CODE.FAILED);
                 response.setMessage("token解析失败");
+                response.setData(false);
                 return response;
             }
     
@@ -585,11 +587,12 @@ public class LoginController {
             redisTemplate.delete(tokenKey);
     
             response.setMessage("退出登录成功");
-            response.setData("退出登录成功");
+            response.setData(true);
     
         } catch (Exception e) {
             response.setCode(PlatformConstant.RET_CODE.FAILED);
             response.setMessage("退出登录失败: " + e.getMessage());
+            response.setData(false);
         }
     
         return response;
