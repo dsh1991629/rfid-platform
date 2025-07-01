@@ -6,9 +6,13 @@ import com.rfid.platform.common.ExecNoContext;
 import com.rfid.platform.common.PlatformConstant;
 import com.rfid.platform.entity.TagImportInfoBean;
 import com.rfid.platform.entity.TagInfoBean;
+import com.rfid.platform.entity.TagStorageOperationBean;
+import com.rfid.platform.persistence.StorageOperationDTO;
 import com.rfid.platform.persistence.TagImportExcelDTO;
 import com.rfid.platform.service.TagImportInfoService;
 import com.rfid.platform.service.TagInfoService;
+import com.rfid.platform.service.TagStorageOperationService;
+import com.rfid.platform.util.TimeUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,6 +32,9 @@ public class TagOperationController {
 
     @Autowired
     private TagImportInfoService tagImportInfoService;
+
+    @Autowired
+    private TagStorageOperationService tagStorageOperationService;
 
 
     @PostMapping(value = "/push")
@@ -73,6 +80,64 @@ public class TagOperationController {
             log.error("[{}] 保存接口记录失败: {}", execNo, e.getMessage());
         }
 
+        return baseResult;
+    }
+
+
+    @PostMapping(value = "/storage/in")
+    @InterfaceLog(type = 3, description = "入库通知")
+    public BaseResult<Boolean> storageIn(@RequestBody StorageOperationDTO storageOperationDTO){
+        BaseResult<Boolean> baseResult = new BaseResult<>();
+        String execNo = ExecNoContext.getExecNo();
+
+        try {
+            LocalDateTime current = TimeUtil.getSysDate();
+            TagStorageOperationBean tagStorageOperationBean = new TagStorageOperationBean();
+            tagStorageOperationBean.setExecNo(execNo);
+            tagStorageOperationBean.setNoticeNo(storageOperationDTO.getTicketNo());
+            tagStorageOperationBean.setNoticeQuantity(storageOperationDTO.getQuantity());
+            tagStorageOperationBean.setNoticeTime(current);
+            tagStorageOperationBean.setNoticeType(PlatformConstant.STORAGE_OPERATION_TYPE.STORAGE_IN);
+            boolean saved = tagStorageOperationService.saveTagStorageOperation(tagStorageOperationBean);
+            baseResult.setData(saved);
+
+            // TODO 调用接口发送给硬件设备
+
+
+        } catch (Exception e) {
+            baseResult.setData(false);
+            baseResult.setCode(PlatformConstant.RET_CODE.FAILED);
+            baseResult.setMessage("接口保存失败：" + e.getMessage());
+        }
+        return baseResult;
+    }
+
+
+    @PostMapping(value = "/storage/out")
+    @InterfaceLog(type = 5, description = "出库通知")
+    public BaseResult<Boolean> storageOut(@RequestBody StorageOperationDTO storageOperationDTO){
+        BaseResult<Boolean> baseResult = new BaseResult<>();
+        String execNo = ExecNoContext.getExecNo();
+
+        try {
+            LocalDateTime current = TimeUtil.getSysDate();
+            TagStorageOperationBean tagStorageOperationBean = new TagStorageOperationBean();
+            tagStorageOperationBean.setExecNo(execNo);
+            tagStorageOperationBean.setNoticeNo(storageOperationDTO.getTicketNo());
+            tagStorageOperationBean.setNoticeQuantity(storageOperationDTO.getQuantity());
+            tagStorageOperationBean.setNoticeTime(current);
+            tagStorageOperationBean.setNoticeType(PlatformConstant.STORAGE_OPERATION_TYPE.STORAGE_OUT);
+            boolean saved = tagStorageOperationService.saveTagStorageOperation(tagStorageOperationBean);
+            baseResult.setData(saved);
+
+            // TODO 调用接口发送给硬件设备
+
+
+        } catch (Exception e) {
+            baseResult.setData(false);
+            baseResult.setCode(PlatformConstant.RET_CODE.FAILED);
+            baseResult.setMessage("接口保存失败：" + e.getMessage());
+        }
         return baseResult;
     }
 

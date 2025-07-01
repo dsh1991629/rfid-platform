@@ -37,4 +37,9 @@ public class PlatformConstant {
         String FAILED = "FAILED";
         String LOCKED = "LOCKED";
     }
+
+    public interface STORAGE_OPERATION_TYPE {
+        Integer STORAGE_IN = 1;
+        Integer STORAGE_OUT = 2;
+    }
 }

@@ -21,7 +21,7 @@ public class TagStorageOperationBean implements Serializable {
     private String noticeNo;
 
     @TableField(value = "NOTICE_QUANTITY")
-    private Integer noticeQuantity;
+    private Long noticeQuantity;
 
     @TableField(value = "NOTICE_TYPE")
     private Integer noticeType;
