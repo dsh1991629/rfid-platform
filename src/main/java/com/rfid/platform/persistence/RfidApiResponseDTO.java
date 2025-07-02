@@ -42,7 +42,7 @@ public class RfidApiResponseDTO<T> implements Serializable {
 
     public static <T> RfidApiResponseDTO<T> success() {
         RfidApiResponseDTO<T> response = new RfidApiResponseDTO<>();
-        response.setCode("");
+        response.setCode("100");
         response.setMessage("操作成功");
         response.setSuccess(true);
         response.setTime(java.time.LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
@@ -63,7 +63,7 @@ public class RfidApiResponseDTO<T> implements Serializable {
 
     public static <T> RfidApiResponseDTO<T> error(String message) {
         RfidApiResponseDTO<T> response = new RfidApiResponseDTO<>();
-        response.setCode("99");
+        response.setCode("400");
         response.setMessage(message);
         response.setSuccess(false);
         response.setTime(java.time.LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));

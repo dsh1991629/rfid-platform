@@ -48,14 +48,16 @@ public class TagOperationController {
         RfidApiResponseDTO<Boolean> baseResult = new RfidApiResponseDTO<>();
 
         // 验证基础参数
-        if (!paramUtil.validateBaseParams(request, "push")) {
-            return RfidApiResponseDTO.error("参数验证失败");
+        if (!paramUtil.validateBaseParams(request, "push", baseResult)) {
+            return baseResult;
         }
 
         // 解析业务参数
         TagImportExcelDTO param = paramUtil.parseParam(request.getParam(), TagImportExcelDTO.class);
         if (param == null) {
-            return RfidApiResponseDTO.error("业务参数解析失败");
+            baseResult.setCode("310");
+            baseResult.setMessage("业务参数解析失败");
+            return baseResult;
         }
 
 
@@ -86,7 +88,7 @@ public class TagOperationController {
             baseResult.setData(saved);
         } catch (Exception e) {
             importInfo.setImportResult("F");
-            baseResult.setCode(PlatformConstant.RET_CODE.FAILED);
+            baseResult.setCode("400");
             baseResult.setMessage("接口保存失败：" + e.getMessage());
         }
 
@@ -108,14 +110,16 @@ public class TagOperationController {
         String execNo = ExecNoContext.getExecNo();
 
         // 验证基础参数
-        if (!paramUtil.validateBaseParams(request, "storageIn")) {
-            return RfidApiResponseDTO.error("参数验证失败");
+        if (!paramUtil.validateBaseParams(request, "storageIn", baseResult)) {
+            return baseResult;
         }
 
         // 解析业务参数
         StorageOperationDTO param = paramUtil.parseParam(request.getParam(), StorageOperationDTO.class);
         if (param == null) {
-            return RfidApiResponseDTO.error("业务参数解析失败");
+            baseResult.setCode("310");
+            baseResult.setMessage("业务参数解析失败");
+            return baseResult;
         }
 
         try {
@@ -134,7 +138,7 @@ public class TagOperationController {
 
         } catch (Exception e) {
             baseResult.setData(false);
-            baseResult.setCode(PlatformConstant.RET_CODE.FAILED);
+            baseResult.setCode("400");
             baseResult.setMessage("接口保存失败：" + e.getMessage());
         }
         return baseResult;
@@ -147,14 +151,16 @@ public class TagOperationController {
         RfidApiResponseDTO<Boolean> baseResult = new RfidApiResponseDTO<>();
 
         // 验证基础参数
-        if (!paramUtil.validateBaseParams(request, "storageOut")) {
-            return RfidApiResponseDTO.error("参数验证失败");
+        if (!paramUtil.validateBaseParams(request, "storageOut", baseResult)) {
+            return baseResult;
         }
 
         // 解析业务参数
         StorageOperationDTO param = paramUtil.parseParam(request.getParam(), StorageOperationDTO.class);
         if (param == null) {
-            return RfidApiResponseDTO.error("业务参数解析失败");
+            baseResult.setCode("310");
+            baseResult.setMessage("业务参数解析失败");
+            return baseResult;
         }
 
         String execNo = ExecNoContext.getExecNo();
@@ -175,7 +181,7 @@ public class TagOperationController {
 
         } catch (Exception e) {
             baseResult.setData(false);
-            baseResult.setCode(PlatformConstant.RET_CODE.FAILED);
+            baseResult.setCode("400");
             baseResult.setMessage("接口保存失败：" + e.getMessage());
         }
         return baseResult;

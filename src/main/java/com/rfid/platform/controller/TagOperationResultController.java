@@ -62,23 +62,26 @@ public class TagOperationResultController {
     @PostMapping("/upInitem")
     @InterfaceLog(type = 4, description = "入库单明细回传")
     public RfidApiResponseDTO<String> uploadInboundItems(@RequestBody RfidApiRequestDTO request) {
+        RfidApiResponseDTO<String> response = RfidApiResponseDTO.success();
         try {
             // 验证基础参数
-            if (!paramUtil.validateBaseParams(request, "upInitem")) {
-                return RfidApiResponseDTO.error("参数验证失败");
+            if (!paramUtil.validateBaseParams(request, "upInitem", response)) {
+                return response;
             }
 
             // 解析业务参数
             InboundDTO.InboundParam param = paramUtil.parseParam(request.getParam(), InboundDTO.InboundParam.class);
             if (param == null) {
-                return RfidApiResponseDTO.error("业务参数解析失败");
+                response.setCode("310");
+                response.setMessage("业务参数解析失败");
+                return response;
             }
 
             // 处理入库单明细
             processInboundItems(param);
 
             log.info("入库单实际明细回传成功，单据编号：{}", param.getBillNo());
-            RfidApiResponseDTO<String> response = RfidApiResponseDTO.success();
+
             response.setData("入库单实际明细回传成功，单据编号：" + param.getBillNo());
             return response;
         } catch (Exception e) {
@@ -96,23 +99,26 @@ public class TagOperationResultController {
     @PostMapping("/upOutitem")
     @InterfaceLog(type = 6, description = "出库单明细回传")
     public RfidApiResponseDTO<String> uploadOutboundItems(@RequestBody RfidApiRequestDTO request) {
+        RfidApiResponseDTO<String> response = RfidApiResponseDTO.success();
         try {
             // 验证基础参数
-            if (!paramUtil.validateBaseParams(request, "upOutitem")) {
+            if (!paramUtil.validateBaseParams(request, "upOutitem", response)) {
                 return RfidApiResponseDTO.error("参数验证失败");
             }
 
             // 解析业务参数
             OutboundDTO.OutboundParam param = paramUtil.parseParam(request.getParam(), OutboundDTO.OutboundParam.class);
             if (param == null) {
-                return RfidApiResponseDTO.error("业务参数解析失败");
+                response.setCode("310");
+                response.setMessage("业务参数解析失败");
+                return response;
             }
 
             // 处理出库单明细
             processOutboundItems(param);
 
             log.info("出库单实际明细回传成功，单据编号：{}", param.getBillNo());
-            RfidApiResponseDTO<String> response = RfidApiResponseDTO.success();
+
             response.setData("出库单实际明细回传成功，单据编号：" + param.getBillNo());
             return response;
         } catch (Exception e) {
@@ -130,9 +136,10 @@ public class TagOperationResultController {
     @PostMapping("/getInvbook")
     @InterfaceLog(type = 7, description = "盘点明细查询")
     public RfidApiResponseDTO<List<InventoryDTO.InventoryBookItem>> getInventoryBook(@RequestBody RfidApiRequestDTO request) {
+        RfidApiResponseDTO<List<InventoryDTO.InventoryBookItem>> response = RfidApiResponseDTO.success();
         try {
             // 验证基础参数
-            if (!paramUtil.validateBaseParams(request, "getInvbook")) {
+            if (!paramUtil.validateBaseParams(request, "getInvbook", response)) {
                 return RfidApiResponseDTO.error("参数验证失败");
             }
 
@@ -140,7 +147,9 @@ public class TagOperationResultController {
             InventoryDTO.InventoryQueryParam param = paramUtil.parseParam(request.getParam(),
                     InventoryDTO.InventoryQueryParam.class);
             if (param == null) {
-                return RfidApiResponseDTO.error("业务参数解析失败");
+                response.setCode("310");
+                response.setMessage("业务参数解析失败");
+                return response;
             }
 
             // 查询盘点单账面明细
@@ -163,9 +172,10 @@ public class TagOperationResultController {
     @PostMapping("/upInvitem")
     @InterfaceLog(type = 8, description = "盘点明细回传")
     public RfidApiResponseDTO<String> uploadInventoryItems(@RequestBody RfidApiRequestDTO request) {
+        RfidApiResponseDTO<String> response = RfidApiResponseDTO.success();
         try {
             // 验证基础参数
-            if (!paramUtil.validateBaseParams(request, "upInvitem")) {
+            if (!paramUtil.validateBaseParams(request, "upInvitem", response)) {
                 return RfidApiResponseDTO.error("参数验证失败");
             }
 
@@ -173,14 +183,14 @@ public class TagOperationResultController {
             InventoryDTO.InventoryParam param = paramUtil.parseParam(request.getParam(),
                     InventoryDTO.InventoryParam.class);
             if (param == null) {
-                return RfidApiResponseDTO.error("业务参数解析失败");
+                response.setCode("310");
+                response.setMessage("业务参数解析失败");
+                return response;
             }
 
             // 处理盘点单明细
             processInventoryItems(param);
-
             log.info("盘点单实际明细回传成功，单据编号：{}", param.getBillNo());
-            RfidApiResponseDTO response = RfidApiResponseDTO.success();
             response.setData("盘点单实际明细回传成功，单据编号：" + param.getBillNo());
             return response;
         } catch (Exception e) {
