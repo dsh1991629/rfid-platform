@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rfid.platform.mapper.AccountMapper">
+
+    <select id="queryAccountPage" resultType="com.rfid.platform.entity.AccountBean">
+        SELECT t.* FROM
+        (
+            SELECT
+                a.*
+            FROM
+                account a
+                <if test="departmentId != null">
+                    , account_department_rel b
+                </if>
+                <if test="roleId != null">
+                    , account_role_rel c
+                </if>
+            WHERE
+                1=1
+                <if test="departmentId != null">
+                    AND a.id = b.account_id
+                </if>
+                <if test="roleId != null">
+                    AND a.id = c.account_id
+                </if>
+        ) t
+        ${ew.customSqlSegment}
+
+    </select>
+
+</mapper>

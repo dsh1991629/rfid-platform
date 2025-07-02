@@ -5,8 +5,10 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.rfid.platform.common.BaseResult;
 import com.rfid.platform.common.PlatformConstant;
 import com.rfid.platform.entity.MenuBean;
-import com.rfid.platform.persistence.MenuDTO;
+import com.rfid.platform.persistence.MenuCreateDTO;
+import com.rfid.platform.persistence.MenuDeleteDTO;
 import com.rfid.platform.persistence.MenuTreeDTO;
+import com.rfid.platform.persistence.MenuUpdateDTO;
 import com.rfid.platform.service.AccountService;
 import com.rfid.platform.service.MenuService;
 import org.apache.commons.lang3.StringUtils;
@@ -31,11 +33,11 @@ public class MenuController {
 
 
     @PostMapping("/create")
-    public BaseResult<Long> createMenu(@RequestBody MenuDTO menuDTO) {
+    public BaseResult<Long> createMenu(@RequestBody MenuCreateDTO menuCreateDTO) {
         BaseResult<Long> result = new BaseResult<>();
         try {
             // 参数校验
-            if (StringUtils.isBlank(menuDTO.getName())) {
+            if (StringUtils.isBlank(menuCreateDTO.getName())) {
                 result.setCode(PlatformConstant.RET_CODE.FAILED);
                 result.setMessage("菜单名称不能为空");
                 return result;
@@ -43,7 +45,7 @@ public class MenuController {
 
             // 检查菜单名称是否已存在
             LambdaQueryWrapper<MenuBean> nameCheckWrapper = new LambdaQueryWrapper<>();
-            nameCheckWrapper.eq(MenuBean::getName, menuDTO.getName());
+            nameCheckWrapper.eq(MenuBean::getName, menuCreateDTO.getName());
             Boolean existingMenus = menuService.existMenu(nameCheckWrapper);
 
             if (existingMenus) {
@@ -52,7 +54,7 @@ public class MenuController {
                 return result;
             }
 
-            MenuBean menuBean = BeanUtil.copyProperties(menuDTO, MenuBean.class);
+            MenuBean menuBean = BeanUtil.copyProperties(menuCreateDTO, MenuBean.class);
 
             boolean success = menuService.saveMenu(menuBean);
             if (success) {
@@ -69,17 +71,17 @@ public class MenuController {
     }
 
     @PostMapping("/delete")
-    public BaseResult<Boolean> deleteMenu(@RequestBody MenuDTO menuDTO) {
+    public BaseResult<Boolean> deleteMenu(@RequestBody MenuDeleteDTO menuDeleteDTO) {
         BaseResult<Boolean> result = new BaseResult<>();
         try {
             // 参数校验
-            if (menuDTO.getId() == null) {
+            if (menuDeleteDTO.getId() == null) {
                 result.setCode(PlatformConstant.RET_CODE.FAILED);
                 result.setMessage("菜单ID不能为空");
                 return result;
             }
 
-            boolean success = menuService.removeMenuByPk(menuDTO.getId());
+            boolean success = menuService.removeMenuByPk(menuDeleteDTO.getId());
             result.setData(success);
             if (!success) {
                 result.setCode(PlatformConstant.RET_CODE.FAILED);
@@ -93,11 +95,11 @@ public class MenuController {
     }
 
     @PostMapping("/update")
-    public BaseResult<Boolean> updateMenu(@RequestBody MenuDTO menuDTO) {
+    public BaseResult<Boolean> updateMenu(@RequestBody MenuUpdateDTO menuUpdateDTO) {
         BaseResult<Boolean> result = new BaseResult<>();
         try {
             // 参数校验
-            if (menuDTO.getId() == null) {
+            if (menuUpdateDTO.getId() == null) {
                 result.setCode(PlatformConstant.RET_CODE.FAILED);
                 result.setMessage("菜单ID不能为空");
                 return result;
@@ -105,7 +107,7 @@ public class MenuController {
 
             // 检查菜单名称是否已存在（排除当前菜单）
             LambdaQueryWrapper<MenuBean> nameCheckWrapper = new LambdaQueryWrapper<>();
-            nameCheckWrapper.eq(MenuBean::getName, menuDTO.getName()).ne(MenuBean::getId, menuDTO.getId());
+            nameCheckWrapper.eq(MenuBean::getName, menuUpdateDTO.getName()).ne(MenuBean::getId, menuUpdateDTO.getId());
             Boolean existMenus = menuService.existMenu(nameCheckWrapper);
 
             if (existMenus) {
@@ -114,7 +116,7 @@ public class MenuController {
                 return result;
             }
 
-            MenuBean menuBean = BeanUtil.copyProperties(menuDTO, MenuBean.class);
+            MenuBean menuBean = BeanUtil.copyProperties(menuUpdateDTO, MenuBean.class);
 
             boolean success = menuService.updateMenuByPk(menuBean);
             result.setData(success);

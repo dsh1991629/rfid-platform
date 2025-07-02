@@ -10,7 +10,12 @@ import com.rfid.platform.common.PageResult;
 import com.rfid.platform.common.PlatformConstant;
 import com.rfid.platform.entity.AccountBean;
 import com.rfid.platform.entity.AccountDepartmentRelBean;
+import com.rfid.platform.persistence.AccountCreateDTO;
 import com.rfid.platform.persistence.AccountDTO;
+import com.rfid.platform.persistence.AccountDeleteDTO;
+import com.rfid.platform.persistence.AccountDepartmentQueryDTO;
+import com.rfid.platform.persistence.AccountPageQueryDTO;
+import com.rfid.platform.persistence.AccountUpdateDTO;
 import com.rfid.platform.persistence.DepartmentDTO;
 import com.rfid.platform.persistence.MenuDTO;
 import com.rfid.platform.persistence.RoleDTO;
@@ -53,18 +58,18 @@ public class AccountController {
 
 
     @PostMapping(value = "/create")
-    public BaseResult<Long> addAccount(@RequestBody AccountDTO accountDTO) {
+    public BaseResult<Long> addAccount(@RequestBody AccountCreateDTO accountCreateDTO) {
         BaseResult<Long> result = new BaseResult<>();
         try {
 
             // 参数校验
-            if (StringUtils.isBlank(accountDTO.getCode())) {
+            if (StringUtils.isBlank(accountCreateDTO.getCode())) {
                 result.setCode(PlatformConstant.RET_CODE.FAILED);
                 result.setMessage("账户编码不能为空");
                 return result;
             }
 
-            if (StringUtils.isBlank(accountDTO.getName())) {
+            if (StringUtils.isBlank(accountCreateDTO.getName())) {
                 result.setCode(PlatformConstant.RET_CODE.FAILED);
                 result.setMessage("账户名称不能为空");
                 return result;
@@ -73,7 +78,7 @@ public class AccountController {
 
             // 检查角色名称是否已存在
             LambdaQueryWrapper<AccountBean> nameCheckWrapper = new LambdaQueryWrapper<>();
-            nameCheckWrapper.eq(AccountBean::getCode, accountDTO.getCode());
+            nameCheckWrapper.eq(AccountBean::getCode, accountCreateDTO.getCode());
             Boolean existingAccounts = accountService.existAccount(nameCheckWrapper);
 
             if (existingAccounts) {
@@ -83,8 +88,8 @@ public class AccountController {
             }
 
 
-            AccountBean accountBean = BeanUtil.copyProperties(accountDTO, AccountBean.class);
-            boolean success = accountService.saveAccount(accountBean, accountDTO.getDepartment(), accountDTO.getRole());
+            AccountBean accountBean = BeanUtil.copyProperties(accountCreateDTO, AccountBean.class);
+            boolean success = accountService.saveAccount(accountBean, accountCreateDTO.getDepartment(), accountCreateDTO.getRole());
             if (success) {
                 result.setData(accountBean.getId());
                 result.setMessage("账户创建成功");
@@ -100,16 +105,16 @@ public class AccountController {
     }
 
     @PostMapping(value = "/delete")
-    public BaseResult<Boolean> deleteAccount(@RequestBody AccountDTO accountDTO) {
+    public BaseResult<Boolean> deleteAccount(@RequestBody AccountDeleteDTO accountDeleteDTO) {
         BaseResult<Boolean> result = new BaseResult<>();
         try {
-            if (accountDTO.getId() == null) {
+            if (accountDeleteDTO.getId() == null) {
                 result.setCode(PlatformConstant.RET_CODE.FAILED);
                 result.setMessage("账户ID不能为空");
                 result.setData(false);
                 return result;
             }
-            boolean success = accountService.removeAccountByPk(accountDTO.getId());
+            boolean success = accountService.removeAccountByPk(accountDeleteDTO.getId());
             result.setData(success);
             if (success) {
                 result.setMessage("账户删除成功");
@@ -126,10 +131,10 @@ public class AccountController {
     }
 
     @PostMapping(value = "/update")
-    public BaseResult<Boolean> updateAccount(@RequestBody AccountDTO accountDTO) {
+    public BaseResult<Boolean> updateAccount(@RequestBody AccountUpdateDTO accountUpdateDTO) {
         BaseResult<Boolean> result = new BaseResult<>();
         try {
-            if (accountDTO.getId() == null) {
+            if (accountUpdateDTO.getId() == null) {
                 result.setCode(PlatformConstant.RET_CODE.FAILED);
                 result.setMessage("账户ID不能为空");
                 result.setData(false);
@@ -138,7 +143,7 @@ public class AccountController {
 
             // 检查账号编码是否已存在（排除当前编码）
             LambdaQueryWrapper<AccountBean> nameCheckWrapper = new LambdaQueryWrapper<>();
-            nameCheckWrapper.eq(AccountBean::getName, accountDTO.getCode()).ne(AccountBean::getId, accountDTO.getId());
+            nameCheckWrapper.eq(AccountBean::getName, accountUpdateDTO.getCode()).ne(AccountBean::getId, accountUpdateDTO.getId());
             Boolean existAccount = accountService.existAccount(nameCheckWrapper);
 
             if (existAccount) {
@@ -147,8 +152,8 @@ public class AccountController {
                 return result;
             }
 
-            AccountBean accountBean = BeanUtil.copyProperties(accountDTO, AccountBean.class);
-            boolean success = accountService.updateAccountByPk(accountBean, accountDTO.getDepartment(), accountDTO.getRole());
+            AccountBean accountBean = BeanUtil.copyProperties(accountUpdateDTO, AccountBean.class);
+            boolean success = accountService.updateAccountByPk(accountBean, accountUpdateDTO.getDepartment(), accountUpdateDTO.getRole());
             result.setData(success);
             if (success) {
                 result.setMessage("账户更新成功");
@@ -164,50 +169,9 @@ public class AccountController {
         return result;
     }
 
-    @PostMapping(value = "/detail")
-    public BaseResult<AccountDTO> accountDetail(@RequestBody AccountDTO accountDTO) {
-        BaseResult<AccountDTO> result = new BaseResult<>();
-        try {
-            if (accountDTO.getId() == null) {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
-                result.setMessage("账户ID不能为空");
-                return result;
-            }
-            AccountBean accountBean = accountService.getAccountByPk(accountDTO.getId());
-            if (accountBean != null) {
-                AccountDTO resultDTO = BeanUtil.copyProperties(accountBean, AccountDTO.class);
-                // 根据状态设置状态名称
-                if (resultDTO.getState() != null) {
-                    resultDTO.setStateName(resultDTO.getState() == 1 ? "正常" : "禁用");
-                }
-
-                DepartmentDTO departmentDTO = departmentService.queryDepartmentByAccountId(accountBean.getId());
-                if (Objects.nonNull(departmentDTO)) {
-                    resultDTO.setDepartment(departmentDTO);
-                }
-
-                RoleDTO roleDTO = roleService.queryRoleByAccountId(accountBean.getId());
-                if (Objects.nonNull(roleDTO)) {
-                    List<MenuDTO> menuDTOS = menuService.queryMenusByRole(roleDTO.getId());
-                    roleDTO.setMenus(menuDTOS);
-                    resultDTO.setRole(roleDTO);
-                }
-
-                result.setData(resultDTO);
-                result.setMessage("查询成功");
-            } else {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
-                result.setMessage("账户不存在");
-            }
-        } catch (Exception e) {
-            result.setCode(PlatformConstant.RET_CODE.FAILED);
-            result.setMessage("查询异常: " + e.getMessage());
-        }
-        return result;
-    }
 
     @PostMapping(value = "/page")
-    public BaseResult<PageResult<AccountDTO>> accountPage(@RequestBody AccountDTO accountDTO,
+    public BaseResult<PageResult<AccountDTO>> accountPage(@RequestBody AccountPageQueryDTO accountPageQueryDTO,
                                                           @RequestParam(defaultValue = "1") Integer pageNum,
                                                           @RequestParam(defaultValue = "10") Integer pageSize) {
         BaseResult<PageResult<AccountDTO>> result = new BaseResult<>();
@@ -216,23 +180,24 @@ public class AccountController {
             LambdaQueryWrapper<AccountBean> queryWrapper = new LambdaQueryWrapper<>();
 
             // 构建查询条件
-            if (StringUtils.isNotBlank(accountDTO.getCode())) {
-                queryWrapper.like(AccountBean::getCode, accountDTO.getCode());
+            if (StringUtils.isNotBlank(accountPageQueryDTO.getCode())) {
+                queryWrapper.like(AccountBean::getCode, accountPageQueryDTO.getCode());
             }
-            if (StringUtils.isNotBlank(accountDTO.getName())) {
-                queryWrapper.like(AccountBean::getName, accountDTO.getName());
-            }
-            if (StringUtils.isNotBlank(accountDTO.getEmail())) {
-                queryWrapper.like(AccountBean::getEmail, accountDTO.getEmail());
-            }
-            if (StringUtils.isNotBlank(accountDTO.getPhone())) {
-                queryWrapper.like(AccountBean::getPhone, accountDTO.getPhone());
-            }
-            if (accountDTO.getState() != null) {
-                queryWrapper.eq(AccountBean::getState, accountDTO.getState());
+            if (StringUtils.isNotBlank(accountPageQueryDTO.getName())) {
+                queryWrapper.like(AccountBean::getName, accountPageQueryDTO.getName());
             }
 
-            IPage<AccountBean> pageResult = accountService.pageAccount(page, queryWrapper);
+            Long departmentId = null;
+            if (Objects.nonNull(accountPageQueryDTO.getDepartment()) && Objects.nonNull(accountPageQueryDTO.getDepartment().getId())) {
+                departmentId = accountPageQueryDTO.getDepartment().getId();
+            }
+
+            Long roleId = null;
+            if (Objects.nonNull(accountPageQueryDTO.getRole()) && Objects.nonNull(accountPageQueryDTO.getRole().getId())) {
+                roleId = accountPageQueryDTO.getRole().getId();
+            }
+
+            IPage<AccountBean> pageResult = accountService.pageAccount(page, queryWrapper, departmentId, roleId);
 
             // 转换结果
             PageResult<AccountDTO> pageResultDTO = new PageResult<>();
@@ -276,17 +241,17 @@ public class AccountController {
 
 
     @PostMapping(value = "/list/department")
-    public BaseResult<List<AccountDTO>> accountByDepartment(@RequestBody AccountDTO accountDTO) {
+    public BaseResult<List<AccountDTO>> accountByDepartment(@RequestBody AccountDepartmentQueryDTO accountDepartmentQueryDTO) {
         BaseResult<List<AccountDTO>> result = new BaseResult<>();
         try {
-            if (accountDTO.getDepartment() == null || accountDTO.getDepartment().getId() == null) {
+            if (accountDepartmentQueryDTO.getDepartment() == null || accountDepartmentQueryDTO.getDepartment().getId() == null) {
                 result.setCode(PlatformConstant.RET_CODE.FAILED);
                 result.setMessage("部门ID不能为空");
                 return result;
             }
 
             LambdaQueryWrapper<AccountDepartmentRelBean> departRelWrapper = Wrappers.lambdaQuery();
-            departRelWrapper.eq(AccountDepartmentRelBean::getDepartmentId, accountDTO.getDepartment().getId());
+            departRelWrapper.eq(AccountDepartmentRelBean::getDepartmentId, accountDepartmentQueryDTO.getDepartment().getId());
             List<AccountDepartmentRelBean> accountDepartmentRelBeans = accountDepartRelService.listAccountDepartRel(departRelWrapper);
 
             if (CollectionUtils.isEmpty(accountDepartmentRelBeans)) {

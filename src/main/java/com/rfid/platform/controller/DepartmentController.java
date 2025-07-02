@@ -5,8 +5,10 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.rfid.platform.common.BaseResult;
 import com.rfid.platform.common.PlatformConstant;
 import com.rfid.platform.entity.DepartmentBean;
-import com.rfid.platform.persistence.DepartmentDTO;
+import com.rfid.platform.persistence.DepartmentCreateDTO;
+import com.rfid.platform.persistence.DepartmentDeleteDTO;
 import com.rfid.platform.persistence.DepartmentTreeDTO;
+import com.rfid.platform.persistence.DepartmentUpdateDTO;
 import com.rfid.platform.service.AccountService;
 import com.rfid.platform.service.DepartmentService;
 import org.apache.commons.lang3.StringUtils;
@@ -30,11 +32,11 @@ public class DepartmentController {
     private AccountService accountService;
 
     @PostMapping(value = "/create")
-    public BaseResult<Long> createDepartment(@RequestBody DepartmentDTO departmentDTO) {
+    public BaseResult<Long> createDepartment(@RequestBody DepartmentCreateDTO departmentCreateDTO) {
         BaseResult<Long> result = new BaseResult<>();
         try {
             // 参数校验
-            if (StringUtils.isBlank(departmentDTO.getName())) {
+            if (StringUtils.isBlank(departmentCreateDTO.getName())) {
                 result.setCode(PlatformConstant.RET_CODE.FAILED);
                 result.setMessage("部门名称不能为空");
                 return result;
@@ -42,7 +44,7 @@ public class DepartmentController {
 
             // 检查部门名称是否已存在
             LambdaQueryWrapper<DepartmentBean> nameCheckWrapper = new LambdaQueryWrapper<>();
-            nameCheckWrapper.eq(DepartmentBean::getName, departmentDTO.getName());
+            nameCheckWrapper.eq(DepartmentBean::getName, departmentCreateDTO.getName());
             Boolean existingDepartments = departmentService.existDepartment(nameCheckWrapper);
 
             if (existingDepartments) {
@@ -52,7 +54,7 @@ public class DepartmentController {
             }
             
             // DTO转Bean
-            DepartmentBean departmentBean = BeanUtil.copyProperties(departmentDTO, DepartmentBean.class);
+            DepartmentBean departmentBean = BeanUtil.copyProperties(departmentCreateDTO, DepartmentBean.class);
             
             // 保存部门
             boolean success = departmentService.saveDepartment(departmentBean);
@@ -71,18 +73,18 @@ public class DepartmentController {
     }
 
     @PostMapping(value = "/delete")
-    public BaseResult<Boolean> deleteDepartment(@RequestBody DepartmentDTO departmentDTO) {
+    public BaseResult<Boolean> deleteDepartment(@RequestBody DepartmentDeleteDTO departmentDeleteDTO) {
         BaseResult<Boolean> result = new BaseResult<>();
         try {
             // 参数校验
-            if (departmentDTO.getId() == null) {
+            if (departmentDeleteDTO.getId() == null) {
                 result.setCode(PlatformConstant.RET_CODE.FAILED);
                 result.setMessage("部门ID不能为空");
                 return result;
             }
             
             // 检查部门是否存在
-            DepartmentBean existingDepartment = departmentService.getDepartmentByPk(departmentDTO.getId());
+            DepartmentBean existingDepartment = departmentService.getDepartmentByPk(departmentDeleteDTO.getId());
             if (existingDepartment == null) {
                 result.setCode(PlatformConstant.RET_CODE.FAILED);
                 result.setMessage("部门不存在");
@@ -90,7 +92,7 @@ public class DepartmentController {
             }
             
             // 级联删除部门及其所有子部门
-            boolean success = departmentService.removeDepartmentCascade(departmentDTO.getId());
+            boolean success = departmentService.removeDepartmentCascade(departmentDeleteDTO.getId());
             result.setData(success);
             if (success) {
                 result.setMessage("删除成功（包含所有子部门）");
@@ -106,11 +108,11 @@ public class DepartmentController {
     }
 
     @PostMapping(value = "/update")
-    public BaseResult<Boolean> updateDepartment(@RequestBody DepartmentDTO departmentDTO) {
+    public BaseResult<Boolean> updateDepartment(@RequestBody DepartmentUpdateDTO departmentUpdateDTO) {
         BaseResult<Boolean> result = new BaseResult<>();
         try {
             // 参数校验
-            if (departmentDTO.getId() == null) {
+            if (departmentUpdateDTO.getId() == null) {
                 result.setCode(PlatformConstant.RET_CODE.FAILED);
                 result.setMessage("部门ID不能为空");
                 return result;
@@ -118,7 +120,7 @@ public class DepartmentController {
 
             // 检查部门名称是否已存在（排除当前部门）
             LambdaQueryWrapper<DepartmentBean> nameCheckWrapper = new LambdaQueryWrapper<>();
-            nameCheckWrapper.eq(DepartmentBean::getName, departmentDTO.getName()).ne(DepartmentBean::getId, departmentDTO.getId());
+            nameCheckWrapper.eq(DepartmentBean::getName, departmentUpdateDTO.getName()).ne(DepartmentBean::getId, departmentUpdateDTO.getId());
             Boolean existingDepartments = departmentService.existDepartment(nameCheckWrapper);
 
             if (existingDepartments) {
@@ -128,7 +130,7 @@ public class DepartmentController {
             }
             
             // DTO转Bean
-            DepartmentBean departmentBean = BeanUtil.copyProperties(departmentDTO, DepartmentBean.class);
+            DepartmentBean departmentBean = BeanUtil.copyProperties(departmentUpdateDTO, DepartmentBean.class);
             
             // 更新部门
             boolean success = departmentService.updateDepartmentByPk(departmentBean);

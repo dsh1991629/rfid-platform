@@ -36,3 +36,8 @@ knife4j:
 #mybatis-plus:
 #  configuration:
 #    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+mybatis-plus:
+  mapper-locations: classpath*:com/rfid/platform/*.xml
+  configuration:
+    map-underscore-to-camel-case: true

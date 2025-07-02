@@ -145,17 +145,17 @@ public class LoginController {
             String captchaKey = PlatformConstant.CACHE_KEY.CAPTCHA_KEY + loginReqDTO.getCaptchaKey();
             String cachedCaptcha = (String) redisTemplate.opsForValue().get(captchaKey);
             
-            if (StringUtils.isBlank(cachedCaptcha)) {
-                response.setCode(PlatformConstant.RET_CODE.FAILED);
-                response.setMessage("验证码已过期");
-                return response;
-            }
-
-            if (!cachedCaptcha.equalsIgnoreCase(loginReqDTO.getCaptchaCode())) {
-                response.setCode(PlatformConstant.RET_CODE.FAILED);
-                response.setMessage("验证码错误");
-                return response;
-            }
+//            if (StringUtils.isBlank(cachedCaptcha)) {
+//                response.setCode(PlatformConstant.RET_CODE.FAILED);
+//                response.setMessage("验证码已过期");
+//                return response;
+//            }
+//
+//            if (!cachedCaptcha.equalsIgnoreCase(loginReqDTO.getCaptchaCode())) {
+//                response.setCode(PlatformConstant.RET_CODE.FAILED);
+//                response.setMessage("验证码错误");
+//                return response;
+//            }
             
             // 删除已使用的验证码
             redisTemplate.delete(captchaKey);
