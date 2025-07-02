@@ -7,6 +7,7 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
+import org.apache.commons.lang3.StringUtils;
 
 public class TimeUtil {
 
@@ -45,6 +46,13 @@ public class TimeUtil {
             return dateTimeFormatter.format(localDateTime);
         }
         return "";
+    }
+
+    public static LocalDateTime parseDateFormatterString(String dateTime) {
+        if (StringUtils.isNotBlank(dateTime)) {
+            return LocalDateTime.parse(dateTime, dateTimeFormatter);
+        }
+        return null;
     }
 
     public static String getMonthNoLineString(LocalDateTime localDateTime) {

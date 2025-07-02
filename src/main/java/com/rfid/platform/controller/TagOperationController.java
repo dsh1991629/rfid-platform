@@ -1,17 +1,19 @@
 package com.rfid.platform.controller;
 
 import com.rfid.platform.annotation.InterfaceLog;
-import com.rfid.platform.common.BaseResult;
 import com.rfid.platform.common.ExecNoContext;
 import com.rfid.platform.common.PlatformConstant;
 import com.rfid.platform.entity.TagImportInfoBean;
 import com.rfid.platform.entity.TagInfoBean;
 import com.rfid.platform.entity.TagStorageOperationBean;
+import com.rfid.platform.persistence.RfidApiRequestDTO;
+import com.rfid.platform.persistence.RfidApiResponseDTO;
 import com.rfid.platform.persistence.StorageOperationDTO;
 import com.rfid.platform.persistence.TagImportExcelDTO;
 import com.rfid.platform.service.TagImportInfoService;
 import com.rfid.platform.service.TagInfoService;
 import com.rfid.platform.service.TagStorageOperationService;
+import com.rfid.platform.util.ParamUtil;
 import com.rfid.platform.util.TimeUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,18 +38,33 @@ public class TagOperationController {
     @Autowired
     private TagStorageOperationService tagStorageOperationService;
 
+    @Autowired
+    private ParamUtil paramUtil;
+
 
     @PostMapping(value = "/push")
     @InterfaceLog(type = 2, description = "标签推送")
-    public BaseResult<Boolean> tagPush(@RequestBody TagImportExcelDTO tagImportExcelDTO){
-        BaseResult<Boolean> baseResult = new BaseResult<>();
+    public RfidApiResponseDTO<Boolean> tagPush(@RequestBody RfidApiRequestDTO request){
+        RfidApiResponseDTO<Boolean> baseResult = new RfidApiResponseDTO<>();
+
+        // 验证基础参数
+        if (!paramUtil.validateBaseParams(request, "push")) {
+            return RfidApiResponseDTO.error("参数验证失败");
+        }
+
+        // 解析业务参数
+        TagImportExcelDTO param = paramUtil.parseParam(request.getParam(), TagImportExcelDTO.class);
+        if (param == null) {
+            return RfidApiResponseDTO.error("业务参数解析失败");
+        }
+
 
         String execNo = ExecNoContext.getExecNo();
 
         // 创建导入详细记录
         TagImportInfoBean importInfo = new TagImportInfoBean();
-        importInfo.setEcpCode(tagImportExcelDTO.getEpcCode());
-        importInfo.setSkuCode(tagImportExcelDTO.getSkuCode());
+        importInfo.setEcpCode(param.getEpcCode());
+        importInfo.setSkuCode(param.getSkuCode());
         importInfo.setImportType(1); // 1表示接口推送
         importInfo.setExecNo(execNo);
         importInfo.setImportTime(LocalDateTime.now());
@@ -55,8 +72,8 @@ public class TagOperationController {
         try {
             // 创建TagInfoBean对象
             TagInfoBean tagInfo = new TagInfoBean();
-            tagInfo.setSkuCode(tagImportExcelDTO.getSkuCode());
-            tagInfo.setEpcCode(tagImportExcelDTO.getEpcCode());
+            tagInfo.setSkuCode(param.getSkuCode());
+            tagInfo.setEpcCode(param.getEpcCode());
             tagInfo.setState(1); // 默认状态为1
             tagInfo.setInTime(LocalDateTime.now());
             // 调用tagInfoService保存
@@ -86,16 +103,27 @@ public class TagOperationController {
 
     @PostMapping(value = "/storage/in")
     @InterfaceLog(type = 3, description = "入库通知")
-    public BaseResult<Boolean> storageIn(@RequestBody StorageOperationDTO storageOperationDTO){
-        BaseResult<Boolean> baseResult = new BaseResult<>();
+    public RfidApiResponseDTO<Boolean> storageIn(@RequestBody RfidApiRequestDTO request){
+        RfidApiResponseDTO<Boolean> baseResult = new RfidApiResponseDTO<>();
         String execNo = ExecNoContext.getExecNo();
+
+        // 验证基础参数
+        if (!paramUtil.validateBaseParams(request, "storageIn")) {
+            return RfidApiResponseDTO.error("参数验证失败");
+        }
+
+        // 解析业务参数
+        StorageOperationDTO param = paramUtil.parseParam(request.getParam(), StorageOperationDTO.class);
+        if (param == null) {
+            return RfidApiResponseDTO.error("业务参数解析失败");
+        }
 
         try {
             LocalDateTime current = TimeUtil.getSysDate();
             TagStorageOperationBean tagStorageOperationBean = new TagStorageOperationBean();
             tagStorageOperationBean.setExecNo(execNo);
-            tagStorageOperationBean.setNoticeNo(storageOperationDTO.getTicketNo());
-            tagStorageOperationBean.setNoticeQuantity(storageOperationDTO.getQuantity());
+            tagStorageOperationBean.setNoticeNo(param.getTicketNo());
+            tagStorageOperationBean.setNoticeQuantity(param.getQuantity());
             tagStorageOperationBean.setNoticeTime(current);
             tagStorageOperationBean.setNoticeType(PlatformConstant.STORAGE_OPERATION_TYPE.STORAGE_IN);
             boolean saved = tagStorageOperationService.saveTagStorageOperation(tagStorageOperationBean);
@@ -115,16 +143,28 @@ public class TagOperationController {
 
     @PostMapping(value = "/storage/out")
     @InterfaceLog(type = 5, description = "出库通知")
-    public BaseResult<Boolean> storageOut(@RequestBody StorageOperationDTO storageOperationDTO){
-        BaseResult<Boolean> baseResult = new BaseResult<>();
+    public RfidApiResponseDTO<Boolean> storageOut(@RequestBody RfidApiRequestDTO request){
+        RfidApiResponseDTO<Boolean> baseResult = new RfidApiResponseDTO<>();
+
+        // 验证基础参数
+        if (!paramUtil.validateBaseParams(request, "storageOut")) {
+            return RfidApiResponseDTO.error("参数验证失败");
+        }
+
+        // 解析业务参数
+        StorageOperationDTO param = paramUtil.parseParam(request.getParam(), StorageOperationDTO.class);
+        if (param == null) {
+            return RfidApiResponseDTO.error("业务参数解析失败");
+        }
+
         String execNo = ExecNoContext.getExecNo();
 
         try {
             LocalDateTime current = TimeUtil.getSysDate();
             TagStorageOperationBean tagStorageOperationBean = new TagStorageOperationBean();
             tagStorageOperationBean.setExecNo(execNo);
-            tagStorageOperationBean.setNoticeNo(storageOperationDTO.getTicketNo());
-            tagStorageOperationBean.setNoticeQuantity(storageOperationDTO.getQuantity());
+            tagStorageOperationBean.setNoticeNo(param.getTicketNo());
+            tagStorageOperationBean.setNoticeQuantity(param.getQuantity());
             tagStorageOperationBean.setNoticeTime(current);
             tagStorageOperationBean.setNoticeType(PlatformConstant.STORAGE_OPERATION_TYPE.STORAGE_OUT);
             boolean saved = tagStorageOperationService.saveTagStorageOperation(tagStorageOperationBean);
@@ -140,5 +180,6 @@ public class TagOperationController {
         }
         return baseResult;
     }
+
 
 }

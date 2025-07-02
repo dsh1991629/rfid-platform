@@ -8,15 +8,13 @@ import com.rfid.platform.persistence.OutboundDTO;
 import com.rfid.platform.persistence.RfidApiRequestDTO;
 import com.rfid.platform.persistence.RfidApiResponseDTO;
 import com.rfid.platform.service.TagStorageOperationResultService;
-import com.rfid.platform.util.JsonUtil;
-import com.rfid.platform.util.RfidSignUtil;
+import com.rfid.platform.util.ParamUtil;
+import com.rfid.platform.util.TimeUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,9 +35,8 @@ public class TagOperationResultController {
     @Autowired
     private TagStorageOperationResultService tagStorageOperationResultService;
 
-    private static final String EXPECTED_APP_ID = "hd-rfid-dev";
-    private static final String EXPECTED_VERSION = "3.0";
-    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    @Autowired
+    private ParamUtil paramUtil;
 
     /**
      * 入库单实际明细回传
@@ -52,12 +49,12 @@ public class TagOperationResultController {
     public RfidApiResponseDTO<Void> uploadInboundItems(@RequestBody RfidApiRequestDTO request) {
         try {
             // 验证基础参数
-            if (!validateBaseParams(request, "upInitem")) {
+            if (!paramUtil.validateBaseParams(request, "upInitem")) {
                 return RfidApiResponseDTO.error("参数验证失败");
             }
 
             // 解析业务参数
-            InboundDTO.InboundParam param = parseParam(request.getParam(), InboundDTO.InboundParam.class);
+            InboundDTO.InboundParam param = paramUtil.parseParam(request.getParam(), InboundDTO.InboundParam.class);
             if (param == null) {
                 return RfidApiResponseDTO.error("业务参数解析失败");
             }
@@ -84,12 +81,12 @@ public class TagOperationResultController {
     public RfidApiResponseDTO<Void> uploadOutboundItems(@RequestBody RfidApiRequestDTO request) {
         try {
             // 验证基础参数
-            if (!validateBaseParams(request, "upOutitem")) {
+            if (!paramUtil.validateBaseParams(request, "upOutitem")) {
                 return RfidApiResponseDTO.error("参数验证失败");
             }
 
             // 解析业务参数
-            OutboundDTO.OutboundParam param = parseParam(request.getParam(), OutboundDTO.OutboundParam.class);
+            OutboundDTO.OutboundParam param = paramUtil.parseParam(request.getParam(), OutboundDTO.OutboundParam.class);
             if (param == null) {
                 return RfidApiResponseDTO.error("业务参数解析失败");
             }
@@ -116,12 +113,13 @@ public class TagOperationResultController {
     public RfidApiResponseDTO<List<InventoryDTO.InventoryBookItem>> getInventoryBook(@RequestBody RfidApiRequestDTO request) {
         try {
             // 验证基础参数
-            if (!validateBaseParams(request, "getInvbook")) {
+            if (!paramUtil.validateBaseParams(request, "getInvbook")) {
                 return RfidApiResponseDTO.error("参数验证失败");
             }
 
             // 解析业务参数
-            InventoryDTO.InventoryQueryParam param = parseParam(request.getParam(), InventoryDTO.InventoryQueryParam.class);
+            InventoryDTO.InventoryQueryParam param = paramUtil.parseParam(request.getParam(),
+                    InventoryDTO.InventoryQueryParam.class);
             if (param == null) {
                 return RfidApiResponseDTO.error("业务参数解析失败");
             }
@@ -148,12 +146,13 @@ public class TagOperationResultController {
     public RfidApiResponseDTO<Void> uploadInventoryItems(@RequestBody RfidApiRequestDTO request) {
         try {
             // 验证基础参数
-            if (!validateBaseParams(request, "upInvitem")) {
+            if (!paramUtil.validateBaseParams(request, "upInvitem")) {
                 return RfidApiResponseDTO.error("参数验证失败");
             }
 
             // 解析业务参数
-            InventoryDTO.InventoryParam param = parseParam(request.getParam(), InventoryDTO.InventoryParam.class);
+            InventoryDTO.InventoryParam param = paramUtil.parseParam(request.getParam(),
+                    InventoryDTO.InventoryParam.class);
             if (param == null) {
                 return RfidApiResponseDTO.error("业务参数解析失败");
             }
@@ -169,65 +168,6 @@ public class TagOperationResultController {
         }
     }
 
-    /**
-     * 验证基础参数
-     */
-    private boolean validateBaseParams(RfidApiRequestDTO request, String expectedMethod) {
-        if (request == null) {
-            log.error("请求参数为空");
-            return false;
-        }
-
-        if (!EXPECTED_APP_ID.equals(request.getAppId())) {
-            log.error("AppId验证失败，期望：{}，实际：{}", EXPECTED_APP_ID, request.getAppId());
-            return false;
-        }
-
-        if (!expectedMethod.equals(request.getMethod())) {
-            log.error("Method验证失败，期望：{}，实际：{}", expectedMethod, request.getMethod());
-            return false;
-        }
-
-        if (!EXPECTED_VERSION.equals(request.getVersion())) {
-            log.error("Version验证失败，期望：{}，实际：{}", EXPECTED_VERSION, request.getVersion());
-            return false;
-        }
-
-        if (!StringUtils.isNotBlank(request.getTimestamp())) {
-            log.error("Timestamp不能为空");
-            return false;
-        }
-
-        if (!StringUtils.isNotBlank(request.getSign())) {
-            log.error("Sign不能为空");
-            return false;
-        }
-
-        // 验证签名
-        if (!RfidSignUtil.verifySign(request.getAppId(), request.getMethod(),
-                request.getVersion(), request.getTimestamp(), request.getSign())) {
-            log.error("签名验证失败");
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * 解析业务参数
-     */
-    private <T> T parseParam(Object param, Class<T> clazz) {
-        try {
-            if (param == null) {
-                return null;
-            }
-            // 使用JsonUtil进行对象转换
-            return JsonUtil.convertValue(param, clazz);
-        } catch (Exception e) {
-            log.error("参数解析失败", e);
-            return null;
-        }
-    }
 
     /**
      * 处理入库单明细
@@ -237,7 +177,7 @@ public class TagOperationResultController {
             return;
         }
 
-        LocalDateTime receiptTime = parseDateTime(param.getReceiptTime());
+        LocalDateTime receiptTime = TimeUtil.parseDateFormatterString(param.getReceiptTime());
 
         for (InboundDTO.InboundItem item : param.getItemData()) {
             if (item.getMsitemData() != null) {
@@ -264,7 +204,7 @@ public class TagOperationResultController {
             return;
         }
 
-        LocalDateTime receiptTime = parseDateTime(param.getReceiptTime());
+        LocalDateTime receiptTime = TimeUtil.parseDateFormatterString(param.getReceiptTime());
 
         for (OutboundDTO.OutboundItem item : param.getItemData()) {
             if (item.getMsitemData() != null) {
@@ -313,7 +253,7 @@ public class TagOperationResultController {
             return;
         }
 
-        LocalDateTime receiptTime = parseDateTime(param.getReceiptTime());
+        LocalDateTime receiptTime = TimeUtil.parseDateFormatterString(param.getReceiptTime());
 
         for (InventoryDTO.InventoryItem item : param.getItemData()) {
             if (item.getMsitemData() != null) {
@@ -332,17 +272,5 @@ public class TagOperationResultController {
         }
     }
 
-    /**
-     * 解析日期时间字符串
-     */
-    private LocalDateTime parseDateTime(String dateTimeStr) {
-        try {
-            if (StringUtils.isNotBlank(dateTimeStr)) {
-                return LocalDateTime.parse(dateTimeStr, DATE_TIME_FORMATTER);
-            }
-        } catch (Exception e) {
-            log.warn("日期时间解析失败：{}", dateTimeStr, e);
-        }
-        return LocalDateTime.now();
-    }
+
 }

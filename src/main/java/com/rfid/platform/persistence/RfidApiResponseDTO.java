@@ -1,5 +1,6 @@
 package com.rfid.platform.persistence;
 
+import java.time.format.DateTimeFormatter;
 import lombok.Data;
 import java.io.Serializable;
 
@@ -10,9 +11,9 @@ import java.io.Serializable;
 public class RfidApiResponseDTO<T> implements Serializable {
 
     /**
-     * 状态码，100表示成功
+     * 状态码，00表示成功
      */
-    private Integer code;
+    private String code;
 
     /**
      * 描述信息
@@ -41,10 +42,10 @@ public class RfidApiResponseDTO<T> implements Serializable {
 
     public static <T> RfidApiResponseDTO<T> success() {
         RfidApiResponseDTO<T> response = new RfidApiResponseDTO<>();
-        response.setCode(100);
+        response.setCode("");
         response.setMessage("操作成功");
         response.setSuccess(true);
-        response.setTime(java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        response.setTime(java.time.LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
         return response;
     }
 
@@ -62,10 +63,10 @@ public class RfidApiResponseDTO<T> implements Serializable {
 
     public static <T> RfidApiResponseDTO<T> error(String message) {
         RfidApiResponseDTO<T> response = new RfidApiResponseDTO<>();
-        response.setCode(200);
+        response.setCode("99");
         response.setMessage(message);
         response.setSuccess(false);
-        response.setTime(java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        response.setTime(java.time.LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
         return response;
     }
 }
