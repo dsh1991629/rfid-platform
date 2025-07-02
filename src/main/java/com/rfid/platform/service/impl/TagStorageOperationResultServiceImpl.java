@@ -7,6 +7,7 @@ import com.rfid.platform.service.TagStorageOperationResultService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import java.util.List;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -36,4 +37,9 @@ public class TagStorageOperationResultServiceImpl extends ServiceImpl<TagStorage
     public IPage<TagStorageOperationResultBean> pageTagStorageOperationResult(Page<TagStorageOperationResultBean> page, LambdaQueryWrapper<TagStorageOperationResultBean> query) {
         return super.page(page, query);
     }
-} 
+
+    @Override
+    public boolean saveTagStorageOperationResults(List<TagStorageOperationResultBean> resultBeans) {
+        return super.saveBatch(resultBeans, 100);
+    }
+}

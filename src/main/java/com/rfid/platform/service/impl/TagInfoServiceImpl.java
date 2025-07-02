@@ -7,6 +7,7 @@ import com.rfid.platform.service.TagInfoService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import java.util.List;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -31,4 +32,14 @@ public class TagInfoServiceImpl extends ServiceImpl<TagInfoMapper, TagInfoBean> 
     public IPage<TagInfoBean> pageTagInfo(Page<TagInfoBean> page, LambdaQueryWrapper<TagInfoBean> query) {
         return super.page(page, query);
     }
-} 
+
+    @Override
+    public java.util.List<TagInfoBean> listTagInfo(LambdaQueryWrapper<TagInfoBean> query) {
+        return super.list(query);
+    }
+
+    @Override
+    public boolean updateTagInfos(List<TagInfoBean> validatedTagInfoBeans) {
+        return super.updateBatchById(validatedTagInfoBeans, 100);
+    }
+}

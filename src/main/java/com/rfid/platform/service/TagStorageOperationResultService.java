@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.rfid.platform.entity.TagStorageOperationResultBean;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import java.util.List;
 
 public interface TagStorageOperationResultService {
 
@@ -16,4 +17,6 @@ public interface TagStorageOperationResultService {
     TagStorageOperationResultBean getTagStorageOperationResultByPk(Long id);
 
     IPage<TagStorageOperationResultBean> pageTagStorageOperationResult(Page<TagStorageOperationResultBean> page, LambdaQueryWrapper<TagStorageOperationResultBean> query);
+
+    boolean saveTagStorageOperationResults(List<TagStorageOperationResultBean> resultBeans);
 } 

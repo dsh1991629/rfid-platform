@@ -36,4 +36,9 @@ public class TagStorageOperationServiceImpl extends ServiceImpl<TagStorageOperat
     public IPage<TagStorageOperationBean> pageTagStorageOperation(Page<TagStorageOperationBean> page, LambdaQueryWrapper<TagStorageOperationBean> query) {
         return super.page(page, query);
     }
+
+    @Override
+    public java.util.List<TagStorageOperationBean> listTagStorageOperation(LambdaQueryWrapper<TagStorageOperationBean> query) {
+        return super.list(query);
+    }
 }
