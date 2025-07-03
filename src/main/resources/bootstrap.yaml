@@ -1,17 +1,17 @@
-server:
-  servlet:
-    context-path: /rfid
-
 spring:
   application:
     name: rfid-platform
   cloud:
     nacos:
       config:
+        enable: true
+        username: nacos
+        password: nacos
         file-extension: yaml
         server-addr: 43.142.143.171:8848
         group: DEFAULT_GROUP
-        namespace: public
+        namespace: rfid
+        timeout: 50000
 
 springdoc:
   swagger-ui:
@@ -33,11 +33,8 @@ knife4j:
     language: zh_cn
 
 
-#mybatis-plus:
-#  configuration:
-#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
-
 mybatis-plus:
   mapper-locations: classpath*:com/rfid/platform/*.xml
   configuration:
     map-underscore-to-camel-case: true
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
