@@ -1,5 +1,6 @@
 package com.rfid.platform.filter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rfid.platform.common.AccountContext;
 import com.rfid.platform.util.JwtUtil;
 import jakarta.servlet.FilterChain;
@@ -9,6 +10,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -17,6 +20,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -53,10 +58,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                 username, null, Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
                             );
                         SecurityContextHolder.getContext().setAuthentication(authentication);
+                        
+                        filterChain.doFilter(request, response);
+                        return;
+                    } else {
+                        // Token在Redis中不存在或用户ID不匹配
+                        sendAuthenticationError(response, "Token已失效或无效");
+                        return;
                     }
+                } else {
+                    // Token过期或用户名为空
+                    sendAuthenticationError(response, "Token已过期或无效");
+                    return;
                 }
             } catch (Exception e) {
                 logger.error("JWT token validation failed", e);
+                sendAuthenticationError(response, "Token验证失败");
+                return;
             }
         }
         
@@ -69,5 +87,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return bearerToken.substring(7);
         }
         return null;
+    }
+    
+    private void sendAuthenticationError(HttpServletResponse response, String message) throws IOException {
+        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setCharacterEncoding("UTF-8");
+        
+        Map<String, Object> errorResponse = new HashMap<>();
+        errorResponse.put("code", 401);
+        errorResponse.put("message", message);
+        errorResponse.put("success", false);
+        errorResponse.put("timestamp", System.currentTimeMillis());
+        
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonResponse = objectMapper.writeValueAsString(errorResponse);
+        
+        response.getWriter().write(jsonResponse);
+        response.getWriter().flush();
     }
 }
