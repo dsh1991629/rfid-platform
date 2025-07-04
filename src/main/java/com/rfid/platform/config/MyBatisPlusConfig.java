@@ -21,7 +21,7 @@ public class MyBatisPlusConfig {
         DynamicTableNameInnerInterceptor dynamicTableNameInnerInterceptor = new DynamicTableNameInnerInterceptor();
         dynamicTableNameInnerInterceptor.setTableNameHandler(
                 //可以传多个表名参数，指定哪些表使用SuffixTableNameHandler处理表名称
-                new SuffixTableNameHandler()
+                new SuffixTableNameHandler("LOGIN_LOG")
         );
         interceptor.addInnerInterceptor(dynamicTableNameInnerInterceptor);
         return interceptor;

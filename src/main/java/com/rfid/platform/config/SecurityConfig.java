@@ -1,8 +1,9 @@
 package com.rfid.platform.config;
 
+import cn.hutool.crypto.digest.MD5;
 import com.rfid.platform.filter.CustomAccessDeniedHandler;
 import com.rfid.platform.filter.CustomAuthenticationEntryPoint;
-import com.rfid.platform.service.impl.UserDetailsServiceImpl;
+import com.rfid.platform.filter.JwtAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,6 +15,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -24,14 +26,15 @@ import java.util.Arrays;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Autowired
-    private UserDetailsServiceImpl userDetailsService;
-    
+
     @Autowired
     private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
     
     @Autowired
     private CustomAccessDeniedHandler customAccessDeniedHandler;
+    
+    @Autowired
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -56,7 +59,8 @@ public class SecurityConfig {
             .exceptionHandling(exception -> exception
                 .authenticationEntryPoint(customAuthenticationEntryPoint)
                 .accessDeniedHandler(customAccessDeniedHandler)
-            );
+            )
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -71,5 +75,11 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
+    }
+
+
+    public static void main(String[] args) {
+        System.out.println(MD5.create().digestHex("!QAZ2wsx"));
+        System.out.println(new BCryptPasswordEncoder().encode(MD5.create().digestHex("!QAZ2wsx")));
     }
 }

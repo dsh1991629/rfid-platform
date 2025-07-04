@@ -128,18 +128,18 @@ public class LoginController {
                 response.setMessage("密码不能为空");
                 return response;
             }
-            
-            if (StringUtils.isBlank(loginReqDTO.getCaptchaCode())) {
-                response.setCode(PlatformConstant.RET_CODE.FAILED);
-                response.setMessage("验证码不能为空");
-                return response;
-            }
-            
-            if (StringUtils.isBlank(loginReqDTO.getCaptchaKey())) {
-                response.setCode(PlatformConstant.RET_CODE.FAILED);
-                response.setMessage("验证码key不能为空");
-                return response;
-            }
+//
+//            if (StringUtils.isBlank(loginReqDTO.getCaptchaCode())) {
+//                response.setCode(PlatformConstant.RET_CODE.FAILED);
+//                response.setMessage("验证码不能为空");
+//                return response;
+//            }
+//
+//            if (StringUtils.isBlank(loginReqDTO.getCaptchaKey())) {
+//                response.setCode(PlatformConstant.RET_CODE.FAILED);
+//                response.setMessage("验证码key不能为空");
+//                return response;
+//            }
             
             // 验证验证码
             String captchaKey = PlatformConstant.CACHE_KEY.CAPTCHA_KEY + loginReqDTO.getCaptchaKey();

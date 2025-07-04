@@ -19,8 +19,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -36,49 +38,77 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         
+        // 排除不需要token验证的路径
+        String requestPath = request.getRequestURI();
+        List<String> excludePaths = Arrays.asList(
+            "/rfid/login", "/rfid/captcha", "/rfid/refresh-token",
+            "/doc.html", "/webjars", "/v3/api-docs", "/rfid/tag/operation"
+        );
+
+        boolean shouldSkip = excludePaths.stream().anyMatch(path -> requestPath.startsWith(path));
+
+        if (shouldSkip) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+        
         String token = getTokenFromRequest(request);
         
         if (StringUtils.isNotBlank(token)) {
             try {
+                // 首先检查token是否已过期
+                if (jwtUtil.isTokenExpired(token)) {
+                    sendAuthenticationError(response, "Token已过期");
+                    return;
+                }
+                
+                // Token未过期，继续解析用户信息
                 String username = jwtUtil.getUsernameFromToken(token);
                 Long userId = jwtUtil.getUserIdFromToken(token);
                 
-                if (StringUtils.isNotBlank(username) && !jwtUtil.isTokenExpired(token)) {
-                    // 验证token是否在Redis中存在
-                    String tokenKey = "token:" + token;
-                    Object cachedUserId = redisTemplate.opsForValue().get(tokenKey);
-                    
-                    if (cachedUserId != null && userId.equals(Long.valueOf(cachedUserId.toString()))) {
-                        // 设置用户上下文
-                        AccountContext.setAccountId(userId);
-                        
-                        // 设置Spring Security上下文
-                        UsernamePasswordAuthenticationToken authentication = 
-                            new UsernamePasswordAuthenticationToken(
-                                username, null, Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
-                            );
-                        SecurityContextHolder.getContext().setAuthentication(authentication);
-                        
-                        filterChain.doFilter(request, response);
-                        return;
-                    } else {
-                        // Token在Redis中不存在或用户ID不匹配
-                        sendAuthenticationError(response, "Token已失效或无效");
-                        return;
-                    }
-                } else {
-                    // Token过期或用户名为空
-                    sendAuthenticationError(response, "Token已过期或无效");
+                if (StringUtils.isBlank(username)) {
+                    sendAuthenticationError(response, "Token中用户信息无效");
                     return;
                 }
+                
+                // 验证token是否在Redis中存在
+                String tokenKey = "token:" + token;
+                Object cachedUserId = redisTemplate.opsForValue().get(tokenKey);
+                
+                if (cachedUserId == null) {
+                    sendAuthenticationError(response, "Token已失效");
+                    return;
+                }
+                
+                if (!userId.equals(Long.valueOf(cachedUserId.toString()))) {
+                    sendAuthenticationError(response, "Token用户信息不匹配");
+                    return;
+                }
+                
+                // 所有验证通过，设置用户上下文
+                AccountContext.setAccountId(userId);
+                
+                // 设置Spring Security上下文
+                UsernamePasswordAuthenticationToken authentication =
+                    new UsernamePasswordAuthenticationToken(
+                        username, null, Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
+                    );
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+                
+                filterChain.doFilter(request, response);
+                return;
+                
             } catch (Exception e) {
                 logger.error("JWT token validation failed", e);
-                sendAuthenticationError(response, "Token验证失败");
+                sendAuthenticationError(response, "Token验证失败: " + e.getMessage());
                 return;
             }
+        } else {
+            logger.error("权限不足");
+            sendAuthenticationError(response, "权限不足");
+            return;
         }
-        
-        filterChain.doFilter(request, response);
+
     }
     
     private String getTokenFromRequest(HttpServletRequest request) {
