@@ -9,8 +9,10 @@ import com.rfid.platform.persistence.MenuCreateDTO;
 import com.rfid.platform.persistence.MenuDeleteDTO;
 import com.rfid.platform.persistence.MenuTreeDTO;
 import com.rfid.platform.persistence.MenuUpdateDTO;
-import com.rfid.platform.service.AccountService;
 import com.rfid.platform.service.MenuService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,6 +23,11 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 菜单管理控制器
+ * 提供菜单的增删改查功能
+ */
+@Tag(name = "菜单管理", description = "菜单管理相关接口")
 @RestController
 @RequestMapping(value = "/rfid/menu")
 public class MenuController {
@@ -28,12 +35,18 @@ public class MenuController {
     @Autowired
     private MenuService menuService;
 
-    @Autowired
-    private AccountService accountService;
 
 
+    /**
+     * 创建菜单
+     * @param menuCreateDTO 菜单创建参数
+     * @return 创建结果，包含菜单ID
+     */
+    @Operation(summary = "创建菜单", description = "创建新的菜单项")
     @PostMapping("/create")
-    public BaseResult<Long> createMenu(@RequestBody MenuCreateDTO menuCreateDTO) {
+    public BaseResult<Long> createMenu(
+            @Parameter(description = "菜单创建参数", required = true)
+            @RequestBody MenuCreateDTO menuCreateDTO) {
         BaseResult<Long> result = new BaseResult<>();
         try {
             // 参数校验
@@ -70,8 +83,16 @@ public class MenuController {
         return result;
     }
 
+    /**
+     * 删除菜单
+     * @param menuDeleteDTO 菜单删除参数
+     * @return 删除结果
+     */
+    @Operation(summary = "删除菜单", description = "根据菜单ID删除菜单")
     @PostMapping("/delete")
-    public BaseResult<Boolean> deleteMenu(@RequestBody MenuDeleteDTO menuDeleteDTO) {
+    public BaseResult<Boolean> deleteMenu(
+            @Parameter(description = "菜单删除参数", required = true)
+            @RequestBody MenuDeleteDTO menuDeleteDTO) {
         BaseResult<Boolean> result = new BaseResult<>();
         try {
             // 参数校验
@@ -94,8 +115,16 @@ public class MenuController {
         return result;
     }
 
+    /**
+     * 更新菜单
+     * @param menuUpdateDTO 菜单更新参数
+     * @return 更新结果
+     */
+    @Operation(summary = "更新菜单", description = "根据菜单ID更新菜单信息")
     @PostMapping("/update")
-    public BaseResult<Boolean> updateMenu(@RequestBody MenuUpdateDTO menuUpdateDTO) {
+    public BaseResult<Boolean> updateMenu(
+            @Parameter(description = "菜单更新参数", required = true)
+            @RequestBody MenuUpdateDTO menuUpdateDTO) {
         BaseResult<Boolean> result = new BaseResult<>();
         try {
             // 参数校验
@@ -131,7 +160,11 @@ public class MenuController {
         return result;
     }
 
-
+    /**
+     * 获取菜单树
+     * @return 菜单树结构
+     */
+    @Operation(summary = "获取菜单树", description = "获取完整的菜单树形结构")
     @PostMapping("/tree")
     public BaseResult<List<MenuTreeDTO>> menuTree() {
         BaseResult<List<MenuTreeDTO>> result = new BaseResult<>();
@@ -153,6 +186,10 @@ public class MenuController {
 
     /**
      * 构建菜单树
+     * 递归构建菜单的树形结构
+     * @param allMenus 所有菜单列表
+     * @param parentId 父菜单ID
+     * @return 菜单树列表
      */
     private List<MenuTreeDTO> buildMenuTree(List<MenuBean> allMenus, Long parentId) {
         List<MenuTreeDTO> treeList = new ArrayList<>();

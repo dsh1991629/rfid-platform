@@ -24,6 +24,9 @@ import com.rfid.platform.service.AccountService;
 import com.rfid.platform.service.DepartmentService;
 import com.rfid.platform.service.MenuService;
 import com.rfid.platform.service.RoleService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +40,15 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+/**
+ * 账户管理控制器
+ * 提供账户的增删改查等基本操作功能
+ * 
+ * @author RFID Platform Team
+ * @version 1.0
+ * @since 2024
+ */
+@Tag(name = "账户管理", description = "账户管理相关接口，包括账户的创建、删除、更新、查询等功能")
 @RestController
 @RequestMapping(value = "/rfid/account")
 public class AccountController {
@@ -56,12 +68,23 @@ public class AccountController {
     @Autowired
     private MenuService menuService;
 
-
+    /**
+     * 创建新账户
+     * 根据提供的账户信息创建新的用户账户，包括账户编码、名称、部门和角色等信息
+     * 
+     * @param accountCreateDTO 账户创建数据传输对象，包含创建账户所需的所有信息
+     * @return 返回创建结果，成功时包含新创建账户的ID
+     */
+    @Operation(
+        summary = "创建账户",
+        description = "创建新的用户账户，需要提供账户编码、名称、部门和角色等基本信息。账户编码不能重复。"
+    )
     @PostMapping(value = "/create")
-    public BaseResult<Long> addAccount(@RequestBody AccountCreateDTO accountCreateDTO) {
+    public BaseResult<Long> addAccount(
+        @Parameter(description = "账户创建信息", required = true)
+        @RequestBody AccountCreateDTO accountCreateDTO) {
         BaseResult<Long> result = new BaseResult<>();
         try {
-
             // 参数校验
             if (StringUtils.isBlank(accountCreateDTO.getCode())) {
                 result.setCode(PlatformConstant.RET_CODE.FAILED);
@@ -75,7 +98,6 @@ public class AccountController {
                 return result;
             }
 
-
             // 检查角色名称是否已存在
             LambdaQueryWrapper<AccountBean> nameCheckWrapper = new LambdaQueryWrapper<>();
             nameCheckWrapper.eq(AccountBean::getCode, accountCreateDTO.getCode());
@@ -86,7 +108,6 @@ public class AccountController {
                 result.setMessage("账户已存在，不能重复");
                 return result;
             }
-
 
             AccountBean accountBean = BeanUtil.copyProperties(accountCreateDTO, AccountBean.class);
             boolean success = accountService.saveAccount(accountBean, accountCreateDTO.getDepartment(), accountCreateDTO.getRole());
@@ -104,8 +125,21 @@ public class AccountController {
         return result;
     }
 
+    /**
+     * 删除账户
+     * 根据账户ID删除指定的用户账户
+     * 
+     * @param accountDeleteDTO 账户删除数据传输对象，包含要删除的账户ID
+     * @return 返回删除操作的结果
+     */
+    @Operation(
+        summary = "删除账户",
+        description = "根据账户ID删除指定的用户账户，删除操作不可逆，请谨慎操作。"
+    )
     @PostMapping(value = "/delete")
-    public BaseResult<Boolean> deleteAccount(@RequestBody AccountDeleteDTO accountDeleteDTO) {
+    public BaseResult<Boolean> deleteAccount(
+        @Parameter(description = "账户删除信息", required = true)
+        @RequestBody AccountDeleteDTO accountDeleteDTO) {
         BaseResult<Boolean> result = new BaseResult<>();
         try {
             if (accountDeleteDTO.getId() == null) {
@@ -130,8 +164,21 @@ public class AccountController {
         return result;
     }
 
+    /**
+     * 更新账户信息
+     * 根据账户ID更新账户的基本信息，包括名称、部门、角色等
+     * 
+     * @param accountUpdateDTO 账户更新数据传输对象，包含要更新的账户信息
+     * @return 返回更新操作的结果
+     */
+    @Operation(
+        summary = "更新账户",
+        description = "根据账户ID更新账户的基本信息，包括账户名称、部门、角色等信息。账户编码不能与其他账户重复。"
+    )
     @PostMapping(value = "/update")
-    public BaseResult<Boolean> updateAccount(@RequestBody AccountUpdateDTO accountUpdateDTO) {
+    public BaseResult<Boolean> updateAccount(
+        @Parameter(description = "账户更新信息", required = true)
+        @RequestBody AccountUpdateDTO accountUpdateDTO) {
         BaseResult<Boolean> result = new BaseResult<>();
         try {
             if (accountUpdateDTO.getId() == null) {
@@ -169,11 +216,27 @@ public class AccountController {
         return result;
     }
 
-
+    /**
+     * 分页查询账户列表
+     * 根据查询条件分页获取账户列表，支持按账户编码、名称、部门、角色等条件进行筛选
+     * 
+     * @param accountPageQueryDTO 账户分页查询条件
+     * @param pageNum 页码，默认为1
+     * @param pageSize 每页大小，默认为10
+     * @return 返回分页查询结果，包含账户列表和分页信息
+     */
+    @Operation(
+        summary = "分页查询账户",
+        description = "根据查询条件分页获取账户列表，支持按账户编码、名称、部门、角色等条件进行筛选查询。"
+    )
     @PostMapping(value = "/page")
-    public BaseResult<PageResult<AccountDTO>> accountPage(@RequestBody AccountPageQueryDTO accountPageQueryDTO,
-                                                          @RequestParam(defaultValue = "1") Integer pageNum,
-                                                          @RequestParam(defaultValue = "10") Integer pageSize) {
+    public BaseResult<PageResult<AccountDTO>> accountPage(
+        @Parameter(description = "账户分页查询条件", required = true)
+        @RequestBody AccountPageQueryDTO accountPageQueryDTO,
+        @Parameter(description = "页码，从1开始", example = "1")
+        @RequestParam(defaultValue = "1") Integer pageNum,
+        @Parameter(description = "每页大小", example = "10")
+        @RequestParam(defaultValue = "10") Integer pageSize) {
         BaseResult<PageResult<AccountDTO>> result = new BaseResult<>();
         try {
             Page<AccountBean> page = new Page<>(pageNum, pageSize);
@@ -239,9 +302,21 @@ public class AccountController {
         return result;
     }
 
-
+    /**
+     * 根据部门查询账户列表
+     * 获取指定部门下的所有账户信息，包括账户的基本信息、角色和权限等
+     * 
+     * @param accountDepartmentQueryDTO 部门账户查询条件，包含部门ID
+     * @return 返回指定部门下的账户列表
+     */
+    @Operation(
+        summary = "根据部门查询账户",
+        description = "获取指定部门下的所有账户信息，包括账户的基本信息、所属角色和相关权限菜单。"
+    )
     @PostMapping(value = "/list/department")
-    public BaseResult<List<AccountDTO>> accountByDepartment(@RequestBody AccountDepartmentQueryDTO accountDepartmentQueryDTO) {
+    public BaseResult<List<AccountDTO>> accountByDepartment(
+        @Parameter(description = "部门账户查询条件", required = true)
+        @RequestBody AccountDepartmentQueryDTO accountDepartmentQueryDTO) {
         BaseResult<List<AccountDTO>> result = new BaseResult<>();
         try {
             if (accountDepartmentQueryDTO.getDepartment() == null || accountDepartmentQueryDTO.getDepartment().getId() == null) {
@@ -292,6 +367,4 @@ public class AccountController {
         }
         return result;
     }
-
-
 }

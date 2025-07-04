@@ -23,7 +23,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
 
@@ -34,11 +38,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * RFID标签操作结果控制器
- * 实现RFID接口文档中定义的四个接口
+ * 实现RFID接口文档中定义的四个接口：入库单明细回传、出库单明细回传、盘点单账面明细查询、盘点单明细回传
+ * 
+ * @author RFID Platform Team
+ * @version 1.0
+ * @since 2024
  */
 @Slf4j
 @RestController
 @RequestMapping("/rfid/tag/operation/result")
+@Tag(name = "出入库结果管理", description = "提供RFID标签操作结果相关的API接口，包括入库、出库、盘点等操作的数据回传和查询功能")
 public class TagOperationResultController {
 
     @Autowired
@@ -54,14 +63,23 @@ public class TagOperationResultController {
     private ParamUtil paramUtil;
 
     /**
-     * 入库单实际明细回传
+     * 入库单实际明细回传接口
+     * 用于接收RFID设备扫描到的入库单实际明细数据，包括EPC标签信息和SKU信息
      *
-     * @param request 请求参数
-     * @return 响应结果
+     * @param request 入库单明细请求参数，包含单据编号、上游单据编号、接收时间和明细数据
+     * @return 响应结果，包含处理状态和结果信息
      */
     @PostMapping("/upInitem")
     @InterfaceLog(type = 4, description = "入库单明细回传")
-    public RfidApiResponseDTO<String> uploadInboundItems(@RequestBody RfidApiRequestDTO request) {
+    @Operation(
+        summary = "入库单实际明细回传",
+        description = "接收RFID设备扫描到的入库单实际明细数据，验证EPC标签和SKU信息的有效性，并更新标签状态",
+        tags = {"出入库结果管理"}
+    )
+    public RfidApiResponseDTO<String> uploadInboundItems(
+            @Parameter(description = "入库单明细请求参数", required = true, 
+                      content = @Content(schema = @Schema(implementation = RfidApiRequestDTO.class)))
+            @RequestBody RfidApiRequestDTO<InboundDTO.InboundParam> request) {
         RfidApiResponseDTO<String> response = RfidApiResponseDTO.success();
         try {
             // 验证基础参数
@@ -70,7 +88,7 @@ public class TagOperationResultController {
             }
 
             // 解析业务参数
-            InboundDTO.InboundParam param = paramUtil.parseParam(request.getParam(), InboundDTO.InboundParam.class);
+            InboundDTO.InboundParam param = request.getParam();
             if (param == null) {
                 response.setCode("310");
                 response.setMessage("业务参数解析失败");
@@ -91,14 +109,23 @@ public class TagOperationResultController {
     }
 
     /**
-     * 出库单实际明细回传
+     * 出库单实际明细回传接口
+     * 用于接收RFID设备扫描到的出库单实际明细数据，验证出库标签的有效性
      *
-     * @param request 请求参数
-     * @return 响应结果
+     * @param request 出库单明细请求参数，包含单据编号、上游单据编号、接收时间和明细数据
+     * @return 响应结果，包含处理状态和结果信息
      */
     @PostMapping("/upOutitem")
     @InterfaceLog(type = 6, description = "出库单明细回传")
-    public RfidApiResponseDTO<String> uploadOutboundItems(@RequestBody RfidApiRequestDTO request) {
+    @Operation(
+        summary = "出库单实际明细回传",
+        description = "接收RFID设备扫描到的出库单实际明细数据，验证出库标签的有效性并更新标签状态为已出库",
+        tags = {"出入库结果管理"}
+    )
+    public RfidApiResponseDTO<String> uploadOutboundItems(
+            @Parameter(description = "出库单明细请求参数", required = true,
+                      content = @Content(schema = @Schema(implementation = RfidApiRequestDTO.class)))
+            @RequestBody RfidApiRequestDTO<OutboundDTO.OutboundParam> request) {
         RfidApiResponseDTO<String> response = RfidApiResponseDTO.success();
         try {
             // 验证基础参数
@@ -107,7 +134,7 @@ public class TagOperationResultController {
             }
 
             // 解析业务参数
-            OutboundDTO.OutboundParam param = paramUtil.parseParam(request.getParam(), OutboundDTO.OutboundParam.class);
+            OutboundDTO.OutboundParam param = request.getParam();
             if (param == null) {
                 response.setCode("310");
                 response.setMessage("业务参数解析失败");
@@ -128,14 +155,23 @@ public class TagOperationResultController {
     }
 
     /**
-     * 查询盘点单账面明细
+     * 查询盘点单账面明细接口
+     * 根据盘点单号查询系统中的账面库存明细，为盘点作业提供基础数据
      *
-     * @param request 请求参数
-     * @return 响应结果
+     * @param request 盘点单查询请求参数，包含盘点单号等查询条件
+     * @return 盘点单账面明细列表，包含SKU编码和账面数量信息
      */
     @PostMapping("/getInvbook")
     @InterfaceLog(type = 7, description = "盘点明细查询")
-    public RfidApiResponseDTO<List<InventoryDTO.InventoryBookItem>> getInventoryBook(@RequestBody RfidApiRequestDTO request) {
+    @Operation(
+        summary = "查询盘点单账面明细",
+        description = "根据盘点单号查询系统中的账面库存明细，返回SKU编码和对应的账面数量，为盘点作业提供基础数据",
+        tags = {"出入库结果管理"}
+    )
+    public RfidApiResponseDTO<List<InventoryDTO.InventoryBookItem>> getInventoryBook(
+            @Parameter(description = "盘点单查询请求参数", required = true,
+                      content = @Content(schema = @Schema(implementation = RfidApiRequestDTO.class)))
+            @RequestBody RfidApiRequestDTO<InventoryDTO.InventoryQueryParam> request) {
         RfidApiResponseDTO<List<InventoryDTO.InventoryBookItem>> response = RfidApiResponseDTO.success();
         try {
             // 验证基础参数
@@ -144,8 +180,7 @@ public class TagOperationResultController {
             }
 
             // 解析业务参数
-            InventoryDTO.InventoryQueryParam param = paramUtil.parseParam(request.getParam(),
-                    InventoryDTO.InventoryQueryParam.class);
+            InventoryDTO.InventoryQueryParam param = request.getParam();
             if (param == null) {
                 response.setCode("310");
                 response.setMessage("业务参数解析失败");
@@ -164,14 +199,23 @@ public class TagOperationResultController {
     }
 
     /**
-     * 盘点单实际明细回传
+     * 盘点单实际明细回传接口
+     * 用于接收RFID设备盘点扫描到的实际明细数据，记录盘点结果
      *
-     * @param request 请求参数
-     * @return 响应结果
+     * @param request 盘点单明细请求参数，包含盘点单号、实际扫描到的EPC标签和SKU信息
+     * @return 响应结果，包含处理状态和结果信息
      */
     @PostMapping("/upInvitem")
     @InterfaceLog(type = 8, description = "盘点明细回传")
-    public RfidApiResponseDTO<String> uploadInventoryItems(@RequestBody RfidApiRequestDTO request) {
+    @Operation(
+        summary = "盘点单实际明细回传",
+        description = "接收RFID设备盘点扫描到的实际明细数据，记录盘点结果，用于后续的盘点差异分析",
+        tags = {"出入库结果管理"}
+    )
+    public RfidApiResponseDTO<String> uploadInventoryItems(
+            @Parameter(description = "盘点单明细请求参数", required = true,
+                      content = @Content(schema = @Schema(implementation = RfidApiRequestDTO.class)))
+            @RequestBody RfidApiRequestDTO<InventoryDTO.InventoryParam> request) {
         RfidApiResponseDTO<String> response = RfidApiResponseDTO.success();
         try {
             // 验证基础参数
@@ -180,8 +224,7 @@ public class TagOperationResultController {
             }
 
             // 解析业务参数
-            InventoryDTO.InventoryParam param = paramUtil.parseParam(request.getParam(),
-                    InventoryDTO.InventoryParam.class);
+            InventoryDTO.InventoryParam param = request.getParam();
             if (param == null) {
                 response.setCode("310");
                 response.setMessage("业务参数解析失败");
@@ -201,7 +244,11 @@ public class TagOperationResultController {
 
 
     /**
-     * 处理入库单明细
+     * 处理入库单明细数据
+     * 解析入库单明细数据，验证EPC标签和SKU的有效性，并更新标签状态
+     * 
+     * @param param 入库单参数对象，包含入库明细数据
+     * @throws Exception 当数据验证失败或处理过程中出现异常时抛出
      */
     private void processInboundItems(InboundDTO.InboundParam param) throws Exception {
         if (param.getItemData() == null || param.getItemData().isEmpty()) {
@@ -237,7 +284,11 @@ public class TagOperationResultController {
     }
 
     /**
-     * 处理出库单明细
+     * 处理出库单明细数据
+     * 解析出库单明细数据，验证出库标签的有效性，并更新标签状态为已出库
+     * 
+     * @param param 出库单参数对象，包含出库明细数据
+     * @throws Exception 当数据验证失败或处理过程中出现异常时抛出
      */
     private void processOutboundItems(OutboundDTO.OutboundParam param) throws Exception {
         if (param.getItemData() == null || param.getItemData().isEmpty()) {
@@ -287,7 +338,11 @@ public class TagOperationResultController {
     }
 
     /**
-     * 查询盘点单账面明细
+     * 查询盘点单账面明细数据
+     * 根据盘点查询参数获取系统中的账面库存明细信息
+     * 
+     * @param param 盘点查询参数对象
+     * @return 盘点账面明细列表
      */
     private List<InventoryDTO.InventoryBookItem> queryInventoryBookItems(InventoryDTO.InventoryQueryParam param) {
         // 这里应该根据实际业务逻辑查询数据库
@@ -309,7 +364,10 @@ public class TagOperationResultController {
     }
 
     /**
-     * 处理盘点单明细
+     * 处理盘点单明细数据
+     * 解析盘点明细数据，记录实际盘点结果到数据库
+     * 
+     * @param param 盘点单参数对象，包含盘点明细数据
      */
     private void processInventoryItems(InventoryDTO.InventoryParam param) {
         if (param.getItemData() == null || param.getItemData().isEmpty()) {

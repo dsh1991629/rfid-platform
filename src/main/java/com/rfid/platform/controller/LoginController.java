@@ -25,14 +25,15 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.util.List;
 import java.util.Objects;
@@ -42,6 +43,11 @@ import java.util.concurrent.TimeUnit;
 import com.rfid.platform.persistence.ChangePasswordReqDTO;
 import com.rfid.platform.util.RequestUtil;
 
+/**
+ * 登录控制器
+ * 提供用户登录、注销、密码管理等功能
+ */
+@Tag(name = "登录管理", description = "用户登录、注销、密码管理相关接口")
 @RestController
 @RequestMapping(value = "/rfid")
 public class LoginController {
@@ -79,6 +85,7 @@ public class LoginController {
 
 
     
+    @Operation(summary = "获取验证码", description = "生成图形验证码，用于登录时的安全验证")
     @PostMapping(value = "/captcha")
     public BaseResult<CaptchaDTO> captcha() {
         BaseResult<CaptchaDTO> response = new BaseResult<>();
@@ -98,8 +105,11 @@ public class LoginController {
     }
 
 
+    @Operation(summary = "用户登录", description = "验证用户账号密码，登录成功后返回访问令牌和用户基本信息")
     @PostMapping(value = "/login")
-    public BaseResult<LoginRetDTO> login(@RequestBody LoginReqDTO loginReqDTO) {
+    public BaseResult<LoginRetDTO> login(
+            @Parameter(description = "登录请求参数", required = true)
+            @RequestBody LoginReqDTO loginReqDTO) {
         BaseResult<LoginRetDTO> response = new BaseResult<>(); 
         String clientIp = RequestUtil.getClientIpAddress();
         
@@ -128,34 +138,10 @@ public class LoginController {
                 response.setMessage("密码不能为空");
                 return response;
             }
-//
-//            if (StringUtils.isBlank(loginReqDTO.getCaptchaCode())) {
-//                response.setCode(PlatformConstant.RET_CODE.FAILED);
-//                response.setMessage("验证码不能为空");
-//                return response;
-//            }
-//
-//            if (StringUtils.isBlank(loginReqDTO.getCaptchaKey())) {
-//                response.setCode(PlatformConstant.RET_CODE.FAILED);
-//                response.setMessage("验证码key不能为空");
-//                return response;
-//            }
             
             // 验证验证码
             String captchaKey = PlatformConstant.CACHE_KEY.CAPTCHA_KEY + loginReqDTO.getCaptchaKey();
             String cachedCaptcha = (String) redisTemplate.opsForValue().get(captchaKey);
-            
-//            if (StringUtils.isBlank(cachedCaptcha)) {
-//                response.setCode(PlatformConstant.RET_CODE.FAILED);
-//                response.setMessage("验证码已过期");
-//                return response;
-//            }
-//
-//            if (!cachedCaptcha.equalsIgnoreCase(loginReqDTO.getCaptchaCode())) {
-//                response.setCode(PlatformConstant.RET_CODE.FAILED);
-//                response.setMessage("验证码错误");
-//                return response;
-//            }
             
             // 删除已使用的验证码
             redisTemplate.delete(captchaKey);
@@ -268,9 +254,16 @@ public class LoginController {
 
     /**
      * 忘记密码 - 发送重置密码邮件
+     * 用户忘记密码时，通过邮箱发送重置密码链接
+     * 
+     * @param forgotPasswordReqDTO 忘记密码请求参数
+     * @return 重置密码token
      */
+    @Operation(summary = "忘记密码", description = "用户忘记密码时，验证身份后生成重置密码token")
     @PostMapping(value = "/forgotPassword")
-    public BaseResult<String> forgotPassword(@RequestBody ForgotPasswordReqDTO forgotPasswordReqDTO) {
+    public BaseResult<String> forgotPassword(
+            @Parameter(description = "忘记密码请求参数", required = true)
+            @RequestBody ForgotPasswordReqDTO forgotPasswordReqDTO) {
         BaseResult<String> response = new BaseResult<>();
         
         try {
@@ -352,9 +345,16 @@ public class LoginController {
     
     /**
      * 忘记密码重置密码
+     * 通过重置token重新设置用户密码
+     * 
+     * @param resetPasswordReqDTO 重置密码请求参数
+     * @return 重置结果
      */
+    @Operation(summary = "重置密码", description = "通过重置token重新设置用户密码")
     @PostMapping(value = "/forgetResetPassword")
-    public BaseResult<Boolean> resetPassword(@RequestBody ResetPasswordReqDTO resetPasswordReqDTO) {
+    public BaseResult<Boolean> resetPassword(
+            @Parameter(description = "重置密码请求参数", required = true)
+            @RequestBody ResetPasswordReqDTO resetPasswordReqDTO) {
         BaseResult<Boolean> response = new BaseResult<>();
         
         try {
@@ -444,10 +444,17 @@ public class LoginController {
     }
 
     /**
-     * 已登录状态下重设密码
+     * 已登录状态下修改密码
+     * 用户在已登录状态下修改自己的密码
+     * 
+     * @param changePasswordReqDTO 修改密码请求参数
+     * @return 修改结果
      */
+    @Operation(summary = "修改密码", description = "用户在已登录状态下修改自己的密码")
     @PostMapping(value = "/changePassword")
-    public BaseResult<String> changePassword(@RequestBody ChangePasswordReqDTO changePasswordReqDTO) {
+    public BaseResult<String> changePassword(
+            @Parameter(description = "修改密码请求参数", required = true)
+            @RequestBody ChangePasswordReqDTO changePasswordReqDTO) {
         BaseResult<String> response = new BaseResult<>();
         
         try {

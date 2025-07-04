@@ -9,6 +9,9 @@ import com.rfid.platform.persistence.RoleCreateDTO;
 import com.rfid.platform.persistence.RoleDeleteDTO;
 import com.rfid.platform.persistence.RoleUpdateDTO;
 import com.rfid.platform.service.RoleService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,16 +19,28 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * 角色管理控制器
+ * 提供角色的创建、删除、更新等功能
+ */
 @RestController
 @RequestMapping(value = "/rfid/role")
+@Tag(name = "角色管理", description = "角色管理相关接口")
 public class RoleController {
 
     @Autowired
     private RoleService roleService;
 
-
+    /**
+     * 创建角色
+     * @param roleCreateDTO 角色创建数据传输对象
+     * @return 创建结果，包含角色ID
+     */
     @PostMapping(value = "/create")
-    public BaseResult<Long> createRole(@RequestBody RoleCreateDTO roleCreateDTO) {
+    @Operation(summary = "创建角色", description = "创建新的角色信息")
+    public BaseResult<Long> createRole(
+            @Parameter(description = "角色创建信息", required = true)
+            @RequestBody RoleCreateDTO roleCreateDTO) {
         BaseResult<Long> result = new BaseResult<>();
         try {
             // 参数校验
@@ -65,8 +80,16 @@ public class RoleController {
         return result;
     }
 
+    /**
+     * 删除角色
+     * @param roleDeleteDTO 角色删除数据传输对象
+     * @return 删除结果
+     */
     @PostMapping(value = "/delete")
-    public BaseResult<Boolean> deleteRole(@RequestBody RoleDeleteDTO roleDeleteDTO) {
+    @Operation(summary = "删除角色", description = "根据角色ID删除角色信息")
+    public BaseResult<Boolean> deleteRole(
+            @Parameter(description = "角色删除信息", required = true)
+            @RequestBody RoleDeleteDTO roleDeleteDTO) {
         BaseResult<Boolean> result = new BaseResult<>();
         try {
             // 参数校验
@@ -92,8 +115,16 @@ public class RoleController {
         return result;
     }
 
+    /**
+     * 更新角色
+     * @param roleUpdateDTO 角色更新数据传输对象
+     * @return 更新结果
+     */
     @PostMapping(value = "/update")
-    public BaseResult<Boolean> updateRole(@RequestBody RoleUpdateDTO roleUpdateDTO) {
+    @Operation(summary = "更新角色", description = "更新角色信息")
+    public BaseResult<Boolean> updateRole(
+            @Parameter(description = "角色更新信息", required = true)
+            @RequestBody RoleUpdateDTO roleUpdateDTO) {
         BaseResult<Boolean> result = new BaseResult<>();
         try {
             // 参数校验

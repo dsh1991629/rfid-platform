@@ -15,6 +15,9 @@ import com.rfid.platform.service.TagInfoService;
 import com.rfid.platform.service.TagStorageOperationService;
 import com.rfid.platform.util.ParamUtil;
 import com.rfid.platform.util.TimeUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,9 +27,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
 
+/**
+ * RFID标签操作控制器
+ * 提供标签推送、入库通知、出库通知等功能
+ */
 @Slf4j
 @RestController
 @RequestMapping(value = "/rfid/tag/operation")
+@Tag(name = "标签操作管理", description = "RFID标签相关操作接口，包括标签推送、入库出库通知等功能")
 public class TagOperationController {
 
     @Autowired
@@ -41,10 +49,19 @@ public class TagOperationController {
     @Autowired
     private ParamUtil paramUtil;
 
-
+    /**
+     * 标签推送接口
+     * 接收外部系统推送的标签信息，保存到系统中
+     * 
+     * @param request 包含标签信息的请求对象
+     * @return 推送结果
+     */
     @PostMapping(value = "/push")
     @InterfaceLog(type = 2, description = "标签推送")
-    public RfidApiResponseDTO<Boolean> tagPush(@RequestBody RfidApiRequestDTO request){
+    @Operation(summary = "标签推送", description = "接收外部系统推送的RFID标签信息，包括EPC编码和SKU编码等")
+    public RfidApiResponseDTO<Boolean> tagPush(
+            @Parameter(description = "标签推送请求参数，包含EPC编码和SKU编码", required = true)
+            @RequestBody RfidApiRequestDTO request){
         RfidApiResponseDTO<Boolean> baseResult = new RfidApiResponseDTO<>();
 
         // 验证基础参数
@@ -59,7 +76,6 @@ public class TagOperationController {
             baseResult.setMessage("业务参数解析失败");
             return baseResult;
         }
-
 
         String execNo = ExecNoContext.getExecNo();
 
@@ -102,10 +118,19 @@ public class TagOperationController {
         return baseResult;
     }
 
-
+    /**
+     * 入库通知接口
+     * 接收到库通知信息，记录入库操作
+     * 
+     * @param request 包含入库信息的请求对象
+     * @return 入库通知处理结果
+     */
     @PostMapping(value = "/storage/in")
     @InterfaceLog(type = 3, description = "入库通知")
-    public RfidApiResponseDTO<Boolean> storageIn(@RequestBody RfidApiRequestDTO request){
+    @Operation(summary = "入库通知", description = "接收货物入库通知，记录入库操作信息并通知硬件设备")
+    public RfidApiResponseDTO<Boolean> storageIn(
+            @Parameter(description = "入库通知请求参数，包含单据号和数量信息", required = true)
+            @RequestBody RfidApiRequestDTO request){
         RfidApiResponseDTO<Boolean> baseResult = new RfidApiResponseDTO<>();
         String execNo = ExecNoContext.getExecNo();
 
@@ -135,7 +160,6 @@ public class TagOperationController {
 
             // TODO 调用接口发送给硬件设备
 
-
         } catch (Exception e) {
             baseResult.setData(false);
             baseResult.setCode("400");
@@ -144,10 +168,19 @@ public class TagOperationController {
         return baseResult;
     }
 
-
+    /**
+     * 出库通知接口
+     * 接收出库通知信息，记录出库操作
+     * 
+     * @param request 包含出库信息的请求对象
+     * @return 出库通知处理结果
+     */
     @PostMapping(value = "/storage/out")
     @InterfaceLog(type = 5, description = "出库通知")
-    public RfidApiResponseDTO<Boolean> storageOut(@RequestBody RfidApiRequestDTO request){
+    @Operation(summary = "出库通知", description = "接收货物出库通知，记录出库操作信息并通知硬件设备")
+    public RfidApiResponseDTO<Boolean> storageOut(
+            @Parameter(description = "出库通知请求参数，包含单据号和数量信息", required = true)
+            @RequestBody RfidApiRequestDTO request){
         RfidApiResponseDTO<Boolean> baseResult = new RfidApiResponseDTO<>();
 
         // 验证基础参数
@@ -178,7 +211,6 @@ public class TagOperationController {
 
             // TODO 调用接口发送给硬件设备
 
-
         } catch (Exception e) {
             baseResult.setData(false);
             baseResult.setCode("400");
@@ -186,6 +218,4 @@ public class TagOperationController {
         }
         return baseResult;
     }
-
-
 }
