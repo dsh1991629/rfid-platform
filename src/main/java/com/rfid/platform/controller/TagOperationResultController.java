@@ -17,7 +17,6 @@ import com.rfid.platform.entity.TagStorageOperationBean;
 import com.rfid.platform.util.ParamUtil;
 import com.rfid.platform.util.TimeUtil;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -55,6 +54,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/rfid/tag/operation/result")
 @Tag(name = "出入库结果管理", description = "提供RFID标签操作结果相关的API接口，包括入库、出库、盘点等操作的数据回传和查询功能")
 public class TagOperationResultController {
+
+    // 通知类型常量
+    private static final int NOTICE_TYPE_INBOUND = 1;  // 入库类型
+    private static final int NOTICE_TYPE_OUTBOUND = 2; // 出库类型
+    private static final int NOTICE_TYPE_INVENTORY = 3; // 盘点类型
 
     @Autowired
     private TagStorageOperationResultService tagStorageOperationResultService;
@@ -279,10 +283,7 @@ public class TagOperationResultController {
     }
 
 
-    // 通知类型常量
-    private static final int NOTICE_TYPE_INBOUND = 1;  // 入库类型
-    private static final int NOTICE_TYPE_OUTBOUND = 2; // 出库类型
-    private static final int NOTICE_TYPE_INVENTORY = 3; // 盘点类型
+
     
     /**
      * 处理入库单明细数据
