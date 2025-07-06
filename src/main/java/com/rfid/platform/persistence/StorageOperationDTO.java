@@ -1,6 +1,7 @@
 package com.rfid.platform.persistence;
 
 import java.io.Serializable;
+import java.util.List;
 import lombok.Data;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -15,20 +16,10 @@ public class StorageOperationDTO implements Serializable {
     /**
      * 票据编号
      */
-    @Schema(description = "出入库单号", example = "TK202312010001")
+    @Schema(description = "出入库单号", example = "TK202312010001", required = true)
     private String noticeNo;
 
-    /**
-     * 数量
-     */
-    @Schema(description = "出入库数量", example = "100")
-    private Integer noticeQuantity;
-
-
-    /**
-     * SKU编码
-     */
-    @Schema(description = "SKU编码")
-    private String skuCode;
+    @Schema(description = "出入库详情", required = true)
+    private List<StorageOperationDetailDTO> detail;
 
 }

@@ -40,4 +40,13 @@ public class TagStorageOperationBean implements Serializable {
 
     @TableField(value = "CREATE_TIME", fill = FieldFill.INSERT)
     private LocalDateTime createTime;
+
+    @TableField(value = "START_TIME")
+    private LocalDateTime startTime;
+
+    @TableField(value = "END_TIME")
+    private LocalDateTime endTime;
+
+    @TableField(value = "STATE")
+    private Integer state;
 } 

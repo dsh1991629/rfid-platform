@@ -26,6 +26,9 @@ public class TagInfoBean implements Serializable {
     @TableField(value = "STATE")
     private Integer state;
 
+    @TableField(value = "STORAGE_STATE")
+    private Integer storageState;
+
     @TableField(value = "IN_TIME")
     private LocalDateTime inTime;
 
@@ -35,5 +38,6 @@ public class TagInfoBean implements Serializable {
     @TableField(value = "CREATE_ID", fill = FieldFill.INSERT)
     private Long createId;
 
+    @TableField(value = "CREATE_TIME", fill = FieldFill.INSERT)
     private LocalDateTime createTime;
 } 

@@ -42,4 +42,12 @@ public class PlatformConstant {
         Integer STORAGE_IN = 1;
         Integer STORAGE_OUT = 2;
     }
+
+    public interface STORAGE_TASK_STATE {
+        Integer CREATED = 1;
+        Integer RUNNING = 2;
+        Integer PARTIAL = 3;
+        Integer SUCCESS = 4;
+    }
+
 }

@@ -6,6 +6,7 @@ import com.rfid.platform.entity.TagInfoBean;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import java.util.List;
+import java.util.Set;
 
 public interface TagInfoService {
 
@@ -20,4 +21,10 @@ public interface TagInfoService {
     List<TagInfoBean> listTagInfo(LambdaQueryWrapper<TagInfoBean> query);
 
     boolean updateTagInfos(List<TagInfoBean> validatedTagInfoBeans);
+
+    List<TagInfoBean> listTagInfoByEpcCodes(Set<String> requestEpcCodes);
+
+    Long countTagInfosBySkuAndStorageState(String skuCode, int storageState);
+
+    boolean updateTagInfoStorageStateBySkuCodes(List<String> skuCodeUpdates, int beforeState,  int afterState);
 }

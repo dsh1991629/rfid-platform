@@ -18,6 +18,8 @@ import com.rfid.platform.util.TimeUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -148,11 +150,14 @@ public class TagOperationController {
         }
 
         try {
-            TagStorageOperationBean tagStorageOperationBean = getTagStorageOperationBean(execNo, param, PlatformConstant.STORAGE_OPERATION_TYPE.STORAGE_IN);
-            boolean saved = tagStorageOperationService.saveTagStorageOperation(tagStorageOperationBean);
+            List<TagStorageOperationBean> tagStorageOperationBeans = getTagStorageOperationBean(execNo, param, PlatformConstant.STORAGE_OPERATION_TYPE.STORAGE_IN);
+            boolean saved = tagStorageOperationService.saveTagStorageOperations(tagStorageOperationBeans);
             baseResult.setData(saved);
 
             // TODO 调用接口发送给硬件设备
+
+            // 更新状态
+            tagStorageOperationService.updateTagStorageOperationsByNoticeNoAndSku(param.getNoticeNo());
 
         } catch (Exception e) {
             baseResult.setData(false);
@@ -195,12 +200,14 @@ public class TagOperationController {
         String execNo = ExecNoContext.getExecNo();
 
         try {
-            TagStorageOperationBean tagStorageOperationBean = getTagStorageOperationBean(execNo, param, PlatformConstant.STORAGE_OPERATION_TYPE.STORAGE_OUT);
-            boolean saved = tagStorageOperationService.saveTagStorageOperation(tagStorageOperationBean);
+            List<TagStorageOperationBean> tagStorageOperationBeans = getTagStorageOperationBean(execNo, param, PlatformConstant.STORAGE_OPERATION_TYPE.STORAGE_OUT);
+            boolean saved = tagStorageOperationService.saveTagStorageOperations(tagStorageOperationBeans);
             baseResult.setData(saved);
 
             // TODO 调用接口发送给硬件设备
 
+            // 更新状态
+            tagStorageOperationService.updateTagStorageOperationsByNoticeNoAndSku(param.getNoticeNo());
         } catch (Exception e) {
             baseResult.setData(false);
             baseResult.setCode("400");
@@ -210,15 +217,19 @@ public class TagOperationController {
     }
 
 
-    private TagStorageOperationBean getTagStorageOperationBean(String execNo, StorageOperationDTO param, Integer storageIn) {
+    private List<TagStorageOperationBean> getTagStorageOperationBean(String execNo, StorageOperationDTO param, Integer storageIn) {
         LocalDateTime current = TimeUtil.getSysDate();
-        TagStorageOperationBean tagStorageOperationBean = new TagStorageOperationBean();
-        tagStorageOperationBean.setExecNo(execNo);
-        tagStorageOperationBean.setNoticeNo(param.getNoticeNo());
-        tagStorageOperationBean.setNoticeQuantity(param.getNoticeQuantity());
-        tagStorageOperationBean.setSkuCode(param.getSkuCode());
-        tagStorageOperationBean.setNoticeTime(current);
-        tagStorageOperationBean.setNoticeType(storageIn);
-        return tagStorageOperationBean;
+        List<TagStorageOperationBean> tagStorageOperationBeans = param.getDetail().stream().map(e -> {
+            TagStorageOperationBean tagStorageOperationBean = new TagStorageOperationBean();
+            tagStorageOperationBean.setExecNo(execNo);
+            tagStorageOperationBean.setNoticeNo(param.getNoticeNo());
+            tagStorageOperationBean.setNoticeQuantity(e.getNoticeQuantity());
+            tagStorageOperationBean.setSkuCode(e.getSkuCode());
+            tagStorageOperationBean.setNoticeTime(current);
+            tagStorageOperationBean.setNoticeType(storageIn);
+            tagStorageOperationBean.setState(PlatformConstant.STORAGE_TASK_STATE.CREATED);
+            return tagStorageOperationBean;
+        }).collect(Collectors.toUnmodifiableList());
+        return tagStorageOperationBeans;
     }
 }
