@@ -16,12 +16,19 @@ public class StorageOperationDTO implements Serializable {
      * 票据编号
      */
     @Schema(description = "出入库单号", example = "TK202312010001")
-    private String ticketNo;
+    private String noticeNo;
 
     /**
      * 数量
      */
     @Schema(description = "出入库数量", example = "100")
-    private Long quantity;
+    private Integer noticeQuantity;
+
+
+    /**
+     * SKU编码
+     */
+    @Schema(description = "SKU编码")
+    private String skuCode;
 
 }

@@ -21,10 +21,13 @@ public class TagStorageOperationBean implements Serializable {
     private String noticeNo;
 
     @TableField(value = "NOTICE_QUANTITY")
-    private Long noticeQuantity;
+    private Integer noticeQuantity;
 
     @TableField(value = "NOTICE_TYPE")
     private Integer noticeType;
+
+    @TableField(value = "SKU_CODE")
+    private String skuCode;
 
     @TableField(value = "NOTICE_TIME")
     private LocalDateTime noticeTime;

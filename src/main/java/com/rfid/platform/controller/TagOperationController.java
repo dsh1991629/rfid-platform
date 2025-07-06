@@ -130,7 +130,7 @@ public class TagOperationController {
     @Operation(summary = "入库通知", description = "接收货物入库通知，记录入库操作信息并通知硬件设备")
     public RfidApiResponseDTO<Boolean> storageIn(
             @Parameter(description = "入库通知请求参数，包含单据号和数量信息", required = true)
-            @RequestBody RfidApiRequestDTO request){
+            @RequestBody RfidApiRequestDTO<StorageOperationDTO> request){
         RfidApiResponseDTO<Boolean> baseResult = new RfidApiResponseDTO<>();
         String execNo = ExecNoContext.getExecNo();
 
@@ -140,7 +140,7 @@ public class TagOperationController {
         }
 
         // 解析业务参数
-        StorageOperationDTO param = paramUtil.parseParam(request.getParam(), StorageOperationDTO.class);
+        StorageOperationDTO param = request.getParam();
         if (param == null) {
             baseResult.setCode("310");
             baseResult.setMessage("业务参数解析失败");
@@ -148,13 +148,7 @@ public class TagOperationController {
         }
 
         try {
-            LocalDateTime current = TimeUtil.getSysDate();
-            TagStorageOperationBean tagStorageOperationBean = new TagStorageOperationBean();
-            tagStorageOperationBean.setExecNo(execNo);
-            tagStorageOperationBean.setNoticeNo(param.getTicketNo());
-            tagStorageOperationBean.setNoticeQuantity(param.getQuantity());
-            tagStorageOperationBean.setNoticeTime(current);
-            tagStorageOperationBean.setNoticeType(PlatformConstant.STORAGE_OPERATION_TYPE.STORAGE_IN);
+            TagStorageOperationBean tagStorageOperationBean = getTagStorageOperationBean(execNo, param, PlatformConstant.STORAGE_OPERATION_TYPE.STORAGE_IN);
             boolean saved = tagStorageOperationService.saveTagStorageOperation(tagStorageOperationBean);
             baseResult.setData(saved);
 
@@ -167,6 +161,8 @@ public class TagOperationController {
         }
         return baseResult;
     }
+
+
 
     /**
      * 出库通知接口
@@ -199,13 +195,7 @@ public class TagOperationController {
         String execNo = ExecNoContext.getExecNo();
 
         try {
-            LocalDateTime current = TimeUtil.getSysDate();
-            TagStorageOperationBean tagStorageOperationBean = new TagStorageOperationBean();
-            tagStorageOperationBean.setExecNo(execNo);
-            tagStorageOperationBean.setNoticeNo(param.getTicketNo());
-            tagStorageOperationBean.setNoticeQuantity(param.getQuantity());
-            tagStorageOperationBean.setNoticeTime(current);
-            tagStorageOperationBean.setNoticeType(PlatformConstant.STORAGE_OPERATION_TYPE.STORAGE_OUT);
+            TagStorageOperationBean tagStorageOperationBean = getTagStorageOperationBean(execNo, param, PlatformConstant.STORAGE_OPERATION_TYPE.STORAGE_OUT);
             boolean saved = tagStorageOperationService.saveTagStorageOperation(tagStorageOperationBean);
             baseResult.setData(saved);
 
@@ -217,5 +207,18 @@ public class TagOperationController {
             baseResult.setMessage("接口保存失败：" + e.getMessage());
         }
         return baseResult;
+    }
+
+
+    private TagStorageOperationBean getTagStorageOperationBean(String execNo, StorageOperationDTO param, Integer storageIn) {
+        LocalDateTime current = TimeUtil.getSysDate();
+        TagStorageOperationBean tagStorageOperationBean = new TagStorageOperationBean();
+        tagStorageOperationBean.setExecNo(execNo);
+        tagStorageOperationBean.setNoticeNo(param.getNoticeNo());
+        tagStorageOperationBean.setNoticeQuantity(param.getNoticeQuantity());
+        tagStorageOperationBean.setSkuCode(param.getSkuCode());
+        tagStorageOperationBean.setNoticeTime(current);
+        tagStorageOperationBean.setNoticeType(storageIn);
+        return tagStorageOperationBean;
     }
 }
