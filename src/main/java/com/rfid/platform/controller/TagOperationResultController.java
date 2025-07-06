@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -97,17 +98,9 @@ public class TagOperationResultController {
                 return response;
             }
 
-            // 解析业务参数
-            InboundDTO.InboundParam param = request.getParam();
+            // 解析和验证业务参数
+            InboundDTO.InboundParam param = validateInboundParam(request, response);
             if (param == null) {
-                response.setCode("310");
-                response.setMessage("业务参数解析失败");
-                return response;
-            }
-
-            if (CollectionUtils.isEmpty(param.getItemData())) {
-                response.setCode(StorageOperationResultEnum.DETAIL_NOT_EXIST.getCode());
-                response.setMessage(StorageOperationResultEnum.DETAIL_NOT_EXIST.getMessage());
                 return response;
             }
 
@@ -117,14 +110,14 @@ public class TagOperationResultController {
                 return response;
             }
 
-
-
-            log.info("入库单实际明细回传成功，单据编号：{}", param.getBillNo());
-
-            response.setData("入库单实际明细回传成功，单据编号：" + param.getBillNo());
+            // 设置成功响应
+            String successMessage = "入库单实际明细回传成功，单据编号：" + param.getBillNo();
+            log.info(successMessage);
+            response.setData(successMessage);
             return response;
         } catch (Exception e) {
-            log.error("入库单实际明细回传失败", e);
+            log.error("入库单实际明细回传失败，单据编号：{}", 
+                request != null && request.getParam() != null ? request.getParam().getBillNo() : "未知", e);
             return RfidApiResponseDTO.error("系统异常：" + e.getMessage());
         }
     }
@@ -294,164 +287,194 @@ public class TagOperationResultController {
      */
     @Transactional(rollbackFor = Exception.class)
     public void processInboundItems(InboundDTO.InboundParam param, RfidApiResponseDTO<String> response) throws Exception {
-
+        // 初始化基础数据
         LocalDateTime receiptTime = TimeUtil.parseDateFormatterString(param.getReceiptTime());
         String noticeNo = param.getUpstreamBillNo();
+        
+        // 获取预期的SKU列表
         List<TagStorageOperationBean> tagStorageOperationBeans = tagStorageOperationService.listTagStorageOperationSkuByNotice(noticeNo);
-        List<String> skuCodes = tagStorageOperationBeans.stream().map(TagStorageOperationBean::getSkuCode).collect(Collectors.toUnmodifiableList());
+        if (CollectionUtils.isEmpty(tagStorageOperationBeans)) {
+            response.setSuccess(false);
+            response.setCode(StorageOperationResultEnum.NOTICE_NOT_EXIST.getCode());
+            response.setMessage(StorageOperationResultEnum.NOTICE_NOT_EXIST.getMessage());
+            return;
+        }
+        
+        Set<String> expectedSkuCodes = tagStorageOperationBeans.stream()
+                .map(TagStorageOperationBean::getSkuCode)
+                .collect(Collectors.toSet());
         
         // 构建入库明细数据
         List<TagStorageOperationResultBean> resultBeans = buildInboundResultBeans(param, receiptTime);
-
-        // 按skuCode分组
-        Map<String, List<TagStorageOperationResultBean>> groupedBySkuCode = resultBeans.stream()
-                .collect(Collectors.groupingBy(TagStorageOperationResultBean::getSkuCode));
-
-        List<TagInfoBean> validatedTagInfoBeans = new ArrayList<>();
-
-        // 遍历groupedBySkuCode进行校验
-        for (Map.Entry<String, List<TagStorageOperationResultBean>> entry : groupedBySkuCode.entrySet()) {
-            String skuCode = entry.getKey();
-            // 第一步，先校验key是不是包含在skuCodes里，不包含response的success设置成false,code和message使用SKU_NOT_CONTAINED_BY_IN_NOTICE，同时结束方法
-            if (!skuCodes.contains(skuCode)) {
-                response.setSuccess(false);
-                response.setCode(StorageOperationResultEnum.SKU_NOT_CONTAINED_BY_IN_NOTICE.getCode());
-                response.setMessage(StorageOperationResultEnum.SKU_NOT_CONTAINED_BY_IN_NOTICE.getMessage());
-                return;
-            }
-
-            List<TagStorageOperationResultBean> tagStorageOperationResultBeans = entry.getValue();
-            // 第二步， 判断tagStorageOperationResultBeans中的epcCode是不是全部都在数据库中，不是response的success设置成fals；使用正则表达式校验不包含的epcCode,全部符合规则使用EPC_CODE_MATCHED_RULE，否则使用EPC_CODE_NOT_MATCHED_RULE
-            
-            // 提取当前SKU下的所有epcCode
-            Set<String> requestEpcCodes = tagStorageOperationResultBeans.stream()
-                    .map(TagStorageOperationResultBean::getEpcCode)
-                    .collect(Collectors.toSet());
-            
-            // 通过requestEpcCodes统计tagInfo表的总数，如果总数和requestEpcCodes的总数不一致
-            Integer epcSize = requestEpcCodes.size();
-            List<TagInfoBean> tagInfoBeans = tagInfoService.listTagInfoByEpcCodes(requestEpcCodes);
-
-            if (epcSize.intValue() != tagInfoBeans.size()) {
-                // 从数据库查询结果中提取EPC编码集合
-                Set<String> dbEpcCodes = tagInfoBeans.stream()
-                        .map(TagInfoBean::getEpcCode)
-                        .collect(Collectors.toSet());
-                
-                // EPC编码格式验证正则表达式：支持两种格式
-                // 1. 3000开头的28位数字格式
-                // 2. E开头的32位十六进制格式
-                String epcPattern = "^(3000[0-9]{24}|E[0-9A-F]{31})$";
-                Pattern pattern = Pattern.compile(epcPattern);
-
-                // 过滤出requestEpcCodes中不在tagInfoBeans中的
-                Set<String> filteredEpcCodes = requestEpcCodes.stream()
-                        .filter(epc -> !dbEpcCodes.contains(epc))
-                        .collect(Collectors.toSet());
-
-                // 检查所有缺失的EPC编码是否都符合格式规则
-                boolean allMatched = filteredEpcCodes.stream()
-                        .allMatch(epc -> pattern.matcher(epc).matches());
-
-                response.setSuccess(false);
-                if (allMatched) {
-                    // 全部符合规则使用EPC_CODE_MATCHED_RULE
-                    response.setCode(StorageOperationResultEnum.EPC_CODE_MATCHED_RULE.getCode());
-                    response.setMessage(StorageOperationResultEnum.EPC_CODE_MATCHED_RULE.getMessage());
-                } else {
-                    // 否则使用EPC_CODE_NOT_MATCHED_RULE
-                    response.setCode(StorageOperationResultEnum.EPC_CODE_NOT_MATCHED_RULE.getCode());
-                    response.setMessage(StorageOperationResultEnum.EPC_CODE_NOT_MATCHED_RULE.getMessage());
-                }
-                return;
-            }
-
-            // 第3步，根据tagInfoBeans和tagStorageOperationResultBeans， 判断tagStorageOperationResultBeans中的所有绑定关系都正确；不正确使用SKU_EPC_BIND_NOT_MATCH
-            // 所有epc的state是1，storageState是1；否则使用EPC_STATE_ABNORMAL
-            
-            // 创建tagInfoBeans的映射，便于快速查找
-            Map<String, TagInfoBean> tagInfoMap = tagInfoBeans.stream()
-                    .collect(Collectors.toMap(TagInfoBean::getEpcCode, bean -> bean));
-            
-            // 检查SKU和EPC的绑定关系
-            for (TagStorageOperationResultBean resultBean : tagStorageOperationResultBeans) {
-                TagInfoBean tagInfo = tagInfoMap.get(resultBean.getEpcCode());
-                if (tagInfo != null) {
-                    // 检查SKU绑定关系
-                    if (!Objects.equals(tagInfo.getSkuCode(), resultBean.getSkuCode())) {
-                        response.setSuccess(false);
-                        response.setCode(StorageOperationResultEnum.SKU_EPC_BIND_NOT_MATCH.getCode());
-                        response.setMessage(StorageOperationResultEnum.SKU_EPC_BIND_NOT_MATCH.getMessage());
-                        return;
-                    }
-                    
-                    // 检查EPC状态
-                    if (!Objects.equals(tagInfo.getState(), 1) || !Objects.equals(tagInfo.getStorageState(), 1)) {
-                        response.setSuccess(false);
-                        response.setCode(StorageOperationResultEnum.EPC_STATE_ABNORMAL.getCode());
-                        response.setMessage(StorageOperationResultEnum.EPC_STATE_ABNORMAL.getMessage());
-                        return;
-                    }
-                }
-            }
-            
-            // 生成校验成功的TagInfoBeans，即tagInfoBeans中和tagStorageOperationResultBeans中有交集的记录
-            validatedTagInfoBeans = tagStorageOperationResultBeans.stream()
-                    .map(resultBean -> {
-                        TagInfoBean tagInfo = tagInfoMap.get(resultBean.getEpcCode());
-                        // 要求skuCode和epcCode都一样
-                        if (tagInfo != null && Objects.equals(tagInfo.getSkuCode(), resultBean.getSkuCode())) {
-                            tagInfo.setStorageState(2);
-                            return tagInfo;
-                        }
-                        return null;
-                    })
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
-
-        }
-
-        if (!response.getSuccess()) {
+        
+        // 提前验证所有SKU是否在预期列表中
+        Set<String> requestSkuCodes = resultBeans.stream()
+                .map(TagStorageOperationResultBean::getSkuCode)
+                .collect(Collectors.toSet());
+        
+        if (!expectedSkuCodes.containsAll(requestSkuCodes)) {
+            response.setSuccess(false);
+            response.setCode(StorageOperationResultEnum.SKU_NOT_CONTAINED_BY_IN_NOTICE.getCode());
+            response.setMessage(StorageOperationResultEnum.SKU_NOT_CONTAINED_BY_IN_NOTICE.getMessage());
             return;
         }
-
-        // 明细数据添加
-        tagStorageOperationResultService.saveTagStorageOperationResults(resultBeans);
-
-        // 更新存储操作状态为部分完成
-        tagStorageOperationService.updateTagStorageOperationPartiallyByNoticeNo(param.getUpstreamBillNo(), PlatformConstant.STORAGE_TASK_STATE.PARTIAL);
-
-        // 校验成功，更新tag_info表中记录状态为2
-        tagInfoService.updateTagInfos(validatedTagInfoBeans);
-
         
-        // 检查所有SKU的数量是否一致
-        boolean allMatched = true;
-        List<String> skuCodeUpdates = new ArrayList<>();
-        for (TagStorageOperationBean tagStorageOperationBean : tagStorageOperationBeans) {
-            String skuCode = tagStorageOperationBean.getSkuCode();
-            int expectedQuantity = tagStorageOperationBean.getNoticeQuantity();
-            int count = tagInfoService.countTagInfosBySkuAndStorageState(skuCode, 2).intValue();
-            allMatched = expectedQuantity == count;
-            skuCodeUpdates.add(skuCode);
+        // 批量验证所有EPC编码并获取标签信息
+        Set<String> allEpcCodes = resultBeans.stream()
+                .map(TagStorageOperationResultBean::getEpcCode)
+                .collect(Collectors.toSet());
+        
+        List<TagInfoBean> allTagInfoBeans = tagInfoService.listTagInfoByEpcCodes(allEpcCodes);
+        if (allEpcCodes.size() != allTagInfoBeans.size()) {
+            handleMissingEpcCodes(allEpcCodes, allTagInfoBeans, response);
+            return;
         }
         
-        // 如果全部一样，更新所有相关TagInfo的storageState为3
+        // 构建EPC到TagInfo的映射，提高查找效率
+        Map<String, TagInfoBean> tagInfoMap = allTagInfoBeans.stream()
+                .collect(Collectors.toMap(TagInfoBean::getEpcCode, Function.identity()));
+        
+        // 批量验证SKU-EPC绑定关系和标签状态
+        List<TagInfoBean> validatedTagInfoBeans = new ArrayList<>();
+        for (TagStorageOperationResultBean resultBean : resultBeans) {
+            TagInfoBean tagInfo = tagInfoMap.get(resultBean.getEpcCode());
+            if (tagInfo == null) {
+                continue;
+            }
+            
+            // 验证SKU绑定关系
+            if (!Objects.equals(tagInfo.getSkuCode(), resultBean.getSkuCode())) {
+                response.setSuccess(false);
+                response.setCode(StorageOperationResultEnum.SKU_EPC_BIND_NOT_MATCH.getCode());
+                response.setMessage(StorageOperationResultEnum.SKU_EPC_BIND_NOT_MATCH.getMessage());
+                return;
+            }
+            
+            // 验证标签状态
+            if (!Objects.equals(tagInfo.getState(), 1) || !Objects.equals(tagInfo.getStorageState(), 1)) {
+                response.setSuccess(false);
+                response.setCode(StorageOperationResultEnum.EPC_STATE_ABNORMAL.getCode());
+                response.setMessage(StorageOperationResultEnum.EPC_STATE_ABNORMAL.getMessage());
+                return;
+            }
+            
+            // 准备更新的标签信息
+            tagInfo.setStorageState(2);
+            validatedTagInfoBeans.add(tagInfo);
+        }
+        
+        // 执行数据库更新操作
+        executeInboundUpdates(param, resultBeans, validatedTagInfoBeans, tagStorageOperationBeans);
+    }
+    
+    /**
+     * 验证入库参数
+     */
+    private InboundDTO.InboundParam validateInboundParam(RfidApiRequestDTO<InboundDTO.InboundParam> request, 
+                                                         RfidApiResponseDTO<String> response) {
+        InboundDTO.InboundParam param = request.getParam();
+        if (param == null) {
+            response.setCode("310");
+            response.setMessage("业务参数解析失败");
+            return null;
+        }
+        
+        if (CollectionUtils.isEmpty(param.getItemData())) {
+            response.setCode(StorageOperationResultEnum.DETAIL_NOT_EXIST.getCode());
+            response.setMessage(StorageOperationResultEnum.DETAIL_NOT_EXIST.getMessage());
+            return null;
+        }
+        
+        return param;
+    }
+    
+    /**
+     * 处理缺失的EPC编码
+     */
+    private List<TagInfoBean> handleMissingEpcCodes(Set<String> requestEpcCodes, 
+                                                    List<TagInfoBean> tagInfoBeans, 
+                                                    RfidApiResponseDTO<String> response) {
+        // EPC编码格式验证正则表达式
+        String epcPattern = "^(3000[0-9]{24}|E[0-9A-F]{31})$";
+        Pattern pattern = Pattern.compile(epcPattern);
+        
+        // 找出缺失的EPC编码
+        Set<String> dbEpcCodes = tagInfoBeans.stream()
+                .map(TagInfoBean::getEpcCode)
+                .collect(Collectors.toSet());
+        
+        Set<String> missingEpcCodes = requestEpcCodes.stream()
+                .filter(epc -> !dbEpcCodes.contains(epc))
+                .collect(Collectors.toSet());
+        
+        // 检查缺失的EPC编码格式
+        boolean allMatched = missingEpcCodes.stream()
+                .allMatch(epc -> pattern.matcher(epc).matches());
+        
+        response.setSuccess(false);
         if (allMatched) {
-            tagInfoService.updateTagInfoStorageStateBySkuCodes(skuCodeUpdates, 2, 3);
-            // TODO 发送给WMS入库成功
+            response.setCode(StorageOperationResultEnum.EPC_CODE_MATCHED_RULE.getCode());
+            response.setMessage(StorageOperationResultEnum.EPC_CODE_MATCHED_RULE.getMessage());
+        } else {
+            response.setCode(StorageOperationResultEnum.EPC_CODE_NOT_MATCHED_RULE.getCode());
+            response.setMessage(StorageOperationResultEnum.EPC_CODE_NOT_MATCHED_RULE.getMessage());
         }
-
+        
+        return null;
+    }
+    
+    /**
+     * 执行入库相关的数据库更新操作
+     */
+    private void executeInboundUpdates(InboundDTO.InboundParam param, 
+                                      List<TagStorageOperationResultBean> resultBeans,
+                                      List<TagInfoBean> validatedTagInfoBeans,
+                                      List<TagStorageOperationBean> tagStorageOperationBeans) {
+        // 保存操作结果明细
+        tagStorageOperationResultService.saveTagStorageOperationResults(resultBeans);
+        
+        // 更新存储操作状态为部分完成
+        tagStorageOperationService.updateTagStorageOperationPartiallyByNoticeNo(
+                param.getUpstreamBillNo(), PlatformConstant.STORAGE_TASK_STATE.PARTIAL);
+        
+        // 更新标签状态
+        tagInfoService.updateTagInfos(validatedTagInfoBeans);
+        
+        // 检查是否所有SKU数量都匹配，如果是则完成入库
+        checkAndCompleteInbound(tagStorageOperationBeans);
+    }
+    
+    /**
+     * 检查并完成入库操作
+     */
+    private void checkAndCompleteInbound(List<TagStorageOperationBean> tagStorageOperationBeans) {
+        List<String> skuCodesToUpdate = new ArrayList<>();
+        boolean allQuantitiesMatched = true;
+        
+        for (TagStorageOperationBean operationBean : tagStorageOperationBeans) {
+            String skuCode = operationBean.getSkuCode();
+            int expectedQuantity = operationBean.getNoticeQuantity();
+            int actualQuantity = tagInfoService.countTagInfosBySkuAndStorageState(skuCode, 2).intValue();
+            
+            if (expectedQuantity != actualQuantity) {
+                allQuantitiesMatched = false;
+                break;
+            }
+            skuCodesToUpdate.add(skuCode);
+        }
+        
+        // 如果所有数量都匹配，则完成入库
+        if (allQuantitiesMatched) {
+            tagInfoService.updateTagInfoStorageStateBySkuCodes(skuCodesToUpdate, 2, 3);
+            // TODO: 发送给WMS入库成功通知
+        }
     }
     
     /**
      * 构建入库明细数据
-     * 
-     * @param param 入库单参数
-     * @param receiptTime 接收时间
-     * @return 入库明细数据列表
      */
-    private List<TagStorageOperationResultBean> buildInboundResultBeans(InboundDTO.InboundParam param, LocalDateTime receiptTime) {
+    private List<TagStorageOperationResultBean> buildInboundResultBeans(InboundDTO.InboundParam param, 
+                                                                        LocalDateTime receiptTime) {
         List<TagStorageOperationResultBean> resultBeans = new ArrayList<>();
         
         for (InboundDTO.InboundItem item : param.getItemData()) {
@@ -470,7 +493,7 @@ public class TagOperationResultController {
         }
         
         return resultBeans;
-     }
+    }
      
     /**
      * 构建出库明细数据
