@@ -140,4 +140,14 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, AccountBean> 
     public Boolean existAccount(LambdaQueryWrapper<AccountBean> nameCheckWrapper) {
         return super.exists(nameCheckWrapper);
     }
+
+    @Override
+    public List<AccountBean> listAccountByIds(List<Long> accountIds) {
+        if (CollectionUtils.isEmpty(accountIds)) {
+            return List.of();
+        }
+        LambdaQueryWrapper<AccountBean> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.in(AccountBean::getId, accountIds);
+        return super.list(queryWrapper);
+    }
 }

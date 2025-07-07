@@ -8,12 +8,17 @@ import com.rfid.platform.common.BaseResult;
 import com.rfid.platform.common.PageResult;
 import com.rfid.platform.common.PlatformConstant;
 import com.rfid.platform.entity.DeviceInfoBean;
+import com.rfid.platform.persistence.AccountDTO;
+import com.rfid.platform.persistence.DeviceAccountRelDeleteDTO;
+import com.rfid.platform.persistence.DeviceAccountRelQueryDTO;
+import com.rfid.platform.persistence.DeviceAccountRelUpdateDTO;
 import com.rfid.platform.persistence.DeviceCreateDTO;
 import com.rfid.platform.persistence.DeviceDTO;
 import com.rfid.platform.persistence.DeviceDeleteDTO;
 import com.rfid.platform.persistence.DevicePageQueryDTO;
 import com.rfid.platform.persistence.DeviceUpdateDTO;
 import com.rfid.platform.service.AccountService;
+import com.rfid.platform.service.DeviceAccountRelService;
 import com.rfid.platform.service.DeviceInfoService;
 import com.rfid.platform.util.TimeUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,6 +34,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.apache.commons.collections4.CollectionUtils;
+import com.rfid.platform.entity.DeviceAccountRelBean;
+import com.rfid.platform.entity.AccountBean;
 
 @Tag(name = "设备管理", description = "设备管理相关接口")
 @RestController
@@ -40,6 +48,9 @@ public class DeviceController {
 
     @Autowired
     private AccountService accountService;
+
+    @Autowired
+    private DeviceAccountRelService deviceAccountRelService;
 
 
     @Operation(summary = "创建设备", description = "创建新的设备，设备编码不能重复")
@@ -150,6 +161,7 @@ public class DeviceController {
                 result.setData(true);
                 result.setMessage("更新成功");
             } else {
+                result.setData(false);
                 result.setCode(PlatformConstant.RET_CODE.FAILED);
                 result.setMessage("更新失败");
             }
@@ -181,6 +193,7 @@ public class DeviceController {
                 result.setData(true);
                 result.setMessage("删除成功");
             } else {
+                result.setData(false);
                 result.setCode(PlatformConstant.RET_CODE.FAILED);
                 result.setMessage("删除失败");
             }
@@ -248,6 +261,124 @@ public class DeviceController {
         } catch (Exception e) {
             result.setCode(PlatformConstant.RET_CODE.FAILED);
             result.setMessage("分页查询异常: " + e.getMessage());
+        }
+        return result;
+    }
+
+
+    @Operation(summary = "查询设备关联的账户", description = "根据设备ID查询关联的账户列表")
+    @PostMapping(value = "/account/rel/list")
+    public BaseResult<List<AccountDTO>> deviceRelatedAccountQuery(@Parameter(description = "设备账户关联查询参数", required = true)
+                                                                  @RequestBody DeviceAccountRelQueryDTO deviceAccountRelQueryDTO) {
+        BaseResult<List<AccountDTO>> result = new BaseResult<>();
+        try {
+            // 参数校验
+            if (Objects.isNull(deviceAccountRelQueryDTO.getId())) {
+                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setMessage("设备ID不能为空");
+                return result;
+            }
+
+            // 通过设备id查询设备账户关联的集合
+            List<DeviceAccountRelBean> deviceAccountRelList = deviceAccountRelService.listDeviceAccountRel(deviceAccountRelQueryDTO.getId());
+
+            if (CollectionUtils.isEmpty(deviceAccountRelList)) {
+                result.setData(List.of());
+                result.setMessage("查询成功");
+                return result;
+            }
+
+            // 提取账户ID列表
+            List<Long> accountIds = deviceAccountRelList.stream()
+                    .map(DeviceAccountRelBean::getAccountId)
+                    .collect(Collectors.toList());
+
+            // 根据账户id查询账户信息并返回
+            List<AccountBean> accountList = accountService.listAccountByIds(accountIds);
+
+            // 转换为DTO
+            List<AccountDTO> accountDTOList = accountList.stream()
+                    .map(accountBean -> BeanUtil.copyProperties(accountBean, AccountDTO.class))
+                    .collect(Collectors.toList());
+
+            result.setData(accountDTOList);
+            result.setMessage("查询成功");
+        } catch (Exception e) {
+            result.setCode(PlatformConstant.RET_CODE.FAILED);
+            result.setMessage("查询异常: " + e.getMessage());
+        }
+        return result;
+    }
+
+
+    @Operation(summary = "删除设备关联的账户", description = "删除设备ID查询关联的账户列表")
+    @PostMapping(value = "/account/rel/delete")
+    public BaseResult<Boolean> deviceRelatedAccountDelete(@Parameter(description = "设备账户关联删除参数", required = true)
+                                                          @RequestBody DeviceAccountRelDeleteDTO deviceAccountRelDeleteDTO) {
+        BaseResult<Boolean> result = new BaseResult<>();
+        try {
+            // 参数校验
+            if (Objects.isNull(deviceAccountRelDeleteDTO.getId())) {
+                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setMessage("设备ID不能为空");
+                return result;
+            }
+
+
+            if (CollectionUtils.isEmpty(deviceAccountRelDeleteDTO.getAccountIds())) {
+                result.setData(false);
+                result.setMessage("账户为空");
+                return result;
+            }
+
+            boolean success = deviceAccountRelService.deleteDeviceAccountRelWithAccount(deviceAccountRelDeleteDTO.getId(), deviceAccountRelDeleteDTO.getAccountIds());
+            if (success) {
+                result.setData(true);
+                result.setMessage("删除成功");
+            } else {
+                result.setData(false);
+                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setMessage("删除失败");
+            }
+        } catch (Exception e) {
+            result.setCode(PlatformConstant.RET_CODE.FAILED);
+            result.setMessage("查询异常: " + e.getMessage());
+        }
+        return result;
+    }
+
+    @Operation(summary = "更新设备关联的账户", description = "更新设备ID查询关联的账户列表")
+    @PostMapping(value = "/account/rel/update")
+    public BaseResult<Boolean> deviceRelatedAccountUpdate(@Parameter(description = "设备账户关联更新参数", required = true)
+                                                         @RequestBody DeviceAccountRelUpdateDTO deviceAccountRelUpdateDTO) {
+        BaseResult<Boolean> result = new BaseResult<>();
+        try {
+            // 参数校验
+            if (Objects.isNull(deviceAccountRelUpdateDTO.getId())) {
+                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setMessage("设备ID不能为空");
+                return result;
+            }
+
+
+            if (CollectionUtils.isEmpty(deviceAccountRelUpdateDTO.getAccountIds())) {
+                result.setData(false);
+                result.setMessage("账户为空");
+                return result;
+            }
+
+            boolean success = deviceAccountRelService.updateDeviceAccountRel(deviceAccountRelUpdateDTO.getId(), deviceAccountRelUpdateDTO.getAccountIds());
+            if (success) {
+                result.setData(true);
+                result.setMessage("更新成功");
+            } else {
+                result.setData(false);
+                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setMessage("更新失败");
+            }
+        } catch (Exception e) {
+            result.setCode(PlatformConstant.RET_CODE.FAILED);
+            result.setMessage("查询异常: " + e.getMessage());
         }
         return result;
     }

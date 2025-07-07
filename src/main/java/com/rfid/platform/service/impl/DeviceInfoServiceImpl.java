@@ -6,11 +6,20 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.rfid.platform.entity.DeviceInfoBean;
 import com.rfid.platform.mapper.DeviceInfoMapper;
+import com.rfid.platform.service.DeviceAccountRelService;
 import com.rfid.platform.service.DeviceInfoService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class DeviceInfoServiceImpl extends ServiceImpl<DeviceInfoMapper, DeviceInfoBean> implements DeviceInfoService {
+
+    @Autowired
+    @Lazy
+    private DeviceAccountRelService deviceAccountRelService;
+
 
     @Override
     public boolean existDevice(LambdaQueryWrapper<DeviceInfoBean> nameCheckWrapper) {
@@ -22,8 +31,10 @@ public class DeviceInfoServiceImpl extends ServiceImpl<DeviceInfoMapper, DeviceI
         return super.save(deviceInfoBean);
     }
 
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public boolean deleteDevice(Long id) {
+        deviceAccountRelService.deleteDeviceAccountRel(id);
         return super.removeById(id);
     }
 
