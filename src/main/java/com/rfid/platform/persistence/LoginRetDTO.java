@@ -51,10 +51,4 @@ public class LoginRetDTO implements Serializable {
     @Schema(description = "用户角色信息")
     private RoleDTO role;
 
-    /**
-     * 用户可访问的菜单列表
-     */
-    @Schema(description = "用户可访问的菜单列表")
-    private List<MenuDTO> menus = new ArrayList<>();
-
 }

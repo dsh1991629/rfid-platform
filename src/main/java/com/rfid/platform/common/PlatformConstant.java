@@ -50,4 +50,7 @@ public class PlatformConstant {
         Integer SUCCESS = 4;
     }
 
+    public interface ROLE_ALIAS {
+        String SUPERADMIN = "administrator";
+    }
 }

@@ -28,6 +28,12 @@ public class RoleDTO implements Serializable {
     private String name;
 
     /**
+     * 角色别名
+     */
+    @Schema(description = "角色别名", example = "administrator")
+    private String alias;
+
+    /**
      * 创建日期
      */
     @Schema(description = "创建日期", example = "2023-12-01 10:30:00")

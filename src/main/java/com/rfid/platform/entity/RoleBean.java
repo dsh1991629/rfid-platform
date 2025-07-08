@@ -20,6 +20,9 @@ public class RoleBean implements Serializable {
     @TableField(value = "NAME")
     private String name;
 
+    @TableField(value = "ALIAS")
+    private String alias;
+
     @TableField(value = "CREATE_ID", fill = FieldFill.INSERT)
     private Long createId;
 

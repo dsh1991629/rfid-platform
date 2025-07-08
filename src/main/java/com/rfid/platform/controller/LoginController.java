@@ -25,6 +25,7 @@ import com.rfid.platform.service.MenuService;
 import com.rfid.platform.service.RoleService;
 import com.rfid.platform.util.JwtUtil;
 import com.wf.captcha.SpecCaptcha;
+import java.util.ArrayList;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -125,12 +126,45 @@ public class LoginController {
         String clientIp = RequestUtil.getClientIpAddress();
         
         try {
+
+            // 验证参数
+            if (StringUtils.isBlank(loginReqDTO.getCaptchaCode())) {
+                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setMessage("验证码不能为空");
+                return response;
+            }
+
+            // 验证验证码
+            String captchaKey = PlatformConstant.CACHE_KEY.CAPTCHA_KEY + loginReqDTO.getCaptchaKey();
+            String cachedCaptcha = (String) redisTemplate.opsForValue().get(captchaKey);
+            if (StringUtils.isBlank(cachedCaptcha)) {
+                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setMessage("验证码已失效");
+                return response;
+            }
+
+            if (!loginReqDTO.getCaptchaCode().equalsIgnoreCase(cachedCaptcha)) {
+                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setMessage("验证码不匹配");
+                return response;
+            }
+
+            // 删除已使用的验证码
+            redisTemplate.delete(captchaKey);
+
             // 验证参数
             if (StringUtils.isBlank(loginReqDTO.getAccount())) {
                 response.setCode(PlatformConstant.RET_CODE.FAILED);
                 response.setMessage("账号不能为空");
                 return response;
             }
+
+            if (StringUtils.isBlank(loginReqDTO.getPassword())) {
+                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setMessage("密码不能为空");
+                return response;
+            }
+
             
             // 检查账号是否被锁定
             String lockKey = PlatformConstant.CACHE_KEY.ACCOUNT_LOCK + loginReqDTO.getAccount();
@@ -143,20 +177,7 @@ public class LoginController {
                     PlatformConstant.LOGIN_STATUS.LOCKED, "账号已被锁定", null);
                 return response;
             }
-            
-            if (StringUtils.isBlank(loginReqDTO.getPassword())) {
-                response.setCode(PlatformConstant.RET_CODE.FAILED);
-                response.setMessage("密码不能为空");
-                return response;
-            }
-            
-            // 验证验证码
-            String captchaKey = PlatformConstant.CACHE_KEY.CAPTCHA_KEY + loginReqDTO.getCaptchaKey();
-            String cachedCaptcha = (String) redisTemplate.opsForValue().get(captchaKey);
-            
-            // 删除已使用的验证码
-            redisTemplate.delete(captchaKey);
-            
+
             // 查询用户信息
             LambdaQueryWrapper<AccountBean> queryWrapper = new LambdaQueryWrapper<>();
             queryWrapper.eq(AccountBean::getCode, loginReqDTO.getAccount());
@@ -235,8 +256,13 @@ public class LoginController {
             RoleDTO roleDTO = roleService.queryRoleByAccountId(account.getId());
             if (Objects.nonNull(roleDTO)) {
                 loginRetDTO.setRole(roleDTO);
-                List<MenuDTO> menuDTOS = menuService.queryMenusByRole(roleDTO.getId());
-                loginRetDTO.setMenus(menuDTOS);
+                List<MenuDTO> menuDTOS = new ArrayList<>();
+                if (PlatformConstant.ROLE_ALIAS.SUPERADMIN.equalsIgnoreCase(roleDTO.getAlias())) {
+                    menuDTOS = menuService.queryAdminMenus();
+                } else {
+                    menuDTOS = menuService.queryMenusByRole(roleDTO.getId());
+                }
+                roleDTO.setMenus(menuDTOS);
             }
 
             // 获取用户部门信息

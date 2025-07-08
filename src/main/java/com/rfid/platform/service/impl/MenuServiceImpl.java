@@ -164,4 +164,20 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, MenuBean> implement
             sortMenusByPriority(menu.getChildren());
         }
     }
+
+
+    @Override
+    public List<MenuDTO> queryAdminMenus() {
+        LambdaQueryWrapper<MenuBean> queryWrapper = Wrappers.lambdaQuery();
+        List<MenuBean> menuBeans = super.list(queryWrapper);
+        // 获取所有菜单并转换为DTO
+        List<MenuDTO> allMenus = menuBeans.stream().map(e -> {
+            MenuDTO menuDTO = BeanUtil.copyProperties(e, MenuDTO.class);
+            menuDTO.setChildren(new ArrayList<>()); // 初始化children列表
+            return menuDTO;
+        }).collect(Collectors.toList());
+
+        // 按照层级组装菜单树
+        return buildMenuTree(allMenus);
+    }
 }

@@ -25,4 +25,6 @@ public interface MenuService {
     Boolean existMenu(LambdaQueryWrapper<MenuBean> nameCheckWrapper);
 
     List<MenuDTO> queryMenusByRole(Long roleId);
+
+    List<MenuDTO> queryAdminMenus();
 }
