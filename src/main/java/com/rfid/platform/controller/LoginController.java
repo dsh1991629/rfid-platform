@@ -653,7 +653,7 @@ public class LoginController {
             }
 
             // 查询登录数量
-            Long loginNums = deviceHeartbeatService.queryLoginNums(deviceLoginReqDTO.getDeviceCode());
+            Long loginNums = deviceHeartbeatService.queryLoginNums(deviceLoginReqDTO.getDeviceCode(), rfidPlatformProperties.getDeviceTimeout());
             if (loginNums.intValue() >= deviceAccountRelBean.getRepeatTimes()) {
                 response.setCode(PlatformConstant.RET_CODE.FAILED);
                 response.setMessage("设备登录次数超限");
@@ -719,15 +719,17 @@ public class LoginController {
             redisTemplate.delete(failCountKey);
 
             // 生成JWT token, 默认失效一个月
-            String accessToken = jwtUtil.generateTokenWithExpiration(account.getCode(), account.getId(), 2592000L);
+            String accessToken = jwtUtil.generateTokenWithExpiration(account.getCode(), account.getId(), rfidPlatformProperties.getDeviceTimeout());
 
             // 将token存储到Redis中，用于后续验证
             String tokenKey = PlatformConstant.CACHE_KEY.TOKEN_KEY + accessToken;
-            redisTemplate.opsForValue().set(tokenKey, account.getId(), 30, TimeUnit.DAYS);
+            redisTemplate.opsForValue().set(tokenKey, account.getId(), rfidPlatformProperties.getDeviceTimeout(), TimeUnit.SECONDS);
 
             // 异步记录登录成功日志
             loginLogService.recordLoginLogAsync(account.getId(), account.getCode(), clientIp,
                     PlatformConstant.LOGIN_STATUS.SUCCESS, null, accessToken);
+
+            deviceHeartbeatService.changeTimeoutLoginState(deviceLoginReqDTO.getDeviceCode(), rfidPlatformProperties.getDeviceTimeout());
 
             // 构建返回结果
             DeviceLoginRetDTO loginRetDTO = new DeviceLoginRetDTO();

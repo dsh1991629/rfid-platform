@@ -16,4 +16,6 @@ public class RfidPlatformProperties {
 
     private Integer captchaBit = 1;
 
+    private Long deviceTimeout = 7200L;
+
 }
