@@ -8,10 +8,10 @@ import com.rfid.platform.common.BaseResult;
 import com.rfid.platform.common.PageResult;
 import com.rfid.platform.common.PlatformConstant;
 import com.rfid.platform.entity.DeviceInfoBean;
-import com.rfid.platform.persistence.AccountDTO;
 import com.rfid.platform.persistence.DeviceAccountRelDeleteDTO;
 import com.rfid.platform.persistence.DeviceAccountRelQueryDTO;
 import com.rfid.platform.persistence.DeviceAccountRelUpdateDTO;
+import com.rfid.platform.persistence.DeviceAccountRepeatDTO;
 import com.rfid.platform.persistence.DeviceCreateDTO;
 import com.rfid.platform.persistence.DeviceDTO;
 import com.rfid.platform.persistence.DeviceDeleteDTO;
@@ -268,9 +268,10 @@ public class DeviceController {
 
     @Operation(summary = "查询设备关联的账户", description = "根据设备ID查询关联的账户列表")
     @PostMapping(value = "/account/rel/list")
-    public BaseResult<List<AccountDTO>> deviceRelatedAccountQuery(@Parameter(description = "设备账户关联查询参数", required = true)
-                                                                  @RequestBody DeviceAccountRelQueryDTO deviceAccountRelQueryDTO) {
-        BaseResult<List<AccountDTO>> result = new BaseResult<>();
+    public BaseResult<List<DeviceAccountRepeatDTO>> deviceRelatedAccountQuery(@Parameter(description = "设备账户关联查询参数", required =
+            true)
+                                                                              @RequestBody DeviceAccountRelQueryDTO deviceAccountRelQueryDTO) {
+        BaseResult<List<DeviceAccountRepeatDTO>> result = new BaseResult<>();
         try {
             // 参数校验
             if (Objects.isNull(deviceAccountRelQueryDTO.getId())) {
@@ -289,19 +290,22 @@ public class DeviceController {
             }
 
             // 提取账户ID列表
-            List<Long> accountIds = deviceAccountRelList.stream()
-                    .map(DeviceAccountRelBean::getAccountId)
-                    .collect(Collectors.toList());
+            List<DeviceAccountRepeatDTO> accounts = deviceAccountRelList.stream()
+                    .map(e -> {
+                        DeviceAccountRepeatDTO deviceAccountRepeatDTO = new DeviceAccountRepeatDTO();
+                        AccountBean accountBean = accountService.getAccountByPk(e.getAccountId());
+                        if (Objects.nonNull(accountBean)) {
+                            deviceAccountRepeatDTO.setAccountName(accountBean.getName());
+                            deviceAccountRepeatDTO.setAccountCode(accountBean.getCode());
+                        }
+                        deviceAccountRepeatDTO.setAccountId(e.getAccountId());
+                        deviceAccountRepeatDTO.setRepeatTimes(e.getRepeatTimes());
+                        return deviceAccountRepeatDTO;
+                    })
+                    .collect(Collectors.toUnmodifiableList());
 
-            // 根据账户id查询账户信息并返回
-            List<AccountBean> accountList = accountService.listAccountByIds(accountIds);
 
-            // 转换为DTO
-            List<AccountDTO> accountDTOList = accountList.stream()
-                    .map(accountBean -> BeanUtil.copyProperties(accountBean, AccountDTO.class))
-                    .collect(Collectors.toList());
-
-            result.setData(accountDTOList);
+            result.setData(accounts);
             result.setMessage("查询成功");
         } catch (Exception e) {
             result.setCode(PlatformConstant.RET_CODE.FAILED);
@@ -350,7 +354,7 @@ public class DeviceController {
     @Operation(summary = "更新设备关联的账户", description = "更新设备ID查询关联的账户列表")
     @PostMapping(value = "/account/rel/update")
     public BaseResult<Boolean> deviceRelatedAccountUpdate(@Parameter(description = "设备账户关联更新参数", required = true)
-                                                         @RequestBody DeviceAccountRelUpdateDTO deviceAccountRelUpdateDTO) {
+                                                          @RequestBody DeviceAccountRelUpdateDTO deviceAccountRelUpdateDTO) {
         BaseResult<Boolean> result = new BaseResult<>();
         try {
             // 参数校验
@@ -361,13 +365,14 @@ public class DeviceController {
             }
 
 
-            if (CollectionUtils.isEmpty(deviceAccountRelUpdateDTO.getAccountIds())) {
+            if (CollectionUtils.isEmpty(deviceAccountRelUpdateDTO.getDeviceAccounts())) {
                 result.setData(false);
                 result.setMessage("账户为空");
                 return result;
             }
 
-            boolean success = deviceAccountRelService.updateDeviceAccountRel(deviceAccountRelUpdateDTO.getId(), deviceAccountRelUpdateDTO.getAccountIds());
+            boolean success = deviceAccountRelService.updateDeviceAccountRel(deviceAccountRelUpdateDTO.getId(),
+                    deviceAccountRelUpdateDTO.getDeviceAccounts());
             if (success) {
                 result.setData(true);
                 result.setMessage("更新成功");

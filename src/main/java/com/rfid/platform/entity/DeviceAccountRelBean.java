@@ -22,6 +22,9 @@ public class DeviceAccountRelBean implements Serializable {
     @TableField(value = "ACCOUNT_ID")
     private Long accountId;
 
+    @TableField(value = "REPEAT_TIMES")
+    private Integer repeatTimes;
+
     @TableField(value = "CREATE_ID", fill = FieldFill.INSERT)
     private Long createId;
 

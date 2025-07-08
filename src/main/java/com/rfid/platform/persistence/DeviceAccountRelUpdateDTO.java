@@ -12,6 +12,6 @@ public class DeviceAccountRelUpdateDTO implements Serializable {
     @Schema(description = "设备ID", example = "1", required = true)
     private Long id;
 
-    @Schema(description = "账户ID", example = "[1,2,3]", required = true)
-    private List<Long> accountIds;
+    @Schema(description = "账户与登录次数", required = true)
+    private List<DeviceAccountRepeatUpdateDTO> deviceAccounts;
 }

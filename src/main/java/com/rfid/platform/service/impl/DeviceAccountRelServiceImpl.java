@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.rfid.platform.common.AccountContext;
 import com.rfid.platform.entity.DeviceAccountRelBean;
 import com.rfid.platform.mapper.DeviceAccountRelMapper;
+import com.rfid.platform.persistence.DeviceAccountRepeatUpdateDTO;
 import com.rfid.platform.service.DeviceAccountRelService;
 import com.rfid.platform.util.TimeUtil;
 import java.time.LocalDateTime;
@@ -42,14 +43,15 @@ public class DeviceAccountRelServiceImpl extends ServiceImpl<DeviceAccountRelMap
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public boolean updateDeviceAccountRel(Long deviceId, List<Long> accountIds) {
+    public boolean updateDeviceAccountRel(Long deviceId, List<DeviceAccountRepeatUpdateDTO> accounts) {
         deleteDeviceAccountRel(deviceId);
         LocalDateTime now = TimeUtil.getSysDate();
         Long accountId = AccountContext.getAccountId();
-        List<DeviceAccountRelBean> deviceAccountRelBeans = accountIds.stream().map(e -> {
+        List<DeviceAccountRelBean> deviceAccountRelBeans = accounts.stream().map(e -> {
             DeviceAccountRelBean deviceAccountRelBean = new DeviceAccountRelBean();
             deviceAccountRelBean.setDeviceId(deviceId);
-            deviceAccountRelBean.setAccountId(e);
+            deviceAccountRelBean.setAccountId(e.getAccountId());
+            deviceAccountRelBean.setRepeatTimes(e.getRepeatTimes());
             deviceAccountRelBean.setCreateId(accountId);
             deviceAccountRelBean.setCreateTime(now);
             return deviceAccountRelBean;
