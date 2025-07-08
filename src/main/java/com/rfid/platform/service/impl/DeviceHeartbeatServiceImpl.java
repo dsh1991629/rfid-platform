@@ -51,4 +51,14 @@ public class DeviceHeartbeatServiceImpl extends ServiceImpl<DeviceHeartbeatMappe
         queryWrapper.set(DeviceHeartbeatBean::getLogoutTime, now);
         return super.update(queryWrapper);
     }
+
+
+    @Override
+    public boolean updateDeviceHeartbeat(String accessToken) {
+        LocalDateTime now = TimeUtil.getSysDate();
+        LambdaUpdateWrapper<DeviceHeartbeatBean> queryWrapper = Wrappers.lambdaUpdate();
+        queryWrapper.eq(DeviceHeartbeatBean::getAccessToken, accessToken);
+        queryWrapper.set(DeviceHeartbeatBean::getHeartbeatTime, TimeUtil.getSysDate());
+        return super.update(queryWrapper);
+    }
 }

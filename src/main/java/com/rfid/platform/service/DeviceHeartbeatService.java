@@ -7,4 +7,6 @@ public interface DeviceHeartbeatService {
     boolean updateLogout(String accessToken);
 
     boolean changeTimeoutLoginState(String deviceCode, Long deviceTimeout);
+
+    boolean updateDeviceHeartbeat(String accessToken);
 }

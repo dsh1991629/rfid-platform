@@ -19,7 +19,9 @@ import com.rfid.platform.persistence.DevicePageQueryDTO;
 import com.rfid.platform.persistence.DeviceUpdateDTO;
 import com.rfid.platform.service.AccountService;
 import com.rfid.platform.service.DeviceAccountRelService;
+import com.rfid.platform.service.DeviceHeartbeatService;
 import com.rfid.platform.service.DeviceInfoService;
+import com.rfid.platform.util.RequestUtil;
 import com.rfid.platform.util.TimeUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -51,6 +53,9 @@ public class DeviceController {
 
     @Autowired
     private DeviceAccountRelService deviceAccountRelService;
+
+    @Autowired
+    private DeviceHeartbeatService deviceHeartbeatService;
 
 
     @Operation(summary = "创建设备", description = "创建新的设备，设备编码不能重复")
@@ -383,6 +388,30 @@ public class DeviceController {
         } catch (Exception e) {
             result.setCode(PlatformConstant.RET_CODE.FAILED);
             result.setMessage("查询异常: " + e.getMessage());
+        }
+        return result;
+    }
+
+
+    @Operation(summary = "设备心跳接口", description = "更新设备心跳接口")
+    @PostMapping(value = "/heartbeat")
+    public BaseResult<Boolean> deviceHeartbeat() {
+        BaseResult<Boolean> result = new BaseResult<>();
+        try {
+            // 通过工具类获取token
+            String accessToken = RequestUtil.getTokenFromHeader();
+            boolean success = deviceHeartbeatService.updateDeviceHeartbeat(accessToken);
+            if (success) {
+                result.setData(true);
+                result.setMessage("心跳更新成功");
+            } else {
+                result.setData(false);
+                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setMessage("心跳更新失败");
+            }
+        } catch (Exception e) {
+            result.setCode(PlatformConstant.RET_CODE.FAILED);
+            result.setMessage("更新异常: " + e.getMessage());
         }
         return result;
     }
