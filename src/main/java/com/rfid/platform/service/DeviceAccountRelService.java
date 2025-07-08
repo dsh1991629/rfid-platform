@@ -14,4 +14,6 @@ public interface DeviceAccountRelService {
     boolean deleteDeviceAccountRelWithAccount(Long deviceId, List<Long> accountIds);
 
     boolean updateDeviceAccountRel(Long deviceId, List<DeviceAccountRepeatUpdateDTO> accounts);
+
+    DeviceAccountRelBean queryBindingRel(String deviceCode, String accountCode);
 }

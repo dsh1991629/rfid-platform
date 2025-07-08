@@ -268,8 +268,7 @@ public class DeviceController {
 
     @Operation(summary = "查询设备关联的账户", description = "根据设备ID查询关联的账户列表")
     @PostMapping(value = "/account/rel/list")
-    public BaseResult<List<DeviceAccountRepeatDTO>> deviceRelatedAccountQuery(@Parameter(description = "设备账户关联查询参数", required =
-            true)
+    public BaseResult<List<DeviceAccountRepeatDTO>> deviceRelatedAccountQuery(@Parameter(description = "设备账户关联查询参数", required = true)
                                                                               @RequestBody DeviceAccountRelQueryDTO deviceAccountRelQueryDTO) {
         BaseResult<List<DeviceAccountRepeatDTO>> result = new BaseResult<>();
         try {
@@ -296,9 +295,9 @@ public class DeviceController {
                         AccountBean accountBean = accountService.getAccountByPk(e.getAccountId());
                         if (Objects.nonNull(accountBean)) {
                             deviceAccountRepeatDTO.setAccountName(accountBean.getName());
-                            deviceAccountRepeatDTO.setAccountCode(accountBean.getCode());
                         }
                         deviceAccountRepeatDTO.setAccountId(e.getAccountId());
+                        deviceAccountRepeatDTO.setAccountCode(e.getAccountCode());
                         deviceAccountRepeatDTO.setRepeatTimes(e.getRepeatTimes());
                         return deviceAccountRepeatDTO;
                     })

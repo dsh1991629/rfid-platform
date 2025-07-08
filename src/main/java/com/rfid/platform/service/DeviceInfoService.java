@@ -16,4 +16,6 @@ public interface DeviceInfoService {
     boolean updateDevice(DeviceInfoBean deviceInfoBean);
 
     IPage<DeviceInfoBean> pageDevice(Page<DeviceInfoBean> page, LambdaQueryWrapper<DeviceInfoBean> queryWrapper);
+
+    DeviceInfoBean queryDeviceInfoByPk(Long id);
 }

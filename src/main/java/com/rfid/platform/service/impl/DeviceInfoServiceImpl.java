@@ -47,4 +47,9 @@ public class DeviceInfoServiceImpl extends ServiceImpl<DeviceInfoMapper, DeviceI
     public IPage<DeviceInfoBean> pageDevice(Page<DeviceInfoBean> page, LambdaQueryWrapper<DeviceInfoBean> queryWrapper) {
         return super.page(page, queryWrapper);
     }
+
+    @Override
+    public DeviceInfoBean queryDeviceInfoByPk(Long id) {
+        return super.getById(id);
+    }
 }
