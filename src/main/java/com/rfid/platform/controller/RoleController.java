@@ -7,11 +7,16 @@ import com.rfid.platform.common.PlatformConstant;
 import com.rfid.platform.entity.RoleBean;
 import com.rfid.platform.persistence.RoleCreateDTO;
 import com.rfid.platform.persistence.RoleDeleteDTO;
+import com.rfid.platform.persistence.RoleSelectDTO;
 import com.rfid.platform.persistence.RoleUpdateDTO;
 import com.rfid.platform.service.RoleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -163,6 +168,32 @@ public class RoleController {
             result.setCode(PlatformConstant.RET_CODE.FAILED);
             result.setMessage("系统异常：" + e.getMessage());
             result.setData(false);
+        }
+        return result;
+    }
+
+
+
+    @PostMapping(value = "/select")
+    @Operation(summary = "角色下拉列表", description = "角色下拉列表")
+    public BaseResult<List<RoleSelectDTO>> queryRoleSelect() {
+        BaseResult<List<RoleSelectDTO>> result = new BaseResult<>();
+        try {
+            List<RoleBean> roleBeans = roleService.listRole(null);
+            List<RoleSelectDTO> roleSelects = new ArrayList<>();
+            if (CollectionUtils.isNotEmpty(roleBeans)) {
+                roleSelects = roleBeans.stream().map(e -> {
+                    RoleSelectDTO roleSelectDTO = new RoleSelectDTO();
+                    roleSelectDTO.setId(e.getId());
+                    roleSelectDTO.setName(e.getName());
+                    return roleSelectDTO;
+                }).collect(Collectors.toUnmodifiableList());
+            }
+            result.setData(roleSelects);
+            result.setMessage("查询成功");
+        } catch (Exception e) {
+            result.setCode(PlatformConstant.RET_CODE.FAILED);
+            result.setMessage("系统异常：" + e.getMessage());
         }
         return result;
     }
