@@ -574,6 +574,7 @@ public class LoginController {
     /**
      * 退出登录
      */
+    @Operation(summary = "用户登出", description = "用户登出")
     @PostMapping(value = "/logout")
     public BaseResult<Boolean> logout() {
         BaseResult<Boolean> response = new BaseResult<>();
@@ -617,7 +618,7 @@ public class LoginController {
     }
 
 
-    @Operation(summary = "用户登录", description = "验证用户账号密码，登录成功后返回访问令牌和用户基本信息")
+    @Operation(summary = "设备登录", description = "账号密码设备编码，登录成功后返回访问令牌")
     @PostMapping(value = "/deviceLogin")
     public BaseResult<DeviceLoginRetDTO> deviceLogin(
             @Parameter(description = "设备登录请求参数", required = true)
@@ -759,6 +760,7 @@ public class LoginController {
     /**
      * 设备退出登录
      */
+    @Operation(summary = "设备登出", description = "设备登出")
     @PostMapping(value = "/deviceLogout")
     public BaseResult<Boolean> deviceLogout() {
         BaseResult<Boolean> response = new BaseResult<>();
