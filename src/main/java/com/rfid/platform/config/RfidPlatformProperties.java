@@ -18,4 +18,6 @@ public class RfidPlatformProperties {
 
     private Long deviceTimeout = 7200L;
 
+    private Long wmsTimeout = 7200L;
+
 }
