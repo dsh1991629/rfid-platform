@@ -41,7 +41,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // 排除不需要token验证的路径
         String requestPath = request.getRequestURI();
         List<String> excludePaths = Arrays.asList(
-            "/rfid/login", "/rfid/captcha", "/rfid/refresh-token", "/rfid/deviceLogin",
+            "/rfid/login", "/rfid/captcha", "/rfid/wms-login","/rfid/dev/login",
             "/doc.html", "/webjars", "/v3/api-docs", "/rfid/tag/operation"
         );
 

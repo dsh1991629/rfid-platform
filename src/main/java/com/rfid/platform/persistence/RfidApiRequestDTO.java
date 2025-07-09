@@ -12,18 +12,6 @@ import java.io.Serializable;
 public class RfidApiRequestDTO<T> implements Serializable {
 
     /**
-     * 应用ID，固定值：hd-rfid-dev
-     */
-    @Schema(description = "应用ID", example = "hd-rfid-dev", required = true)
-    private String appId;
-
-    /**
-     * 方法名
-     */
-    @Schema(description = "接口方法名", example = "queryRfidData", required = true)
-    private String method;
-
-    /**
      * 时间戳，格式：yyyy-MM-dd HH:mm:ss
      */
     @Schema(description = "请求时间戳", example = "2024-01-01 12:00:00", required = true)
@@ -32,18 +20,13 @@ public class RfidApiRequestDTO<T> implements Serializable {
     /**
      * 版本号，固定值：3.0
      */
-    @Schema(description = "API版本号", example = "3.0", required = true)
+    @Schema(description = "API版本号", example = "1.0", required = true)
     private String version;
 
-    /**
-     * 签名
-     */
-    @Schema(description = "请求签名，用于验证请求的合法性", required = true)
-    private String sign;
 
     /**
      * 业务参数
      */
     @Schema(description = "具体的业务参数，根据不同接口传入不同的数据结构")
-    private T param;
+    private T data;
 }

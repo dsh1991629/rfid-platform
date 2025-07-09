@@ -52,7 +52,7 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/rfid/deviceLogin", "/rfid/login", "/rfid/captcha", "/rfid/refresh-token", "/rfid/tag/operation/**").permitAll()
+                .requestMatchers("/rfid/wms-login","/rfid/dev/login", "/rfid/login", "/rfid/captcha").permitAll()
                 .requestMatchers("/doc.html", "/webjars/**", "/v3/api-docs/**").permitAll()
                 .anyRequest().authenticated()
             )
