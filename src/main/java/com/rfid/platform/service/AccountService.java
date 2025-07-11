@@ -35,4 +35,6 @@ public interface AccountService {
      * @return 账户信息列表
      */
     List<AccountBean> listAccountByIds(List<Long> accountIds);
+
+    List<AccountBean> listAccountByCode(String code);
 }

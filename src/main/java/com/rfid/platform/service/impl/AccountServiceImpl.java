@@ -5,13 +5,9 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.rfid.platform.entity.AccountBean;
 import com.rfid.platform.entity.AccountDepartmentRelBean;
 import com.rfid.platform.entity.AccountRoleRelBean;
-import com.rfid.platform.entity.RoleMenuRelBean;
 import com.rfid.platform.mapper.AccountMapper;
 import com.rfid.platform.persistence.AccountPageDepartmentDTO;
 import com.rfid.platform.persistence.AccountPageRoleDTO;
-import com.rfid.platform.persistence.DepartmentDTO;
-import com.rfid.platform.persistence.MenuDTO;
-import com.rfid.platform.persistence.RoleDTO;
 import com.rfid.platform.service.AccountDepartRelService;
 import com.rfid.platform.service.AccountRoleRelService;
 import com.rfid.platform.service.AccountService;
@@ -28,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class AccountServiceImpl extends ServiceImpl<AccountMapper, AccountBean> implements AccountService {
@@ -148,6 +143,14 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, AccountBean> 
         }
         LambdaQueryWrapper<AccountBean> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.in(AccountBean::getId, accountIds);
+        return super.list(queryWrapper);
+    }
+
+
+    @Override
+    public List<AccountBean> listAccountByCode(String code) {
+        LambdaQueryWrapper<AccountBean> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(AccountBean::getCode, code);
         return super.list(queryWrapper);
     }
 }

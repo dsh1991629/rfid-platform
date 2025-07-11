@@ -52,7 +52,11 @@ public class PlatformConstant {
         Integer CANCELED = 5; // 取消
     }
 
-
+    public interface DEVICE_HEARTBEAT_TYPE {
+        Integer LOGIN = 1; // 登录
+        Integer HEARTBEAT = 2; // 心跳
+        Integer LOGOUT = 3; // 登出
+    }
 
     public interface ROLE_ALIAS {
         String SUPERADMIN = "administrator";

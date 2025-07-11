@@ -4,9 +4,9 @@ public interface DeviceHeartbeatService {
 
     Long queryLoginNums(String deviceCode, Long deviceTimeout);
 
-    boolean updateLogout(String accessToken);
+    boolean addLoginHeartBeat(String deviceCode, String accessToken, String timeStamp);
 
-    boolean changeTimeoutLoginState(String deviceCode, Long deviceTimeout);
+    boolean addLogoutHeartBeat(String accessToken, String timeStamp);
 
-    boolean updateDeviceHeartbeat(String accessToken);
+    boolean addDeviceHeartbeat(String accessToken, String timeStamp);
 }

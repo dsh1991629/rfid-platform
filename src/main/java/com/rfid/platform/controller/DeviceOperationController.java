@@ -1,6 +1,5 @@
 package com.rfid.platform.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.rfid.platform.common.PlatformConstant;
 import com.rfid.platform.config.RfidPlatformProperties;
 import com.rfid.platform.entity.AccountBean;
@@ -111,9 +110,7 @@ public class DeviceOperationController {
             String lockKey = PlatformConstant.CACHE_KEY.ACCOUNT_LOCK + deviceLoginReqDTO.getAccount();
 
             // 查询用户信息
-            LambdaQueryWrapper<AccountBean> queryWrapper = new LambdaQueryWrapper<>();
-            queryWrapper.eq(AccountBean::getCode, deviceLoginReqDTO.getAccount());
-            List<AccountBean> accounts = accountService.listAccount(queryWrapper);
+            List<AccountBean> accounts = accountService.listAccountByCode(deviceLoginReqDTO.getAccount());
 
             if (CollectionUtils.isEmpty(accounts)) {
                 response.setStatus(false);
@@ -177,7 +174,7 @@ public class DeviceOperationController {
             loginLogService.recordLoginLogAsync(account.getId(), account.getCode(), clientIp,
                     PlatformConstant.LOGIN_STATUS.SUCCESS, null, accessToken);
 
-            deviceHeartbeatService.changeTimeoutLoginState(deviceLoginReqDTO.getDeviceCode(), rfidPlatformProperties.getDeviceTimeout());
+            deviceHeartbeatService.addLoginHeartBeat(deviceLoginReqDTO.getDeviceCode(), accessToken, request.getTimeStamp());
 
             // 构建返回结果
             DeviceLoginRetDTO loginRetDTO = new DeviceLoginRetDTO();
@@ -208,8 +205,8 @@ public class DeviceOperationController {
      * 设备退出登录
      */
     @Operation(summary = "设备登出", description = "设备登出")
-    @PostMapping(value = "/de/logout")
-    public RfidApiResponseDTO<Boolean> deviceLogout() {
+    @PostMapping(value = "/dev/logout")
+    public RfidApiResponseDTO<Boolean> deviceLogout(@RequestBody RfidApiRequestDTO requestDTO) {
         RfidApiResponseDTO<Boolean> response = RfidApiResponseDTO.success();
 
         try {
@@ -239,7 +236,7 @@ public class DeviceOperationController {
             redisTemplate.delete(tokenKey);
 
             // 更新心跳表记录
-            deviceHeartbeatService.updateLogout(accessToken);
+            deviceHeartbeatService.addLogoutHeartBeat(accessToken, requestDTO.getTimeStamp());
 
             response.setMessage("退出登录成功");
             response.setData(true);
@@ -253,5 +250,18 @@ public class DeviceOperationController {
         return response;
     }
 
+
+
+    @Operation(summary = "设备心跳接口", description = "更新设备心跳接口")
+    @PostMapping(value = "/heartbeat")
+    public RfidApiResponseDTO<Boolean> deviceHeartbeat(@RequestBody RfidApiRequestDTO requestDTO) {
+        RfidApiResponseDTO<Boolean> result = RfidApiResponseDTO.success();
+
+        // 通过工具类获取token
+        String accessToken = RequestUtil.getTokenFromHeader();
+        boolean success = deviceHeartbeatService.addDeviceHeartbeat(accessToken, requestDTO.getTimeStamp());
+        result.setData(success);
+        return result;
+    }
 
 }
