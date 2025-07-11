@@ -7,7 +7,12 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.rfid.platform.common.BaseResult;
 import com.rfid.platform.common.PageResult;
 import com.rfid.platform.common.PlatformConstant;
+import com.rfid.platform.entity.DeviceHeartbeatBean;
 import com.rfid.platform.entity.DeviceInfoBean;
+import com.rfid.platform.enums.DeviceHeartbeatTypeEnum;
+import com.rfid.platform.persistence.AccountDTO;
+import com.rfid.platform.persistence.AccountPageQueryDTO;
+import com.rfid.platform.persistence.DepartmentDTO;
 import com.rfid.platform.persistence.DeviceAccountRelDeleteDTO;
 import com.rfid.platform.persistence.DeviceAccountRelQueryDTO;
 import com.rfid.platform.persistence.DeviceAccountRelUpdateDTO;
@@ -15,8 +20,12 @@ import com.rfid.platform.persistence.DeviceAccountRepeatDTO;
 import com.rfid.platform.persistence.DeviceCreateDTO;
 import com.rfid.platform.persistence.DeviceDTO;
 import com.rfid.platform.persistence.DeviceDeleteDTO;
+import com.rfid.platform.persistence.DeviceHeartbeatDTO;
+import com.rfid.platform.persistence.DeviceHeartbeatQueryDTO;
 import com.rfid.platform.persistence.DevicePageQueryDTO;
 import com.rfid.platform.persistence.DeviceUpdateDTO;
+import com.rfid.platform.persistence.MenuDTO;
+import com.rfid.platform.persistence.RoleDTO;
 import com.rfid.platform.service.AccountService;
 import com.rfid.platform.service.DeviceAccountRelService;
 import com.rfid.platform.service.DeviceHeartbeatService;
@@ -389,6 +398,67 @@ public class DeviceController {
             result.setMessage("查询异常: " + e.getMessage());
         }
         return result;
+    }
+
+
+    @Operation(
+            summary = "分页查询账户",
+            description = "根据查询条件分页获取账户列表，支持按账户编码、名称、部门、角色等条件进行筛选查询。"
+    )
+    @PostMapping(value = "/heartbeat/page")
+    public BaseResult<PageResult<DeviceHeartbeatDTO>> heartbeatPage(
+            @Parameter(description = "账户分页查询条件", required = true)
+            @RequestBody DeviceHeartbeatQueryDTO deviceHeartbeatQueryDTO,
+            @Parameter(description = "页码，从1开始", example = "1")
+            @RequestParam(defaultValue = "1") Integer pageNum,
+            @Parameter(description = "每页大小", example = "10")
+            @RequestParam(defaultValue = "10") Integer pageSize) {
+        BaseResult<PageResult<DeviceHeartbeatDTO>> result = new BaseResult<>();
+        try {
+            Page<DeviceHeartbeatBean> page = new Page<>(pageNum, pageSize);
+            LambdaQueryWrapper<DeviceHeartbeatBean> queryWrapper = new LambdaQueryWrapper<>();
+
+            // 构建查询条件
+            DeviceInfoBean deviceInfoBean;
+            if (StringUtils.isNotBlank(deviceHeartbeatQueryDTO.getDeviceCode())) {
+                queryWrapper.eq(DeviceHeartbeatBean::getDeviceCode, deviceHeartbeatQueryDTO.getDeviceCode());
+                deviceInfoBean = deviceInfoService.queryDeviceInfoByCode(deviceHeartbeatQueryDTO.getDeviceCode());
+            } else {
+                deviceInfoBean = null;
+            }
+
+            IPage<DeviceHeartbeatBean> pageResult = deviceHeartbeatService.pageDeviceHeartbeat(page, queryWrapper);
+
+            // 转换结果
+            PageResult<DeviceHeartbeatDTO> pageResultDTO = new PageResult<>();
+            pageResultDTO.setPageNum(pageNum);
+            pageResultDTO.setPageSize(pageSize);
+            pageResultDTO.setTotal(pageResult.getTotal());
+            pageResultDTO.setPages(pageResult.getPages());
+
+            List<DeviceHeartbeatDTO> dtoList = pageResult.getRecords().stream()
+                    .map(bean -> {
+                        DeviceHeartbeatDTO dto = BeanUtil.copyProperties(bean, DeviceHeartbeatDTO.class);
+                        if (Objects.nonNull(deviceInfoBean)) {
+                            dto.setDeviceName(deviceInfoBean.getDeviceName());
+                        }
+                        dto.setType(changeType(bean.getType()));
+                        return dto;
+                    })
+                    .collect(Collectors.toList());
+
+            pageResultDTO.setData(dtoList);
+            result.setData(pageResultDTO);
+            result.setMessage("查询成功");
+        } catch (Exception e) {
+            result.setCode(PlatformConstant.RET_CODE.FAILED);
+            result.setMessage("分页查询异常: " + e.getMessage());
+        }
+        return result;
+    }
+
+    private String changeType(Integer type) {
+        return DeviceHeartbeatTypeEnum.getDescriptionByCode(type);
     }
 
 }

@@ -18,4 +18,6 @@ public interface DeviceInfoService {
     IPage<DeviceInfoBean> pageDevice(Page<DeviceInfoBean> page, LambdaQueryWrapper<DeviceInfoBean> queryWrapper);
 
     DeviceInfoBean queryDeviceInfoByPk(Long id);
+
+    DeviceInfoBean queryDeviceInfoByCode(String deviceCode);
 }

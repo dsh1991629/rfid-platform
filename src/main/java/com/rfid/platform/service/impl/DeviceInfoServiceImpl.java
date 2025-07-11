@@ -2,6 +2,7 @@ package com.rfid.platform.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.rfid.platform.entity.DeviceInfoBean;
@@ -51,5 +52,12 @@ public class DeviceInfoServiceImpl extends ServiceImpl<DeviceInfoMapper, DeviceI
     @Override
     public DeviceInfoBean queryDeviceInfoByPk(Long id) {
         return super.getById(id);
+    }
+
+    @Override
+    public DeviceInfoBean queryDeviceInfoByCode(String deviceCode) {
+        LambdaQueryWrapper<DeviceInfoBean> queryWrapper = Wrappers.lambdaQuery();
+        queryWrapper.eq(DeviceInfoBean::getDeviceCode, deviceCode);
+        return super.getOne(queryWrapper);
     }
 }
