@@ -63,7 +63,7 @@ public class DeviceOperationController {
 
 
     @Operation(summary = "设备登录", description = "账号密码设备编码，登录成功后返回访问令牌")
-    @PostMapping(value = "/dev/login")
+    @PostMapping(value = "/login")
     public RfidApiResponseDTO<DeviceLoginRetDTO> deviceLogin(
             @Parameter(description = "设备登录请求参数", required = true)
             @RequestBody RfidApiRequestDTO<DeviceLoginReqDTO> request) {
@@ -205,7 +205,7 @@ public class DeviceOperationController {
      * 设备退出登录
      */
     @Operation(summary = "设备登出", description = "设备登出")
-    @PostMapping(value = "/dev/logout")
+    @PostMapping(value = "/logout")
     public RfidApiResponseDTO<Boolean> deviceLogout(@RequestBody RfidApiRequestDTO requestDTO) {
         RfidApiResponseDTO<Boolean> response = RfidApiResponseDTO.success();
 
