@@ -1,5 +1,7 @@
 package com.rfid.platform.service;
 
+import com.rfid.platform.entity.TagStorageOrderBean;
+import com.rfid.platform.persistence.storage.StorageCheckQueryRequestDTO;
 import com.rfid.platform.persistence.storage.StorageOrderItemRequestDTO;
 import java.util.List;
 
@@ -14,4 +16,6 @@ public interface TagStorageOrderService {
     boolean checkStorageOrderCancelable(String orderNo, Integer orderType);
 
     Long cancelTagStorageOrder(String timeStamp, String orderNo, Integer orderType);
+
+    List<TagStorageOrderBean> queryActiveInBoundOrders(StorageCheckQueryRequestDTO data);
 }

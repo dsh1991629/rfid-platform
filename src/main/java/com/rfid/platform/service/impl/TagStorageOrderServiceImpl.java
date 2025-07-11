@@ -7,12 +7,15 @@ import com.rfid.platform.common.AccountContext;
 import com.rfid.platform.common.PlatformConstant;
 import com.rfid.platform.entity.TagStorageOrderBean;
 import com.rfid.platform.mapper.TagStorageOrderMapper;
+import com.rfid.platform.persistence.storage.StorageCheckQueryRequestDTO;
 import com.rfid.platform.persistence.storage.StorageOrderItemRequestDTO;
 import com.rfid.platform.service.TagStorageOrderDetailService;
 import com.rfid.platform.service.TagStorageOrderService;
 import com.rfid.platform.util.TimeUtil;
 import java.util.List;
 import java.util.Objects;
+
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -106,5 +109,20 @@ public class TagStorageOrderServiceImpl extends ServiceImpl<TagStorageOrderMappe
             super.updateById(tagStorageOrderBean);
         }
         return tagStorageOrderBean.getId();
+    }
+
+
+    @Override
+    public List<TagStorageOrderBean> queryActiveInBoundOrders(StorageCheckQueryRequestDTO data) {
+        LambdaQueryWrapper<TagStorageOrderBean> queryWrapper = Wrappers.lambdaQuery();
+        queryWrapper.eq(TagStorageOrderBean::getOrderType, PlatformConstant.STORAGE_ORDER_TYPE.IN_BOUND);
+        queryWrapper.eq(TagStorageOrderBean::getState, PlatformConstant.STORAGE_ORDER_STATUS.SEND)
+                .or().eq(TagStorageOrderBean::getState, PlatformConstant.STORAGE_ORDER_STATUS.EXECUTING);
+        if (Objects.nonNull(data)) {
+            queryWrapper.like(TagStorageOrderBean::getOrderNo, data.getOrderNo());
+            queryWrapper.ge(StringUtils.isNotBlank(data.getTimeBegin()), TagStorageOrderBean::getCreateTime, TimeUtil.getDayNoLineTimestamp(data.getTimeBegin()));
+            queryWrapper.le(StringUtils.isNotBlank(data.getTimeEnd()), TagStorageOrderBean::getCreateTime, TimeUtil.getDayNoLineTimestamp(data.getTimeEnd()));
+        }
+        return super.list(queryWrapper);
     }
 }

@@ -1,5 +1,7 @@
 package com.rfid.platform.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.rfid.platform.entity.TagStorageOrderDetailBean;
 import com.rfid.platform.mapper.TagStorageOrderDetailMapper;
@@ -46,5 +48,12 @@ public class TagStorageOrderDetailServiceImpl extends ServiceImpl<TagStorageOrde
         detailBean.setBoxCnt(item.getBoxCnt());
         detailBean.setBoxCode(boxCode);
         return detailBean;
+    }
+
+    @Override
+    public List<TagStorageOrderDetailBean> listTagStorageOrderDetails(String orderNo) {
+        LambdaQueryWrapper<TagStorageOrderDetailBean> queryWrapper = Wrappers.lambdaQuery();
+        queryWrapper.eq(TagStorageOrderDetailBean::getOrderNo, orderNo);
+        return super.list(queryWrapper);
     }
 }

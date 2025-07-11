@@ -69,6 +69,14 @@ public class TimeUtil {
         return "";
     }
 
+    public static Long getDayNoLineTimestamp(String dayNoLine) {
+        if (StringUtils.isBlank(dayNoLine)) {
+            return 0L;
+        }
+        LocalDateTime localDateTime = LocalDateTime.parse(dayNoLine, dayNoLineFormatter);
+        return localDateTimeToTimestamp(localDateTime);
+    }
+
     public static String getSecondNoLineString(LocalDateTime localDateTime) {
         if (Objects.nonNull(localDateTime)) {
             return secondNoLineFormatter.format(localDateTime);
