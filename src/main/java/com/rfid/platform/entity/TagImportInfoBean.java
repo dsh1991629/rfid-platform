@@ -17,11 +17,14 @@ public class TagImportInfoBean implements Serializable {
     @TableId(value = "ID", type = IdType.AUTO)
     private Long id;
 
-    @TableField(value = "ECP_CODE")
-    private String ecpCode;
+    @TableField(value = "EPC")
+    private String epc;
 
-    @TableField(value = "SKU_CODE")
-    private String skuCode;
+    @TableField(value = "SKU")
+    private String sku;
+
+    @TableField(value = "PRODUCT_CODE")
+    private String productCode;
 
     @TableField(value = "IMPORT_TYPE")
     private Integer importType;

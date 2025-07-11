@@ -104,8 +104,9 @@ public class TagImportController {
             for (TagImportExcelDTO dto : dataList) {
                 // 创建导入详细记录
                 TagImportInfoBean importInfo = new TagImportInfoBean();
-                importInfo.setEcpCode(dto.getEpcCode());
-                importInfo.setSkuCode(dto.getSkuCode());
+                importInfo.setEpc(dto.getEpc());
+                importInfo.setSku(dto.getSku());
+                importInfo.setProductCode(dto.getProductCode());
                 importInfo.setImportType(2); // 2表示Excel导入
                 importInfo.setExecNo(execNo);
                 importInfo.setImportTime(LocalDateTime.now());
@@ -113,8 +114,9 @@ public class TagImportController {
                 try {
                     // 创建TagInfoBean对象
                     TagInfoBean tagInfo = new TagInfoBean();
-                    tagInfo.setSkuCode(dto.getSkuCode());
-                    tagInfo.setEpcCode(dto.getEpcCode());
+                    tagInfo.setSku(dto.getSku());
+                    tagInfo.setEpc(dto.getEpc());
+                    tagInfo.setProductCode(dto.getProductCode());
                     tagInfo.setState(1); // 默认状态为1（激活状态）
                     tagInfo.setInTime(LocalDateTime.now());
                     
@@ -130,8 +132,8 @@ public class TagImportController {
                 } catch (Exception e) {
                     failCount++;
                     importInfo.setImportResult("F");
-                    log.error("[{}] 保存标签信息失败，EPC: {}, SKU: {}, 错误: {}", 
-                        execNo, dto.getEpcCode(), dto.getSkuCode(), e.getMessage());
+                    log.error("[{}] 保存标签信息失败，EPC: {}, SKU: {}, 款式ma: {}, 错误: {}",
+                        execNo, dto.getEpc(), dto.getSku(), dto.getProductCode(), e.getMessage());
                 }
 
                 tagImportInfoBeans.add(importInfo);

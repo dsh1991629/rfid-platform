@@ -37,7 +37,7 @@ public class TagInfoServiceImpl extends ServiceImpl<TagInfoMapper, TagInfoBean> 
     }
 
     @Override
-    public java.util.List<TagInfoBean> listTagInfo(LambdaQueryWrapper<TagInfoBean> query) {
+    public List<TagInfoBean> listTagInfo(LambdaQueryWrapper<TagInfoBean> query) {
         return super.list(query);
     }
 
@@ -49,14 +49,14 @@ public class TagInfoServiceImpl extends ServiceImpl<TagInfoMapper, TagInfoBean> 
     @Override
     public List<TagInfoBean> listTagInfoByEpcCodes(Set<String> requestEpcCodes) {
         LambdaQueryWrapper<TagInfoBean> queryWrapper = Wrappers.lambdaQuery();
-        queryWrapper.in(TagInfoBean::getEpcCode, requestEpcCodes);
+        queryWrapper.in(TagInfoBean::getEpc, requestEpcCodes);
         return super.list(queryWrapper);
     }
 
     @Override
     public Long countTagInfosBySkuAndStorageState(String skuCode, int storageState) {
         LambdaQueryWrapper<TagInfoBean> queryWrapper = Wrappers.lambdaQuery();
-        queryWrapper.eq(TagInfoBean::getSkuCode, skuCode);
+        queryWrapper.eq(TagInfoBean::getSku, skuCode);
         queryWrapper.eq(TagInfoBean::getStorageState, storageState);
         return super.count(queryWrapper);
     }
@@ -66,7 +66,7 @@ public class TagInfoServiceImpl extends ServiceImpl<TagInfoMapper, TagInfoBean> 
     public boolean updateTagInfoStorageStateBySkuCodes(List<String> skuCode, int beforeState, int afterState) {
         LambdaUpdateWrapper<TagInfoBean> queryWrapper = Wrappers.lambdaUpdate();
         queryWrapper.set(TagInfoBean::getStorageState, afterState);
-        queryWrapper.in(TagInfoBean::getSkuCode, skuCode);
+        queryWrapper.in(TagInfoBean::getSku, skuCode);
         queryWrapper.eq(TagInfoBean::getStorageState, beforeState);
         return super.update(queryWrapper);
     }

@@ -17,11 +17,14 @@ public class TagInfoBean implements Serializable {
     @TableId(value = "ID", type = IdType.AUTO)
     private Long id;
 
-    @TableField(value = "EPC_CODE")
-    private String epcCode;
+    @TableField(value = "EPC")
+    private String epc;
 
-    @TableField(value = "SKU_CODE")
-    private String skuCode;
+    @TableField(value = "SKU")
+    private String sku;
+
+    @TableField(value = "PRODUCT_CODE")
+    private String productCode;
 
     @TableField(value = "STATE")
     private Integer state;

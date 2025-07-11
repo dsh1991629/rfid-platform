@@ -17,12 +17,20 @@ public class TagImportExcelDTO {
      */
     @ExcelProperty(index = 0, value = "SKU编码")
     @Schema(description = "SKU编码", example = "SKU001", required = true)
-    private String skuCode;
-    
+    private String sku;
+
     /**
      * EPC编码
      */
     @ExcelProperty(index = 1, value = "EPC编码")
     @Schema(description = "EPC编码", example = "3000000000000000000000001", required = true)
-    private String epcCode;
+    private String epc;
+
+    /**
+     * 款式码
+     */
+    @ExcelProperty(index = 2, value = "款式码")
+    @Schema(description = "款式码", example = "SKU001", required = true)
+    private String productCode;
+
 }
