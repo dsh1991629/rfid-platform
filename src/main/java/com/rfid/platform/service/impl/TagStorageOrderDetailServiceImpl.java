@@ -3,9 +3,48 @@ package com.rfid.platform.service.impl;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.rfid.platform.entity.TagStorageOrderDetailBean;
 import com.rfid.platform.mapper.TagStorageOrderDetailMapper;
+import com.rfid.platform.persistence.storage.StorageOrderItemRequestDTO;
 import com.rfid.platform.service.TagStorageOrderDetailService;
+import java.util.ArrayList;
+import java.util.List;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Service;
 
 @Service
 public class TagStorageOrderDetailServiceImpl extends ServiceImpl<TagStorageOrderDetailMapper, TagStorageOrderDetailBean> implements TagStorageOrderDetailService {
+
+
+    @Override
+    public boolean saveStorageOrderDetails(String orderNo, List<StorageOrderItemRequestDTO> items) {
+        if (CollectionUtils.isEmpty(items)) {
+            return false;
+        }
+        // 遍历items， 在遍历item中的boxCodes，按找一个boxCode生成一个TagStorageOrderDetailBean，返回最终的集合
+        List<TagStorageOrderDetailBean> detailBeans = new ArrayList<>();
+        
+        for (StorageOrderItemRequestDTO item : items) {
+            if (CollectionUtils.isNotEmpty(item.getBoxCodes())) {
+                for (String boxCode : item.getBoxCodes()) {TagStorageOrderDetailBean detailBean = getTagStorageOrderDetailBean(orderNo, item, boxCode);
+                    detailBeans.add(detailBean);
+                }
+            }
+        }
+        
+        // 批量保存到数据库
+        return super.saveBatch(detailBeans, 50);
+    }
+
+    private TagStorageOrderDetailBean getTagStorageOrderDetailBean(String orderNo, StorageOrderItemRequestDTO item, String boxCode) {
+        TagStorageOrderDetailBean detailBean = new TagStorageOrderDetailBean();
+        detailBean.setOrderNo(orderNo);
+        detailBean.setProductCode(item.getProductCode());
+        detailBean.setProductName(item.getProductName());
+        detailBean.setProductSize(item.getProductSize());
+        detailBean.setProductColor(item.getProductColor());
+        detailBean.setSku(item.getSku());
+        detailBean.setQuantity(item.getQuantity());
+        detailBean.setBoxCnt(item.getBoxCnt());
+        detailBean.setBoxCode(boxCode);
+        return detailBean;
+    }
 }

@@ -15,7 +15,7 @@ public class RfidApiRequestDTO<T> implements Serializable {
      * 时间戳，格式：yyyy-MM-dd HH:mm:ss
      */
     @Schema(description = "请求时间戳", example = "2024-01-01 12:00:00", required = true)
-    private String timestamp;
+    private String timeStamp;
 
     /**
      * 版本号，固定值：3.0

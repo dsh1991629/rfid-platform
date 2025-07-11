@@ -1,11 +1,110 @@
 package com.rfid.platform.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.rfid.platform.common.AccountContext;
+import com.rfid.platform.common.PlatformConstant;
 import com.rfid.platform.entity.TagStorageOrderBean;
 import com.rfid.platform.mapper.TagStorageOrderMapper;
+import com.rfid.platform.persistence.storage.StorageOrderItemRequestDTO;
+import com.rfid.platform.service.TagStorageOrderDetailService;
 import com.rfid.platform.service.TagStorageOrderService;
+import com.rfid.platform.util.TimeUtil;
+import java.util.List;
+import java.util.Objects;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class TagStorageOrderServiceImpl extends ServiceImpl<TagStorageOrderMapper, TagStorageOrderBean> implements TagStorageOrderService {
+
+    @Autowired
+    @Lazy
+    private TagStorageOrderDetailService tagStorageOrderDetailService;
+
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public Long saveInboundTagStorageOrder(String timeStamp, String orderNo, List<StorageOrderItemRequestDTO> items) {
+        TagStorageOrderBean tagStorageOrderBean = new TagStorageOrderBean();
+        tagStorageOrderBean.setOrderNo(orderNo);
+        tagStorageOrderBean.setOrderType(PlatformConstant.STORAGE_ORDER_TYPE.IN_BOUND);
+        tagStorageOrderBean.setState(PlatformConstant.STORAGE_ORDER_STATUS.SEND);
+        tagStorageOrderBean.setCreateUser(String.valueOf(AccountContext.getAccountId()));
+        tagStorageOrderBean.setCreateDate(timeStamp);
+        tagStorageOrderBean.setCreateTime(TimeUtil.localDateTimeToTimestamp(TimeUtil.parseDateFormatterString(timeStamp)));
+        super.save(tagStorageOrderBean);
+
+        tagStorageOrderDetailService.saveStorageOrderDetails(orderNo, items);
+
+        return tagStorageOrderBean.getId();
+    }
+
+
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public Long saveOutboundTagStorageOrder(String timeStamp, String orderNo, List<StorageOrderItemRequestDTO> items) {
+        TagStorageOrderBean tagStorageOrderBean = new TagStorageOrderBean();
+        tagStorageOrderBean.setOrderNo(orderNo);
+        tagStorageOrderBean.setOrderType(PlatformConstant.STORAGE_ORDER_TYPE.OUT_BOUND);
+        tagStorageOrderBean.setState(PlatformConstant.STORAGE_ORDER_STATUS.SEND);
+        tagStorageOrderBean.setCreateUser(String.valueOf(AccountContext.getAccountId()));
+        tagStorageOrderBean.setCreateDate(timeStamp);
+        tagStorageOrderBean.setCreateTime(TimeUtil.localDateTimeToTimestamp(TimeUtil.parseDateFormatterString(timeStamp)));
+        super.save(tagStorageOrderBean);
+
+        tagStorageOrderDetailService.saveStorageOrderDetails(orderNo, items);
+
+        return tagStorageOrderBean.getId();
+    }
+
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public Long saveInventoryTagStorageOrder(String timeStamp, String orderNo, List<StorageOrderItemRequestDTO> items) {
+        TagStorageOrderBean tagStorageOrderBean = new TagStorageOrderBean();
+        tagStorageOrderBean.setOrderNo(orderNo);
+        tagStorageOrderBean.setOrderType(PlatformConstant.STORAGE_ORDER_TYPE.INVENTORY_BOUND);
+        tagStorageOrderBean.setState(PlatformConstant.STORAGE_ORDER_STATUS.SEND);
+        tagStorageOrderBean.setCreateUser(String.valueOf(AccountContext.getAccountId()));
+        tagStorageOrderBean.setCreateDate(timeStamp);
+        tagStorageOrderBean.setCreateTime(TimeUtil.localDateTimeToTimestamp(TimeUtil.parseDateFormatterString(timeStamp)));
+        super.save(tagStorageOrderBean);
+
+        tagStorageOrderDetailService.saveStorageOrderDetails(orderNo, items);
+
+        return tagStorageOrderBean.getId();
+    }
+
+
+    @Override
+    public boolean checkStorageOrderCancelable(String orderNo, Integer orderType) {
+        LambdaQueryWrapper<TagStorageOrderBean> queryWrapper = Wrappers.lambdaQuery();
+        queryWrapper.eq(TagStorageOrderBean::getOrderNo, orderNo);
+        queryWrapper.eq(TagStorageOrderBean::getState, PlatformConstant.STORAGE_ORDER_STATUS.SEND);
+        queryWrapper.eq(TagStorageOrderBean::getOrderType, orderType);
+        return super.exists(queryWrapper);
+    }
+
+
+    @Override
+    public Long cancelTagStorageOrder(String timeStamp, String orderNo, Integer orderType) {
+        LambdaQueryWrapper<TagStorageOrderBean> queryWrapper = Wrappers.lambdaQuery();
+        queryWrapper.eq(TagStorageOrderBean::getOrderNo, orderNo);
+        queryWrapper.eq(TagStorageOrderBean::getState, PlatformConstant.STORAGE_ORDER_STATUS.SEND);
+        queryWrapper.eq(TagStorageOrderBean::getOrderType, orderType);
+        TagStorageOrderBean tagStorageOrderBean = super.getOne(queryWrapper);
+        if (Objects.nonNull(tagStorageOrderBean)) {
+            tagStorageOrderBean.setState(PlatformConstant.STORAGE_ORDER_STATUS.CANCELED);
+            tagStorageOrderBean.setUpdateDate(timeStamp);
+            tagStorageOrderBean.setUpdateUser(String.valueOf(AccountContext.getAccountId()));
+            tagStorageOrderBean.setUpdateTime(TimeUtil.localDateTimeToTimestamp(TimeUtil.parseDateFormatterString(timeStamp)));
+            super.updateById(tagStorageOrderBean);
+        }
+        return tagStorageOrderBean.getId();
+    }
 }

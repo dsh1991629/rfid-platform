@@ -38,17 +38,21 @@ public class PlatformConstant {
         String LOCKED = "LOCKED";
     }
 
-    public interface STORAGE_OPERATION_TYPE {
-        Integer STORAGE_IN = 1;
-        Integer STORAGE_OUT = 2;
+    public interface STORAGE_ORDER_TYPE {
+        Integer IN_BOUND = 1; // 入库单
+        Integer OUT_BOUND = 2; // 出库单
+        Integer INVENTORY_BOUND = 3; // 盘点单
     }
 
-    public interface STORAGE_TASK_STATE {
-        Integer CREATED = 1;
-        Integer RUNNING = 2;
-        Integer PARTIAL = 3;
-        Integer SUCCESS = 4;
+    public interface STORAGE_ORDER_STATUS {
+        Integer SEND = 1; // 下发
+        Integer EXECUTING = 2; // 盘点中
+        Integer COMPLETED = 3; // 盘点完成
+        Integer FINISHED = 4; // 上传完成
+        Integer CANCELED = 5; // 取消
     }
+
+
 
     public interface ROLE_ALIAS {
         String SUPERADMIN = "administrator";

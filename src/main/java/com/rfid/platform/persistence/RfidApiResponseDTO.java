@@ -28,7 +28,7 @@ public class RfidApiResponseDTO<T> implements Serializable {
      * 时间，格式：yyyy-MM-dd HH:mm:ss
      */
     @Schema(description = "响应时间", example = "2024-01-01 12:00:00", pattern = "yyyy-MM-dd HH:mm:ss", requiredMode = Schema.RequiredMode.REQUIRED)
-    private String timestamp;
+    private String timeStamp;
 
     /**
      * 详情数据
@@ -44,7 +44,7 @@ public class RfidApiResponseDTO<T> implements Serializable {
         RfidApiResponseDTO<T> response = new RfidApiResponseDTO<>();
         response.setMessage("操作成功");
         response.setStatus(true);
-        response.setTimestamp(java.time.LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        response.setTimeStamp(java.time.LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
         return response;
     }
 
@@ -69,7 +69,7 @@ public class RfidApiResponseDTO<T> implements Serializable {
         RfidApiResponseDTO<T> response = new RfidApiResponseDTO<>();
         response.setMessage(message);
         response.setStatus(false);
-        response.setTimestamp(java.time.LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        response.setTimeStamp(java.time.LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
         return response;
     }
 }

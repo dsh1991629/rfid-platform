@@ -32,4 +32,13 @@ public class TagStorageOrderBean implements Serializable {
     @TableField(value = "CREATE_TIME")
     private Long createTime;
 
+    @TableField(value = "UPDATE_DATE")
+    private String updateDate;
+
+    @TableField(value = "UPDATE_USER")
+    private String updateUser;
+
+    @TableField(value = "UPDATE_TIME")
+    private Long updateTime;
+
 }
