@@ -9,6 +9,7 @@ import com.rfid.platform.persistence.storage.StorageOrderItemRequestDTO;
 import com.rfid.platform.service.TagStorageOrderDetailService;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Service;
 
@@ -55,5 +56,20 @@ public class TagStorageOrderDetailServiceImpl extends ServiceImpl<TagStorageOrde
         LambdaQueryWrapper<TagStorageOrderDetailBean> queryWrapper = Wrappers.lambdaQuery();
         queryWrapper.eq(TagStorageOrderDetailBean::getOrderNo, orderNo);
         return super.list(queryWrapper);
+    }
+    
+    @Override
+    public List<String> listDistinctProductCodes(String orderNo) {
+        LambdaQueryWrapper<TagStorageOrderDetailBean> queryWrapper = Wrappers.lambdaQuery();
+        queryWrapper.eq(TagStorageOrderDetailBean::getOrderNo, orderNo);
+        queryWrapper.select(TagStorageOrderDetailBean::getProductCode);
+        
+        List<TagStorageOrderDetailBean> details = super.list(queryWrapper);
+        
+        // 过滤重复的productCode
+        return details.stream()
+                .map(TagStorageOrderDetailBean::getProductCode)
+                .distinct()
+                .collect(Collectors.toList());
     }
 }

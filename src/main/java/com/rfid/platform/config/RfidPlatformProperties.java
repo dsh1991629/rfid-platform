@@ -20,4 +20,6 @@ public class RfidPlatformProperties {
 
     private Long wmsTimeout = 7200L;
 
+    private String epcPattern = "";
+
 }
