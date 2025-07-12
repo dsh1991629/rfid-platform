@@ -8,6 +8,8 @@ import com.rfid.platform.mapper.TagStorageOrderResultMapper;
 import com.rfid.platform.service.TagStorageOrderResultService;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class TagStorageOrderResultServiceImpl extends ServiceImpl<TagStorageOrderResultMapper, TagStorageOrderResultBean> implements TagStorageOrderResultService {
     
@@ -17,5 +19,10 @@ public class TagStorageOrderResultServiceImpl extends ServiceImpl<TagStorageOrde
         queryWrapper.eq(TagStorageOrderResultBean::getOrderNo, orderNo);
         queryWrapper.eq(TagStorageOrderResultBean::getProductCode, productCode);
         return Math.toIntExact(super.count(queryWrapper));
+    }
+
+    @Override
+    public boolean saveStorageOrderResults(List<TagStorageOrderResultBean> resultBeans) {
+        return super.saveBatch(resultBeans, 50);
     }
 }

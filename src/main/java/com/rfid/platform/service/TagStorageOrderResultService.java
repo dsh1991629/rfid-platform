@@ -1,5 +1,9 @@
 package com.rfid.platform.service;
 
+import com.rfid.platform.entity.TagStorageOrderResultBean;
+
+import java.util.List;
+
 public interface TagStorageOrderResultService {
     
     /**
@@ -9,4 +13,6 @@ public interface TagStorageOrderResultService {
      * @return 完成数量
      */
     int countCompletedByOrderNoAndProductCode(String orderNo, String productCode);
+
+    boolean saveStorageOrderResults(List<TagStorageOrderResultBean> resultBeans);
 }

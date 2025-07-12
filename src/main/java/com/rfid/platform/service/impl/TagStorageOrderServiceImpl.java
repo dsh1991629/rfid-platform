@@ -155,4 +155,26 @@ public class TagStorageOrderServiceImpl extends ServiceImpl<TagStorageOrderMappe
         }
         return super.list(queryWrapper);
     }
+
+    @Override
+    public boolean updateOrderStateByOrderNo(String orderNo, String timeStamp, Integer state) {
+        if (StringUtils.isBlank(orderNo)  || Objects.isNull(state)) {
+            return false;
+        }
+        
+        LambdaQueryWrapper<TagStorageOrderBean> queryWrapper = Wrappers.lambdaQuery();
+        queryWrapper.eq(TagStorageOrderBean::getOrderNo, orderNo);
+        TagStorageOrderBean existsBean = super.getOne(queryWrapper);
+        
+        if (Objects.isNull(existsBean)) {
+            return false;
+        }
+
+        // 更新订单状态和相关字段
+        existsBean.setState(state);
+        existsBean.setUpdateDate(timeStamp);
+        existsBean.setUpdateUser(String.valueOf(AccountContext.getAccountId()));
+        existsBean.setUpdateTime(TimeUtil.localDateTimeToTimestamp(TimeUtil.parseDateFormatterString(timeStamp)));
+        return super.updateById(existsBean);
+    }
 }
