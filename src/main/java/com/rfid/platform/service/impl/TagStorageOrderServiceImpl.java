@@ -125,4 +125,34 @@ public class TagStorageOrderServiceImpl extends ServiceImpl<TagStorageOrderMappe
         }
         return super.list(queryWrapper);
     }
+
+
+    @Override
+    public List<TagStorageOrderBean> queryActiveOutBoundOrders(StorageCheckQueryRequestDTO data) {
+        LambdaQueryWrapper<TagStorageOrderBean> queryWrapper = Wrappers.lambdaQuery();
+        queryWrapper.eq(TagStorageOrderBean::getOrderType, PlatformConstant.STORAGE_ORDER_TYPE.OUT_BOUND);
+        queryWrapper.eq(TagStorageOrderBean::getState, PlatformConstant.STORAGE_ORDER_STATUS.SEND)
+                .or().eq(TagStorageOrderBean::getState, PlatformConstant.STORAGE_ORDER_STATUS.EXECUTING);
+        if (Objects.nonNull(data)) {
+            queryWrapper.like(TagStorageOrderBean::getOrderNo, data.getOrderNo());
+            queryWrapper.ge(StringUtils.isNotBlank(data.getTimeBegin()), TagStorageOrderBean::getCreateTime, TimeUtil.getDayNoLineTimestamp(data.getTimeBegin()));
+            queryWrapper.le(StringUtils.isNotBlank(data.getTimeEnd()), TagStorageOrderBean::getCreateTime, TimeUtil.getDayNoLineTimestamp(data.getTimeEnd()));
+        }
+        return super.list(queryWrapper);
+    }
+
+
+    @Override
+    public List<TagStorageOrderBean> queryActiveInventoryOrders(StorageCheckQueryRequestDTO data) {
+        LambdaQueryWrapper<TagStorageOrderBean> queryWrapper = Wrappers.lambdaQuery();
+        queryWrapper.eq(TagStorageOrderBean::getOrderType, PlatformConstant.STORAGE_ORDER_TYPE.INVENTORY_BOUND);
+        queryWrapper.eq(TagStorageOrderBean::getState, PlatformConstant.STORAGE_ORDER_STATUS.SEND)
+                .or().eq(TagStorageOrderBean::getState, PlatformConstant.STORAGE_ORDER_STATUS.EXECUTING);
+        if (Objects.nonNull(data)) {
+            queryWrapper.like(TagStorageOrderBean::getOrderNo, data.getOrderNo());
+            queryWrapper.ge(StringUtils.isNotBlank(data.getTimeBegin()), TagStorageOrderBean::getCreateTime, TimeUtil.getDayNoLineTimestamp(data.getTimeBegin()));
+            queryWrapper.le(StringUtils.isNotBlank(data.getTimeEnd()), TagStorageOrderBean::getCreateTime, TimeUtil.getDayNoLineTimestamp(data.getTimeEnd()));
+        }
+        return super.list(queryWrapper);
+    }
 }

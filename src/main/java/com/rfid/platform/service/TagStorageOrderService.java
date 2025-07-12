@@ -18,4 +18,8 @@ public interface TagStorageOrderService {
     Long cancelTagStorageOrder(String timeStamp, String orderNo, Integer orderType);
 
     List<TagStorageOrderBean> queryActiveInBoundOrders(StorageCheckQueryRequestDTO data);
+
+    List<TagStorageOrderBean> queryActiveOutBoundOrders(StorageCheckQueryRequestDTO data);
+
+    List<TagStorageOrderBean> queryActiveInventoryOrders(StorageCheckQueryRequestDTO data);
 }

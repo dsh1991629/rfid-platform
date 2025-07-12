@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@Tag(name = "仓储订单管理", description = "RFID仓储订单相关接口，包括入库、出库、盘点订单的创建和取消")
+@Tag(name = "设备通知单下发，取消", description = "RFID通知单相关接口，包括入库、出库、盘点通知单的创建和取消")
 @RestController
 @RequestMapping(value = "/rfid")
 public class StorageOrderController {
