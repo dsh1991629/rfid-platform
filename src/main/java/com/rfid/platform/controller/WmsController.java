@@ -14,6 +14,7 @@ import com.rfid.platform.util.JwtUtil;
 import com.rfid.platform.util.RequestUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +30,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
+@Tag(name = "WMS操作", description = "提供给WMS登录，登出功能")
 @RestController
 @RequestMapping(value = "/rfid")
 public class WmsController {

@@ -14,6 +14,7 @@ import com.rfid.platform.service.TagStorageOrderService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,10 +27,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-@Api(tags = "设备通知单查询", description = "提供给设备入库、出库、盘点通知单查询功能")
+@Tag(name = "设备通知单查询", description = "提供给设备入库、出库、盘点通知单查询功能")
 @RestController
 @RequestMapping(value = "/rfid/dev")
-public class StorageCheckController {
+public class StorageDeviceQueryController {
 
     @Autowired
     private TagStorageOrderService tagStorageOrderService;
@@ -44,7 +45,7 @@ public class StorageCheckController {
     @ApiOperation(value = "获取入库通知单", notes = "查询活跃的入库通知单及其详情")
     @PostMapping(value = "/getinboundorder")
     public RfidApiResponseDTO<StorageCheckQueryResponseDTO> getInBoundOrder (
-            @ApiParam(value = "入库订单查询请求", required = true) @RequestBody RfidApiRequestDTO<StorageCheckQueryRequestDTO> requestDTO) {
+            @ApiParam(value = "入库通知单查询请求", required = true) @RequestBody RfidApiRequestDTO<StorageCheckQueryRequestDTO> requestDTO) {
         RfidApiResponseDTO<StorageCheckQueryResponseDTO> response = RfidApiResponseDTO.success();
 
         if (Objects.isNull(requestDTO)) {
@@ -99,7 +100,7 @@ public class StorageCheckController {
     @ApiOperation(value = "获取出库通知单", notes = "查询活跃的出库通知单及其详情")
     @PostMapping(value = "/getoutboundorder")
     public RfidApiResponseDTO<StorageCheckQueryResponseDTO> getOutBoundOrder (
-            @ApiParam(value = "出库订单查询请求", required = true) @RequestBody RfidApiRequestDTO<StorageCheckQueryRequestDTO> requestDTO) {
+            @ApiParam(value = "出库通知单查询请求", required = true) @RequestBody RfidApiRequestDTO<StorageCheckQueryRequestDTO> requestDTO) {
         RfidApiResponseDTO<StorageCheckQueryResponseDTO> response = RfidApiResponseDTO.success();
 
         if (Objects.isNull(requestDTO)) {
@@ -154,7 +155,7 @@ public class StorageCheckController {
     @ApiOperation(value = "获取盘点通知单", notes = "查询活跃的盘点通知单及其详情")
     @PostMapping(value = "/getinventoryorder")
     public RfidApiResponseDTO<StorageCheckQueryResponseDTO> getInventoryOrder (
-            @ApiParam(value = "盘点订单查询请求", required = true) @RequestBody RfidApiRequestDTO<StorageCheckQueryRequestDTO> requestDTO) {
+            @ApiParam(value = "盘点通知单查询请求", required = true) @RequestBody RfidApiRequestDTO<StorageCheckQueryRequestDTO> requestDTO) {
         RfidApiResponseDTO<StorageCheckQueryResponseDTO> response = RfidApiResponseDTO.success();
 
         if (Objects.isNull(requestDTO)) {
