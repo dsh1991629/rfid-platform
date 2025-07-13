@@ -28,4 +28,13 @@ public class DeviceHeartbeatBean implements Serializable {
     @TableField(value = "CREATE_TIME")
     private Long createTime;
 
+    @TableField(value = "DEVICE_TYPE")
+    private String deviceType;
+
+    @TableField(value = "DEVICE_MODEL")
+    private String deviceModel;
+
+    @TableField(value = "DEVICE_LOCATION")
+    private String deviceLocation;
+
 }

@@ -110,6 +110,7 @@ public class StorageDeviceUploadController {
         for (TagStorageOrderDetailBean detail : orderDetails) {
             if (productCode.equals(detail.getProductCode())) {
                 quantity = detail.getQuantity();
+                break;
             }
         }
 

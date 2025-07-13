@@ -26,18 +26,15 @@ public class TagStorageOrderDetailServiceImpl extends ServiceImpl<TagStorageOrde
         List<TagStorageOrderDetailBean> detailBeans = new ArrayList<>();
         
         for (StorageOrderItemRequestDTO item : items) {
-            if (CollectionUtils.isNotEmpty(item.getBoxCodes())) {
-                for (String boxCode : item.getBoxCodes()) {TagStorageOrderDetailBean detailBean = getTagStorageOrderDetailBean(orderNo, item, boxCode);
-                    detailBeans.add(detailBean);
-                }
-            }
+            TagStorageOrderDetailBean detailBean = getTagStorageOrderDetailBean(orderNo, item);
+            detailBeans.add(detailBean);
         }
         
         // 批量保存到数据库
         return super.saveBatch(detailBeans, 50);
     }
 
-    private TagStorageOrderDetailBean getTagStorageOrderDetailBean(String orderNo, StorageOrderItemRequestDTO item, String boxCode) {
+    private TagStorageOrderDetailBean getTagStorageOrderDetailBean(String orderNo, StorageOrderItemRequestDTO item) {
         TagStorageOrderDetailBean detailBean = new TagStorageOrderDetailBean();
         detailBean.setOrderNo(orderNo);
         detailBean.setProductCode(item.getProductCode());
@@ -47,7 +44,7 @@ public class TagStorageOrderDetailServiceImpl extends ServiceImpl<TagStorageOrde
         detailBean.setSku(item.getSku());
         detailBean.setQuantity(item.getQuantity());
         detailBean.setBoxCnt(item.getBoxCnt());
-        detailBean.setBoxCode(boxCode);
+        detailBean.setBoxCodes(String.join(",", item.getBoxCodes()));
         return detailBean;
     }
 

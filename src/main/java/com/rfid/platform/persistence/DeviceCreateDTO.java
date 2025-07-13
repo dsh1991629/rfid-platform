@@ -9,15 +9,15 @@ import lombok.Data;
 public class DeviceCreateDTO implements Serializable {
 
     /**
-     * 设备名称
+     * 设备类型
      */
-    @Schema(description = "设备名称", example = "通道机", required = true)
-    private String deviceName;
+    @Schema(description = "设备类型", example = "通道机", required = true)
+    private String deviceType;
 
     /**
      * 设备类型
      */
-    @Schema(description = "设备类型", example = "QMX-通道机-红豆-V1", required = true)
+    @Schema(description = "设备规格", example = "QMX-通道机-红豆-V1", required = true)
     private String deviceModel;
 
     /**

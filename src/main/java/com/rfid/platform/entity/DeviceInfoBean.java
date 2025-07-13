@@ -16,8 +16,8 @@ public class DeviceInfoBean implements Serializable {
     @TableId(value = "ID", type = IdType.AUTO)
     private Long id;
 
-    @TableField(value = "DEVICE_NAME")
-    private String deviceName;
+    @TableField(value = "DEVICE_TYPE")
+    private String deviceType;
 
     @TableField(value = "DEVICE_MODEL")
     private String deviceModel;

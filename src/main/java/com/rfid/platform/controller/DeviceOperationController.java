@@ -8,6 +8,7 @@ import com.rfid.platform.persistence.DeviceLoginReqDTO;
 import com.rfid.platform.persistence.DeviceLoginRetDTO;
 import com.rfid.platform.persistence.RfidApiRequestDTO;
 import com.rfid.platform.persistence.RfidApiResponseDTO;
+import com.rfid.platform.persistence.storage.HeartBeatDTO;
 import com.rfid.platform.service.AccountService;
 import com.rfid.platform.service.DeviceAccountRelService;
 import com.rfid.platform.service.DeviceHeartbeatService;
@@ -256,12 +257,12 @@ public class DeviceOperationController {
 
     @Operation(summary = "设备心跳接口", description = "更新设备心跳接口")
     @PostMapping(value = "/heartbeat")
-    public RfidApiResponseDTO<Boolean> deviceHeartbeat(@RequestBody RfidApiRequestDTO requestDTO) {
+    public RfidApiResponseDTO<Boolean> deviceHeartbeat(@RequestBody RfidApiRequestDTO<HeartBeatDTO> requestDTO) {
         RfidApiResponseDTO<Boolean> result = RfidApiResponseDTO.success();
 
         // 通过工具类获取token
         String accessToken = RequestUtil.getTokenFromHeader();
-        boolean success = deviceHeartbeatService.addDeviceHeartbeat(accessToken, requestDTO.getTimeStamp());
+        boolean success = deviceHeartbeatService.addDeviceHeartbeat(accessToken, requestDTO.getTimeStamp(), requestDTO.getData());
         result.setData(success);
         return result;
     }

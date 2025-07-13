@@ -7,18 +7,28 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.rfid.platform.common.PlatformConstant;
 import com.rfid.platform.entity.DeviceHeartbeatBean;
+import com.rfid.platform.entity.DeviceInfoBean;
 import com.rfid.platform.mapper.DeviceHeartbeatMapper;
+import com.rfid.platform.persistence.storage.HeartBeatDTO;
 import com.rfid.platform.service.DeviceHeartbeatService;
+import com.rfid.platform.service.DeviceInfoService;
 import com.rfid.platform.util.TimeUtil;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 @Service
 public class DeviceHeartbeatServiceImpl extends ServiceImpl<DeviceHeartbeatMapper, DeviceHeartbeatBean> implements DeviceHeartbeatService {
+
+    @Autowired
+    @Lazy
+    private DeviceInfoService deviceInfoService;
 
 
     @Override
@@ -52,7 +62,14 @@ public class DeviceHeartbeatServiceImpl extends ServiceImpl<DeviceHeartbeatMappe
 
     @Override
     public boolean addLoginHeartBeat(String deviceCode, String accessToken, String timeStamp) {
+        DeviceInfoBean deviceInfoBean = deviceInfoService.queryDeviceInfoByCode(deviceCode);
+
         DeviceHeartbeatBean deviceHeartbeatBean = new DeviceHeartbeatBean();
+        if (Objects.nonNull(deviceInfoBean)) {
+            deviceHeartbeatBean.setDeviceModel(deviceInfoBean.getDeviceModel());
+            deviceHeartbeatBean.setDeviceLocation(deviceInfoBean.getDeviceLocation());
+            deviceHeartbeatBean.setDeviceType(deviceInfoBean.getDeviceType());
+        }
         deviceHeartbeatBean.setDeviceCode(deviceCode);
         deviceHeartbeatBean.setAccessToken(accessToken);
         deviceHeartbeatBean.setCreateDate(timeStamp);
@@ -64,25 +81,28 @@ public class DeviceHeartbeatServiceImpl extends ServiceImpl<DeviceHeartbeatMappe
 
     @Override
     public boolean addLogoutHeartBeat(String accessToken, String timeStamp) {
-        String deviceCode = "";
+        DeviceHeartbeatBean deviceHeartbeatBean = null;
         LambdaQueryWrapper<DeviceHeartbeatBean> queryWrapper = Wrappers.lambdaQuery();
         queryWrapper.eq(DeviceHeartbeatBean::getAccessToken, accessToken);
         List<DeviceHeartbeatBean> deviceHeartbeatBeans = super.list(queryWrapper);
         if (CollectionUtils.isNotEmpty(deviceHeartbeatBeans)) {
-            deviceCode = deviceHeartbeatBeans.get(0).getDeviceCode();
+            deviceHeartbeatBean = deviceHeartbeatBeans.get(0);
         }
-        DeviceHeartbeatBean deviceHeartbeatBean = new DeviceHeartbeatBean();
-        deviceHeartbeatBean.setDeviceCode(deviceCode);
-        deviceHeartbeatBean.setAccessToken(accessToken);
-        deviceHeartbeatBean.setCreateDate(timeStamp);
-        deviceHeartbeatBean.setCreateTime(TimeUtil.localDateTimeToTimestamp(TimeUtil.parseDateFormatterString(timeStamp)));
-        deviceHeartbeatBean.setType(PlatformConstant.DEVICE_HEARTBEAT_TYPE.LOGOUT);
-        return super.save(deviceHeartbeatBean);
+        DeviceHeartbeatBean deviceLogoutHeartbeatBean = new DeviceHeartbeatBean();
+        deviceLogoutHeartbeatBean.setDeviceCode(deviceHeartbeatBean.getDeviceCode());
+        deviceLogoutHeartbeatBean.setDeviceType(deviceHeartbeatBean.getDeviceType());
+        deviceLogoutHeartbeatBean.setDeviceModel(deviceHeartbeatBean.getDeviceModel());
+        deviceLogoutHeartbeatBean.setDeviceLocation(deviceHeartbeatBean.getDeviceLocation());
+        deviceLogoutHeartbeatBean.setAccessToken(accessToken);
+        deviceLogoutHeartbeatBean.setCreateDate(timeStamp);
+        deviceLogoutHeartbeatBean.setCreateTime(TimeUtil.localDateTimeToTimestamp(TimeUtil.parseDateFormatterString(timeStamp)));
+        deviceLogoutHeartbeatBean.setType(PlatformConstant.DEVICE_HEARTBEAT_TYPE.LOGOUT);
+        return super.save(deviceLogoutHeartbeatBean);
     }
 
 
     @Override
-    public boolean addDeviceHeartbeat(String accessToken, String timeStamp) {
+    public boolean addDeviceHeartbeat(String accessToken, String timeStamp, HeartBeatDTO heartBeatDTO) {
         String deviceCode = "";
         LambdaQueryWrapper<DeviceHeartbeatBean> queryWrapper = Wrappers.lambdaQuery();
         queryWrapper.eq(DeviceHeartbeatBean::getAccessToken, accessToken);
@@ -91,6 +111,9 @@ public class DeviceHeartbeatServiceImpl extends ServiceImpl<DeviceHeartbeatMappe
             deviceCode = deviceHeartbeatBeans.get(0).getDeviceCode();
         }
         DeviceHeartbeatBean deviceHeartbeatBean = new DeviceHeartbeatBean();
+        deviceHeartbeatBean.setDeviceType(heartBeatDTO.getDevType());
+        deviceHeartbeatBean.setDeviceLocation(heartBeatDTO.getDevLocation());
+        deviceHeartbeatBean.setDeviceModel(heartBeatDTO.getDevModel());
         deviceHeartbeatBean.setDeviceCode(deviceCode);
         deviceHeartbeatBean.setAccessToken(accessToken);
         deviceHeartbeatBean.setCreateDate(timeStamp);

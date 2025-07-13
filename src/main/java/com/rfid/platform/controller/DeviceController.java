@@ -10,9 +10,6 @@ import com.rfid.platform.common.PlatformConstant;
 import com.rfid.platform.entity.DeviceHeartbeatBean;
 import com.rfid.platform.entity.DeviceInfoBean;
 import com.rfid.platform.enums.DeviceHeartbeatTypeEnum;
-import com.rfid.platform.persistence.AccountDTO;
-import com.rfid.platform.persistence.AccountPageQueryDTO;
-import com.rfid.platform.persistence.DepartmentDTO;
 import com.rfid.platform.persistence.DeviceAccountRelDeleteDTO;
 import com.rfid.platform.persistence.DeviceAccountRelQueryDTO;
 import com.rfid.platform.persistence.DeviceAccountRelUpdateDTO;
@@ -24,8 +21,6 @@ import com.rfid.platform.persistence.DeviceHeartbeatDTO;
 import com.rfid.platform.persistence.DeviceHeartbeatQueryDTO;
 import com.rfid.platform.persistence.DevicePageQueryDTO;
 import com.rfid.platform.persistence.DeviceUpdateDTO;
-import com.rfid.platform.persistence.MenuDTO;
-import com.rfid.platform.persistence.RoleDTO;
 import com.rfid.platform.service.AccountService;
 import com.rfid.platform.service.DeviceAccountRelService;
 import com.rfid.platform.service.DeviceHeartbeatService;
@@ -73,15 +68,15 @@ public class DeviceController {
         BaseResult<Long> result = new BaseResult<>();
         try {
             // 参数校验
-            if (StringUtils.isBlank(deviceCreateDTO.getDeviceName())) {
+            if (StringUtils.isBlank(deviceCreateDTO.getDeviceType())) {
                 result.setCode(PlatformConstant.RET_CODE.FAILED);
-                result.setMessage("设备名称不能为空");
+                result.setMessage("设备类型不能为空");
                 return result;
             }
 
             if (StringUtils.isBlank(deviceCreateDTO.getDeviceModel())) {
                 result.setCode(PlatformConstant.RET_CODE.FAILED);
-                result.setMessage("设备类型不能为空");
+                result.setMessage("设备型号不能为空");
                 return result;
             }
 
@@ -240,8 +235,8 @@ public class DeviceController {
             if (StringUtils.isNotBlank(devicePageQueryDTO.getDeviceCode())) {
                 queryWrapper.like(DeviceInfoBean::getDeviceCode, devicePageQueryDTO.getDeviceCode());
             }
-            if (StringUtils.isNotBlank(devicePageQueryDTO.getDeviceName())) {
-                queryWrapper.like(DeviceInfoBean::getDeviceName, devicePageQueryDTO.getDeviceName());
+            if (StringUtils.isNotBlank(devicePageQueryDTO.getDeviceType())) {
+                queryWrapper.like(DeviceInfoBean::getDeviceType, devicePageQueryDTO.getDeviceType());
             }
 
             if (StringUtils.isNotBlank(devicePageQueryDTO.getDeviceModel())) {
@@ -440,7 +435,7 @@ public class DeviceController {
                     .map(bean -> {
                         DeviceHeartbeatDTO dto = BeanUtil.copyProperties(bean, DeviceHeartbeatDTO.class);
                         if (Objects.nonNull(deviceInfoBean)) {
-                            dto.setDeviceName(deviceInfoBean.getDeviceName());
+                            dto.setDeviceType(deviceInfoBean.getDeviceType());
                         }
                         dto.setType(changeType(bean.getType()));
                         return dto;

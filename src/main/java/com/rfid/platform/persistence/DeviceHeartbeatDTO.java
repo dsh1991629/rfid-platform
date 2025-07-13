@@ -12,8 +12,8 @@ public class DeviceHeartbeatDTO implements Serializable {
     @Schema(description = "设备编码")
     private String deviceCode;
 
-    @Schema(description = "设备名称")
-    private String deviceName;
+    @Schema(description = "设备类型")
+    private String deviceType;
 
     @Schema(description = "执行时间")
     private String createDate;
