@@ -54,7 +54,13 @@ public class StorageOrderController {
             return response;
         }
 
-        Long id = tagStorageOrderService.saveInboundTagStorageOrder(requestDTO.getTimeStamp(), storageOrderRequestDTO.getOrderNo(), storageOrderRequestDTO.getItems());
+        if (StringUtils.isBlank(storageOrderRequestDTO.getOrderType())) {
+            response.setStatus(false);
+            response.setMessage("入库通知单类型不存在");
+            return response;
+        }
+
+        Long id = tagStorageOrderService.saveInboundTagStorageOrder(requestDTO.getTimeStamp(), storageOrderRequestDTO.getOrderNo(), storageOrderRequestDTO.getOrderType(), storageOrderRequestDTO.getItems());
         StorageOrderResponseDTO storageOrderResponseDTO = new StorageOrderResponseDTO();
         storageOrderResponseDTO.setOrderNo(storageOrderResponseDTO.getOrderNo());
         storageOrderResponseDTO.setId(id);
@@ -129,7 +135,13 @@ public class StorageOrderController {
             return response;
         }
 
-        Long id = tagStorageOrderService.saveOutboundTagStorageOrder(requestDTO.getTimeStamp(), storageOrderRequestDTO.getOrderNo(), storageOrderRequestDTO.getItems());
+        if (StringUtils.isBlank(storageOrderRequestDTO.getOrderType())) {
+            response.setStatus(false);
+            response.setMessage("出库通知单类型不存在");
+            return response;
+        }
+
+        Long id = tagStorageOrderService.saveOutboundTagStorageOrder(requestDTO.getTimeStamp(), storageOrderRequestDTO.getOrderNo(), storageOrderRequestDTO.getOrderType(), storageOrderRequestDTO.getItems());
         StorageOrderResponseDTO storageOrderResponseDTO = new StorageOrderResponseDTO();
         storageOrderResponseDTO.setOrderNo(storageOrderResponseDTO.getOrderNo());
         storageOrderResponseDTO.setId(id);

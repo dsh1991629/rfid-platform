@@ -106,6 +106,7 @@ public class TagImportController {
                 TagImportInfoBean importInfo = new TagImportInfoBean();
                 importInfo.setEpc(dto.getEpc());
                 importInfo.setSku(dto.getSku());
+                importInfo.setSkuIndex(dto.getEpc().substring(2, 10));
                 importInfo.setProductCode(dto.getProductCode());
                 importInfo.setImportType(2); // 2表示Excel导入
                 importInfo.setExecNo(execNo);
@@ -163,4 +164,5 @@ public class TagImportController {
             return baseResult;
         }
     }
+
 }

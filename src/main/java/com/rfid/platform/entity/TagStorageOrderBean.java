@@ -18,7 +18,10 @@ public class TagStorageOrderBean implements Serializable {
     private String orderNo;
 
     @TableField(value = "ORDER_TYPE")
-    private Integer orderType;
+    private String orderType;
+
+    @TableField(value = "TYPE")
+    private Integer type;
 
     @TableField(value = "STATE")
     private Integer state;

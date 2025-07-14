@@ -7,9 +7,9 @@ import java.util.List;
 
 public interface TagStorageOrderService {
 
-    Long saveInboundTagStorageOrder(String timeStamp, String orderNo, List<StorageOrderItemRequestDTO> items);
+    Long saveInboundTagStorageOrder(String timeStamp, String orderNo, String orderType, List<StorageOrderItemRequestDTO> items);
 
-    Long saveOutboundTagStorageOrder(String timeStamp, String orderNo, List<StorageOrderItemRequestDTO> items);
+    Long saveOutboundTagStorageOrder(String timeStamp, String orderNo, String orderType, List<StorageOrderItemRequestDTO> items);
 
     Long saveInventoryTagStorageOrder(String timeStamp, String orderNo, List<StorageOrderItemRequestDTO> items);
 

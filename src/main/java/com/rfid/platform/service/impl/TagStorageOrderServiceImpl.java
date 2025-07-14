@@ -31,10 +31,11 @@ public class TagStorageOrderServiceImpl extends ServiceImpl<TagStorageOrderMappe
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public Long saveInboundTagStorageOrder(String timeStamp, String orderNo, List<StorageOrderItemRequestDTO> items) {
+    public Long saveInboundTagStorageOrder(String timeStamp, String orderNo, String orderType, List<StorageOrderItemRequestDTO> items) {
         TagStorageOrderBean tagStorageOrderBean = new TagStorageOrderBean();
         tagStorageOrderBean.setOrderNo(orderNo);
-        tagStorageOrderBean.setOrderType(PlatformConstant.STORAGE_ORDER_TYPE.IN_BOUND);
+        tagStorageOrderBean.setType(PlatformConstant.STORAGE_ORDER_TYPE.IN_BOUND);
+        tagStorageOrderBean.setOrderType(orderType);
         tagStorageOrderBean.setState(PlatformConstant.STORAGE_ORDER_STATUS.SEND);
         tagStorageOrderBean.setCreateUser(String.valueOf(AccountContext.getAccountId()));
         tagStorageOrderBean.setCreateDate(timeStamp);
@@ -50,10 +51,11 @@ public class TagStorageOrderServiceImpl extends ServiceImpl<TagStorageOrderMappe
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public Long saveOutboundTagStorageOrder(String timeStamp, String orderNo, List<StorageOrderItemRequestDTO> items) {
+    public Long saveOutboundTagStorageOrder(String timeStamp, String orderNo, String orderType, List<StorageOrderItemRequestDTO> items) {
         TagStorageOrderBean tagStorageOrderBean = new TagStorageOrderBean();
         tagStorageOrderBean.setOrderNo(orderNo);
-        tagStorageOrderBean.setOrderType(PlatformConstant.STORAGE_ORDER_TYPE.OUT_BOUND);
+        tagStorageOrderBean.setType(PlatformConstant.STORAGE_ORDER_TYPE.OUT_BOUND);
+        tagStorageOrderBean.setOrderType(orderType);
         tagStorageOrderBean.setState(PlatformConstant.STORAGE_ORDER_STATUS.SEND);
         tagStorageOrderBean.setCreateUser(String.valueOf(AccountContext.getAccountId()));
         tagStorageOrderBean.setCreateDate(timeStamp);
@@ -71,7 +73,8 @@ public class TagStorageOrderServiceImpl extends ServiceImpl<TagStorageOrderMappe
     public Long saveInventoryTagStorageOrder(String timeStamp, String orderNo, List<StorageOrderItemRequestDTO> items) {
         TagStorageOrderBean tagStorageOrderBean = new TagStorageOrderBean();
         tagStorageOrderBean.setOrderNo(orderNo);
-        tagStorageOrderBean.setOrderType(PlatformConstant.STORAGE_ORDER_TYPE.INVENTORY_BOUND);
+        tagStorageOrderBean.setType(PlatformConstant.STORAGE_ORDER_TYPE.INVENTORY_BOUND);
+        tagStorageOrderBean.setOrderType("");
         tagStorageOrderBean.setState(PlatformConstant.STORAGE_ORDER_STATUS.SEND);
         tagStorageOrderBean.setCreateUser(String.valueOf(AccountContext.getAccountId()));
         tagStorageOrderBean.setCreateDate(timeStamp);

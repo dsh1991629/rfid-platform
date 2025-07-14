@@ -20,6 +20,9 @@ public class TagImportInfoBean implements Serializable {
     @TableField(value = "EPC")
     private String epc;
 
+    @TableField(value = "SKU_INDEX")
+    private String skuIndex;
+
     @TableField(value = "SKU")
     private String sku;
 
