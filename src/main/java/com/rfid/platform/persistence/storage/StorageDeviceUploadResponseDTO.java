@@ -12,9 +12,6 @@ public class StorageDeviceUploadResponseDTO implements Serializable {
     @Schema(description = "通知单号")
     private String orderNo;
 
-    @Schema(description = "款式码")
-    private String productCode;
-
     @Schema(description = "本通知单已经扫描的的箱数量")
     private Integer oprtBoxCnt;
 

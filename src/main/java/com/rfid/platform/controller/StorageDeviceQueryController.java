@@ -15,12 +15,14 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -59,27 +61,28 @@ public class StorageDeviceQueryController {
             List<StorageCheckQueryOrderDetailDTO> details = tagStorageOrderBeans.stream().map(e -> {
                 StorageCheckQueryOrderDetailDTO detailDTO = new StorageCheckQueryOrderDetailDTO();
                 detailDTO.setOrderNo(e.getOrderNo());
+                detailDTO.setOrderType(e.getOrderType());
 
                 List<TagStorageOrderDetailBean> tagStorageOrderDetailBeans = tagStorageOrderDetailService.listTagStorageOrderDetails(e.getOrderNo());
                 // 按照productCode分组，遍历productCode，生成StorageCheckQueryOrderDetailItemDTO集合
                 if (CollectionUtils.isNotEmpty(tagStorageOrderDetailBeans)) {
-                    Map<String, List<TagStorageOrderDetailBean>> productCodeGroupMap = tagStorageOrderDetailBeans.stream()
-                            .collect(Collectors.groupingBy(TagStorageOrderDetailBean::getProductCode));
-                    
-                    List<StorageCheckQueryOrderDetailItemDTO> items = productCodeGroupMap.entrySet().stream().map(entry -> {
-                        String productCode = entry.getKey();
-                        List<TagStorageOrderDetailBean> detailBeans = entry.getValue();
-                        
+                    List<StorageCheckQueryOrderDetailItemDTO> items = tagStorageOrderDetailBeans.stream().map(entry -> {
+                        String productCode = entry.getProductCode();
+
                         StorageCheckQueryOrderDetailItemDTO itemDTO = new StorageCheckQueryOrderDetailItemDTO();
                         itemDTO.setProductCode(productCode);
+                        itemDTO.setSku(entry.getSku());
                         
                         // 计算总件数
-                        int totalCount = detailBeans.get(0).getQuantity();
+                        int totalCount = entry.getQuantity();
                         itemDTO.setTotalCount(totalCount);
                         
                         // 查询完成数
                         int progress = tagStorageOrderResultService.countCompletedByOrderNoAndProductCode(e.getOrderNo(), productCode);
                         itemDTO.setProgress(progress);
+
+                        itemDTO.setBoxCnt(entry.getBoxCnt());
+                        itemDTO.setBoxCodes(StringUtils.isNotBlank(entry.getBoxCodes()) ? Arrays.asList(entry.getBoxCodes().split(",")) : List.of());
                         
                         return itemDTO;
                     }).collect(Collectors.toList());
@@ -114,27 +117,29 @@ public class StorageDeviceQueryController {
             List<StorageCheckQueryOrderDetailDTO> details = tagStorageOrderBeans.stream().map(e -> {
                 StorageCheckQueryOrderDetailDTO detailDTO = new StorageCheckQueryOrderDetailDTO();
                 detailDTO.setOrderNo(e.getOrderNo());
+                detailDTO.setOrderType(e.getOrderType());
 
                 List<TagStorageOrderDetailBean> tagStorageOrderDetailBeans = tagStorageOrderDetailService.listTagStorageOrderDetails(e.getOrderNo());
                 // 按照productCode分组，遍历productCode，生成StorageCheckQueryOrderDetailItemDTO集合
                 if (CollectionUtils.isNotEmpty(tagStorageOrderDetailBeans)) {
-                    Map<String, List<TagStorageOrderDetailBean>> productCodeGroupMap = tagStorageOrderDetailBeans.stream()
-                            .collect(Collectors.groupingBy(TagStorageOrderDetailBean::getProductCode));
 
-                    List<StorageCheckQueryOrderDetailItemDTO> items = productCodeGroupMap.entrySet().stream().map(entry -> {
-                        String productCode = entry.getKey();
-                        List<TagStorageOrderDetailBean> detailBeans = entry.getValue();
+                    List<StorageCheckQueryOrderDetailItemDTO> items = tagStorageOrderDetailBeans.stream().map(entry -> {
+                        String productCode = entry.getProductCode();
 
                         StorageCheckQueryOrderDetailItemDTO itemDTO = new StorageCheckQueryOrderDetailItemDTO();
                         itemDTO.setProductCode(productCode);
+                        itemDTO.setSku(entry.getSku());
 
                         // 计算总件数
-                        int totalCount = detailBeans.get(0).getQuantity();
+                        int totalCount = entry.getQuantity();
                         itemDTO.setTotalCount(totalCount);
 
                         // 查询完成数
                         int progress = tagStorageOrderResultService.countCompletedByOrderNoAndProductCode(e.getOrderNo(), productCode);
                         itemDTO.setProgress(progress);
+
+                        itemDTO.setBoxCnt(entry.getBoxCnt());
+                        itemDTO.setBoxCodes(StringUtils.isNotBlank(entry.getBoxCodes()) ? Arrays.asList(entry.getBoxCodes().split(",")) : List.of());
 
                         return itemDTO;
                     }).collect(Collectors.toList());
@@ -173,18 +178,16 @@ public class StorageDeviceQueryController {
                 List<TagStorageOrderDetailBean> tagStorageOrderDetailBeans = tagStorageOrderDetailService.listTagStorageOrderDetails(e.getOrderNo());
                 // 按照productCode分组，遍历productCode，生成StorageCheckQueryOrderDetailItemDTO集合
                 if (CollectionUtils.isNotEmpty(tagStorageOrderDetailBeans)) {
-                    Map<String, List<TagStorageOrderDetailBean>> productCodeGroupMap = tagStorageOrderDetailBeans.stream()
-                            .collect(Collectors.groupingBy(TagStorageOrderDetailBean::getProductCode));
 
-                    List<StorageCheckQueryOrderDetailItemDTO> items = productCodeGroupMap.entrySet().stream().map(entry -> {
-                        String productCode = entry.getKey();
-                        List<TagStorageOrderDetailBean> detailBeans = entry.getValue();
+                    List<StorageCheckQueryOrderDetailItemDTO> items = tagStorageOrderDetailBeans.stream().map(entry -> {
+                        String productCode = entry.getProductCode();
 
                         StorageCheckQueryOrderDetailItemDTO itemDTO = new StorageCheckQueryOrderDetailItemDTO();
                         itemDTO.setProductCode(productCode);
+                        itemDTO.setSku(entry.getSku());
 
                         // 计算总件数
-                        int totalCount = detailBeans.get(0).getQuantity();
+                        int totalCount = entry.getQuantity();
                         itemDTO.setTotalCount(totalCount);
 
                         // 查询完成数

@@ -13,6 +13,9 @@ public class StorageCheckQueryOrderDetailDTO implements Serializable {
     @Schema(description = "通知单号")
     private String orderNo;
 
+    @Schema(description = "通知单类型")
+    private String orderType;
+
     @Schema(description = "通知单详情")
     private List<StorageCheckQueryOrderDetailItemDTO> items;
 

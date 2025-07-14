@@ -8,7 +8,7 @@ public interface TagStorageOrderDetailService {
 
     boolean saveStorageOrderDetails(String orderNo, List<StorageOrderItemRequestDTO> items);
 
-    List<TagStorageOrderDetailBean> listTagStorageOrderDetails(String orderNo);
+    List<TagStorageOrderDetailBean> listTagStorageOrderDetails(String orderNo, String productCode);
     
     /**
      * 根据订单号查询所有不重复的产品编码
@@ -16,4 +16,8 @@ public interface TagStorageOrderDetailService {
      * @return 不重复的产品编码列表
      */
     List<String> listDistinctProductCodes(String orderNo);
+
+    boolean productCodeExistInOrderNo(String orderNo, String productCode);
+
+    Integer getQuantityFromTagStorageOrderDetails(String orderNo, String productCode);
 }

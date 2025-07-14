@@ -9,8 +9,10 @@ import com.rfid.platform.persistence.storage.StorageOrderItemRequestDTO;
 import com.rfid.platform.service.TagStorageOrderDetailService;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -49,9 +51,10 @@ public class TagStorageOrderDetailServiceImpl extends ServiceImpl<TagStorageOrde
     }
 
     @Override
-    public List<TagStorageOrderDetailBean> listTagStorageOrderDetails(String orderNo) {
+    public List<TagStorageOrderDetailBean> listTagStorageOrderDetails(String orderNo, String productCode) {
         LambdaQueryWrapper<TagStorageOrderDetailBean> queryWrapper = Wrappers.lambdaQuery();
         queryWrapper.eq(TagStorageOrderDetailBean::getOrderNo, orderNo);
+        queryWrapper.eq(StringUtils.isNotBlank(productCode), TagStorageOrderDetailBean::getProductCode, productCode);
         return super.list(queryWrapper);
     }
     
@@ -68,5 +71,22 @@ public class TagStorageOrderDetailServiceImpl extends ServiceImpl<TagStorageOrde
                 .map(TagStorageOrderDetailBean::getProductCode)
                 .distinct()
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean productCodeExistInOrderNo(String orderNo, String productCode) {
+        LambdaQueryWrapper<TagStorageOrderDetailBean> queryWrapper = Wrappers.lambdaQuery();
+        queryWrapper.eq(TagStorageOrderDetailBean::getOrderNo, orderNo);
+        queryWrapper.eq(TagStorageOrderDetailBean::getProductCode, productCode);
+        return super.exists(queryWrapper);
+    }
+
+    @Override
+    public Integer getQuantityFromTagStorageOrderDetails(String orderNo, String productCode) {
+        LambdaQueryWrapper<TagStorageOrderDetailBean> queryWrapper = Wrappers.lambdaQuery();
+        queryWrapper.eq(TagStorageOrderDetailBean::getOrderNo, orderNo);
+        queryWrapper.eq(TagStorageOrderDetailBean::getProductCode, productCode);
+        TagStorageOrderDetailBean tagStorageOrderDetailBean = super.getOne(queryWrapper);
+        return Objects.nonNull(tagStorageOrderDetailBean) ? tagStorageOrderDetailBean.getQuantity() : 0;
     }
 }
