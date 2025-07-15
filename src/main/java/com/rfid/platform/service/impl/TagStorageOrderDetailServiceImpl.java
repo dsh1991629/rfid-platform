@@ -51,10 +51,9 @@ public class TagStorageOrderDetailServiceImpl extends ServiceImpl<TagStorageOrde
     }
 
     @Override
-    public List<TagStorageOrderDetailBean> listTagStorageOrderDetails(String orderNo, String productCode) {
+    public List<TagStorageOrderDetailBean> listTagStorageOrderDetails(String orderNo) {
         LambdaQueryWrapper<TagStorageOrderDetailBean> queryWrapper = Wrappers.lambdaQuery();
         queryWrapper.eq(TagStorageOrderDetailBean::getOrderNo, orderNo);
-        queryWrapper.eq(StringUtils.isNotBlank(productCode), TagStorageOrderDetailBean::getProductCode, productCode);
         return super.list(queryWrapper);
     }
     

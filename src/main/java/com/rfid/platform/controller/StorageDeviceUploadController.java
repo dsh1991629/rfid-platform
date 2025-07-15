@@ -90,7 +90,7 @@ public class StorageDeviceUploadController {
             Integer oprtBoxCnt = tagStorageOrderResultService.countCompletedBoxByOrderNo(orderNo);
             Integer oprtCnt = tagStorageOrderResultService.countCompletedRfidByOrderNo(orderNo);
 
-            List<TagStorageOrderDetailBean> orderDetails = tagStorageOrderDetailService.listTagStorageOrderDetails(orderNo, "");
+            List<TagStorageOrderDetailBean> orderDetails = tagStorageOrderDetailService.listTagStorageOrderDetails(orderNo);
             Integer total = orderDetails.stream()
                     .mapToInt(detail -> detail.getQuantity() != null ? detail.getQuantity() : 0)
                     .sum();
