@@ -4,6 +4,8 @@ import com.rfid.platform.entity.TagStorageOrderBean;
 import com.rfid.platform.entity.TagStorageOrderDetailBean;
 import com.rfid.platform.persistence.RfidApiRequestDTO;
 import com.rfid.platform.persistence.RfidApiResponseDTO;
+import com.rfid.platform.persistence.storage.LabelInfoRequestDTO;
+import com.rfid.platform.persistence.storage.LabelInfoResponseDTO;
 import com.rfid.platform.persistence.storage.StorageCheckQueryOrderDetailDTO;
 import com.rfid.platform.persistence.storage.StorageCheckQueryOrderDetailItemDTO;
 import com.rfid.platform.persistence.storage.StorageCheckQueryRequestDTO;
@@ -24,7 +26,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -205,6 +206,24 @@ public class StorageDeviceQueryController {
             storageCheckQueryResponseDTO.setOrders(details);
         }
         response.setData(storageCheckQueryResponseDTO);
+        return response;
+    }
+
+
+    @ApiOperation(value = "查询吊牌信息", notes = "查询吊牌信息")
+    @PostMapping(value = "/getlabelinfo")
+    public RfidApiResponseDTO<LabelInfoResponseDTO> getLabelInfo (
+            @ApiParam(value = "吊牌查询请求", required = true) @RequestBody RfidApiRequestDTO<LabelInfoRequestDTO> requestDTO) {
+        RfidApiResponseDTO<LabelInfoResponseDTO> response = RfidApiResponseDTO.success();
+
+        if (Objects.isNull(requestDTO) || Objects.isNull(requestDTO.getData())) {
+            response.setStatus(false);
+            response.setMessage("吊牌查询对象不存在");
+            return response;
+        }
+
+        LabelInfoRequestDTO labelInfoRequestDTO = requestDTO.getData();
+
         return response;
     }
 
