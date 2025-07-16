@@ -2,6 +2,7 @@ package com.rfid.platform.controller;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
+import com.rfid.platform.config.PlatformRestProperties;
 import com.rfid.platform.entity.TagStorageOrderBean;
 import com.rfid.platform.entity.TagStorageOrderDetailBean;
 import com.rfid.platform.persistence.RfidApiRequestDTO;
@@ -48,6 +49,10 @@ public class StorageDeviceQueryController {
 
     @Autowired
     private TagRestService tagRestService;
+
+    @Autowired
+    private PlatformRestProperties platformRestProperties;
+
 
 
     @ApiOperation(value = "获取入库通知单", notes = "查询活跃的入库通知单及其详情")
@@ -231,10 +236,12 @@ public class StorageDeviceQueryController {
         try{
             LabelInfoRequestDTO labelInfoRequestDTO = requestDTO.getData();
             JSONObject reqObject = JSONObject.parseObject(JSON.toJSONString(labelInfoRequestDTO));
-            JSONObject jsonObject = tagRestService.executeRestPostOptions(reqObject);
+            JSONObject jsonObject =
+                    tagRestService.executeRestPostOptions(platformRestProperties.getVersion(), platformRestProperties.getSkuUrl(), reqObject);
             if (Objects.nonNull(jsonObject)) {
-                LabelInfoResponseDTO labelInfoResponseDTO = jsonObject.toJavaObject(LabelInfoResponseDTO.class);
-                response.setData(labelInfoResponseDTO);
+                RfidApiResponseDTO<LabelInfoResponseDTO> labelInfoResponseDTO =
+                        jsonObject.toJavaObject(RfidApiResponseDTO.class);
+                response.setData(labelInfoResponseDTO.getData());
             }
         } catch (Exception e) {
             response.setStatus(false);

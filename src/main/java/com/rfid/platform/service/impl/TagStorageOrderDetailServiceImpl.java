@@ -10,9 +10,7 @@ import com.rfid.platform.service.TagStorageOrderDetailService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -56,21 +54,7 @@ public class TagStorageOrderDetailServiceImpl extends ServiceImpl<TagStorageOrde
         queryWrapper.eq(TagStorageOrderDetailBean::getOrderNo, orderNo);
         return super.list(queryWrapper);
     }
-    
-    @Override
-    public List<String> listDistinctProductCodes(String orderNo) {
-        LambdaQueryWrapper<TagStorageOrderDetailBean> queryWrapper = Wrappers.lambdaQuery();
-        queryWrapper.eq(TagStorageOrderDetailBean::getOrderNo, orderNo);
-        queryWrapper.select(TagStorageOrderDetailBean::getProductCode);
-        
-        List<TagStorageOrderDetailBean> details = super.list(queryWrapper);
-        
-        // 过滤重复的productCode
-        return details.stream()
-                .map(TagStorageOrderDetailBean::getProductCode)
-                .distinct()
-                .collect(Collectors.toList());
-    }
+
 
     @Override
     public boolean productCodeExistInOrderNo(String orderNo, String productCode) {
@@ -87,5 +71,14 @@ public class TagStorageOrderDetailServiceImpl extends ServiceImpl<TagStorageOrde
         queryWrapper.eq(TagStorageOrderDetailBean::getProductCode, productCode);
         TagStorageOrderDetailBean tagStorageOrderDetailBean = super.getOne(queryWrapper);
         return Objects.nonNull(tagStorageOrderDetailBean) ? tagStorageOrderDetailBean.getQuantity() : 0;
+    }
+
+
+    @Override
+    public List<TagStorageOrderDetailBean> listTagStorageOrderDetailsByNoAndProductCode(String orderNo, String productCode) {
+        LambdaQueryWrapper<TagStorageOrderDetailBean> queryWrapper = Wrappers.lambdaQuery();
+        queryWrapper.eq(TagStorageOrderDetailBean::getOrderNo, orderNo);
+        queryWrapper.eq(TagStorageOrderDetailBean::getProductCode, productCode);
+        return super.list(queryWrapper);
     }
 }

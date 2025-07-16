@@ -18,4 +18,6 @@ public interface TagStorageOrderResultService {
     Integer countCompletedBoxByOrderNo(String orderNo);
 
     Integer countCompletedRfidByOrderNo(String orderNo);
+
+    List<TagStorageOrderResultBean> listTagStorageOrderResults(String orderNo);
 }

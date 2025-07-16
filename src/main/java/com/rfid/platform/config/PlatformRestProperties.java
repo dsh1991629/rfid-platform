@@ -11,10 +11,16 @@ public class PlatformRestProperties {
 
     private String version;
     
-    private String url;
-    
     private Integer connectTimeout = 5000;
     
     private Integer readTimeout = 10000;
+
+    private String skuUrl = "";
+
+    private String inBoundUploadUrl = "";
+
+    private String outBoundUploadUrl = "";
+
+    private String inventoryUploadUrl = "";
 
 }

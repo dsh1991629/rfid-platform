@@ -180,4 +180,12 @@ public class TagStorageOrderServiceImpl extends ServiceImpl<TagStorageOrderMappe
         existsBean.setUpdateTime(TimeUtil.localDateTimeToTimestamp(TimeUtil.parseDateFormatterString(timeStamp)));
         return super.updateById(existsBean);
     }
+
+
+    @Override
+    public TagStorageOrderBean queryTagStorageOrderByNo(String orderNo) {
+        LambdaQueryWrapper<TagStorageOrderBean> queryWrapper = Wrappers.lambdaQuery();
+        queryWrapper.eq(TagStorageOrderBean::getOrderNo, orderNo);
+        return super.getOne(queryWrapper);
+    }
 }

@@ -24,4 +24,6 @@ public interface TagStorageOrderService {
     List<TagStorageOrderBean> queryActiveInventoryOrders(StorageCheckQueryRequestDTO data);
 
     boolean updateOrderStateByOrderNo(String orderNo, String timeStamp, Integer state);
+
+    TagStorageOrderBean queryTagStorageOrderByNo(String orderNo);
 }

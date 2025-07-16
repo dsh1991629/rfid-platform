@@ -4,5 +4,5 @@ import com.alibaba.fastjson2.JSONObject;
 
 public interface TagRestService {
 
-    JSONObject executeRestPostOptions(JSONObject reqObject);
+    JSONObject executeRestPostOptions(String version, String url, JSONObject reqObject);
 }

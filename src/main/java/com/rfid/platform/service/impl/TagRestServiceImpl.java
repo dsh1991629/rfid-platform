@@ -1,7 +1,6 @@
 package com.rfid.platform.service.impl;
 
 import com.alibaba.fastjson2.JSONObject;
-import com.rfid.platform.config.PlatformRestProperties;
 import com.rfid.platform.persistence.RfidApiRequestDTO;
 import com.rfid.platform.service.TagRestService;
 import com.rfid.platform.util.TimeUtil;
@@ -17,16 +16,13 @@ import org.springframework.web.client.RestTemplate;
 public class TagRestServiceImpl implements TagRestService {
 
     @Autowired
-    private PlatformRestProperties platformRestProperties;
-
-    @Autowired
     private RestTemplate restTemplate;
 
 
     @Override
-    public JSONObject executeRestPostOptions(JSONObject reqObject) {
+    public JSONObject executeRestPostOptions(String version, String url, JSONObject reqObject) {
         RfidApiRequestDTO<JSONObject> request = new RfidApiRequestDTO<>();
-        request.setVersion(platformRestProperties.getVersion());
+        request.setVersion(version);
         request.setTimeStamp(TimeUtil.getDateFormatterString(TimeUtil.getSysDate()));
         request.setData(reqObject);
 
@@ -38,7 +34,7 @@ public class TagRestServiceImpl implements TagRestService {
         HttpEntity<RfidApiRequestDTO<JSONObject>> httpEntity = new HttpEntity<>(request, headers);
 
         ResponseEntity<String> response = restTemplate.postForEntity(
-                platformRestProperties.getUrl(),
+                url,
                 httpEntity,
                 String.class
         );
