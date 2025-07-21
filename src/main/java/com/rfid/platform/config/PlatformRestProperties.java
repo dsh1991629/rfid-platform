@@ -23,4 +23,10 @@ public class PlatformRestProperties {
 
     private String inventoryUploadUrl = "";
 
+    private String getSkuDetailUrl = "/rfid/getskudetails";
+
+    private String getShippingInfoUrl = "/rfid/getshippinginfo";
+
+    private String getGetOrderInfoUrl = "/rfid/getorderinfo";
+
 }

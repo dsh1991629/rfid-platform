@@ -1,14 +1,10 @@
 package com.rfid.platform.controller;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONObject;
 import com.rfid.platform.config.PlatformRestProperties;
 import com.rfid.platform.entity.TagStorageOrderBean;
 import com.rfid.platform.entity.TagStorageOrderDetailBean;
 import com.rfid.platform.persistence.RfidApiRequestDTO;
 import com.rfid.platform.persistence.RfidApiResponseDTO;
-import com.rfid.platform.persistence.storage.LabelInfoRequestDTO;
-import com.rfid.platform.persistence.storage.LabelInfoResponseDTO;
 import com.rfid.platform.persistence.storage.StorageCheckQueryOrderDetailDTO;
 import com.rfid.platform.persistence.storage.StorageCheckQueryOrderDetailItemDTO;
 import com.rfid.platform.persistence.storage.StorageCheckQueryRequestDTO;
@@ -221,34 +217,5 @@ public class StorageDeviceQueryController {
     }
 
 
-    @ApiOperation(value = "查询吊牌信息", notes = "查询吊牌信息")
-    @PostMapping(value = "/getlabelinfo")
-    public RfidApiResponseDTO<LabelInfoResponseDTO> getLabelInfo (
-            @ApiParam(value = "吊牌查询请求", required = true) @RequestBody RfidApiRequestDTO<LabelInfoRequestDTO> requestDTO) {
-        RfidApiResponseDTO<LabelInfoResponseDTO> response = RfidApiResponseDTO.success();
-
-        if (Objects.isNull(requestDTO) || Objects.isNull(requestDTO.getData())) {
-            response.setStatus(false);
-            response.setMessage("吊牌查询对象不存在");
-            return response;
-        }
-
-        try{
-            LabelInfoRequestDTO labelInfoRequestDTO = requestDTO.getData();
-            JSONObject reqObject = JSONObject.parseObject(JSON.toJSONString(labelInfoRequestDTO));
-            JSONObject jsonObject =
-                    tagRestService.executeRestPostOptions(platformRestProperties.getVersion(), platformRestProperties.getSkuUrl(), reqObject);
-            if (Objects.nonNull(jsonObject)) {
-                RfidApiResponseDTO<LabelInfoResponseDTO> labelInfoResponseDTO =
-                        jsonObject.toJavaObject(RfidApiResponseDTO.class);
-                response.setData(labelInfoResponseDTO.getData());
-            }
-        } catch (Exception e) {
-            response.setStatus(false);
-            response.setMessage("查询出错，" + e);
-        }
-
-        return response;
-    }
 
 }

@@ -1,6 +1,7 @@
 package com.rfid.platform.util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +44,21 @@ public class JsonUtil {
             return objectMapper.readValue(json, clazz);
         } catch (JsonProcessingException e) {
             log.error("JSON转对象失败", e);
+            return null;
+        }
+    }
+
+    /**
+     * JSON字符串转泛型对象
+     * @param json JSON字符串
+     * @param typeReference 泛型类型引用
+     * @return 泛型对象
+     */
+    public static <T> T fromJson(String json, TypeReference<T> typeReference) {
+        try {
+            return objectMapper.readValue(json, typeReference);
+        } catch (JsonProcessingException e) {
+            log.error("JSON转泛型对象失败", e);
             return null;
         }
     }
