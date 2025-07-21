@@ -9,9 +9,9 @@ import java.io.Serializable;
 @Schema(description = "货主信息")
 public class Rms2ErpOrderOwnerInfoRespDTO implements Serializable {
 
-    @Schema(description = "名字", example = "某某公司")
+    @Schema(description = "名字")
     private String name;
 
-    @Schema(description = "联系方式", example = "13800138000")
+    @Schema(description = "联系方式")
     private String contact;
 }
