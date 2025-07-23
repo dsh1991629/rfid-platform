@@ -1,11 +1,13 @@
 package com.rfid.platform.service;
 
 import com.rfid.platform.entity.TagStorageOrderBean;
+import com.rfid.platform.persistence.storage.DevInventoryOrderQueryRequestDTO;
+import com.rfid.platform.persistence.storage.DevOutBoundOrderQueryRequestDTO;
 import com.rfid.platform.persistence.storage.InBoundOrderRequestDTO;
 import com.rfid.platform.persistence.storage.InventoryOrderRequestDTO;
 import com.rfid.platform.persistence.storage.OutBoundOrderRequestDTO;
-import com.rfid.platform.persistence.storage.StorageCheckQueryRequestDTO;
-import com.rfid.platform.persistence.storage.InBoundOrderItemRequestDTO;
+import com.rfid.platform.persistence.storage.DevInBoundOrderQueryRequestDTO;
+
 import java.util.List;
 
 public interface TagStorageOrderService {
@@ -24,11 +26,11 @@ public interface TagStorageOrderService {
 
     String cancelInventoryTagStorageOrder(String timeStamp, String orderNoWms, String orderNoRms, Integer type);
 
-    List<TagStorageOrderBean> queryActiveInBoundOrders(StorageCheckQueryRequestDTO data);
+    List<TagStorageOrderBean> queryActiveInBoundOrders(DevInBoundOrderQueryRequestDTO data);
 
-    List<TagStorageOrderBean> queryActiveOutBoundOrders(StorageCheckQueryRequestDTO data);
+    List<TagStorageOrderBean> queryActiveOutBoundOrders(DevOutBoundOrderQueryRequestDTO data);
 
-    List<TagStorageOrderBean> queryActiveInventoryOrders(StorageCheckQueryRequestDTO data);
+    List<TagStorageOrderBean> queryActiveInventoryOrders(DevInventoryOrderQueryRequestDTO data);
 
     boolean updateOrderStateByOrderNo(String orderNo, String timeStamp, Integer state);
 

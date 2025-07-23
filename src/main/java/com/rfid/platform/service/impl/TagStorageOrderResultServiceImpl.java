@@ -51,4 +51,12 @@ public class TagStorageOrderResultServiceImpl extends ServiceImpl<TagStorageOrde
         queryWrapper.eq(TagStorageOrderResultBean::getOrderNoRms, orderNoRms);
         return super.list(queryWrapper);
     }
+
+    @Override
+    public List<TagStorageOrderResultBean> listTagStorageOrderResultsByOrderRmsAndProductCode(String orderNoRms, String productCode) {
+        LambdaQueryWrapper<TagStorageOrderResultBean> queryWrapper = Wrappers.lambdaQuery();
+        queryWrapper.eq(TagStorageOrderResultBean::getOrderNoRms, orderNoRms);
+        queryWrapper.eq(TagStorageOrderResultBean::getProductCode, productCode);
+        return super.list(queryWrapper);
+    }
 }

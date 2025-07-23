@@ -103,18 +103,14 @@ public class DeviceHeartbeatServiceImpl extends ServiceImpl<DeviceHeartbeatMappe
 
     @Override
     public boolean addDeviceHeartbeat(String accessToken, String timeStamp, HeartBeatDTO heartBeatDTO) {
-        String deviceCode = "";
-        LambdaQueryWrapper<DeviceHeartbeatBean> queryWrapper = Wrappers.lambdaQuery();
-        queryWrapper.eq(DeviceHeartbeatBean::getAccessToken, accessToken);
-        List<DeviceHeartbeatBean> deviceHeartbeatBeans = super.list(queryWrapper);
-        if (CollectionUtils.isNotEmpty(deviceHeartbeatBeans)) {
-            deviceCode = deviceHeartbeatBeans.get(0).getDeviceCode();
-        }
+        DeviceInfoBean deviceInfoBean = deviceInfoService.queryDeviceInfoByCode(heartBeatDTO.getDevCode());
         DeviceHeartbeatBean deviceHeartbeatBean = new DeviceHeartbeatBean();
-        deviceHeartbeatBean.setDeviceType(heartBeatDTO.getDevType());
-        deviceHeartbeatBean.setDeviceLocation(heartBeatDTO.getDevLocation());
-        deviceHeartbeatBean.setDeviceModel(heartBeatDTO.getDevModel());
-        deviceHeartbeatBean.setDeviceCode(deviceCode);
+        if (Objects.nonNull(deviceHeartbeatBean)) {
+            deviceHeartbeatBean.setDeviceType(deviceInfoBean.getDeviceType());
+            deviceHeartbeatBean.setDeviceLocation(deviceInfoBean.getDeviceLocation());
+            deviceHeartbeatBean.setDeviceModel(deviceInfoBean.getDeviceModel());
+        }
+        deviceHeartbeatBean.setDeviceCode(heartBeatDTO.getDevCode());
         deviceHeartbeatBean.setAccessToken(accessToken);
         deviceHeartbeatBean.setCreateDate(timeStamp);
         deviceHeartbeatBean.setCreateTime(TimeUtil.localDateTimeToTimestamp(TimeUtil.parseDateFormatterString(timeStamp)));

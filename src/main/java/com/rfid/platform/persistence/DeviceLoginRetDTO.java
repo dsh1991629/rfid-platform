@@ -18,4 +18,7 @@ public class DeviceLoginRetDTO implements Serializable {
     @Schema(description = "访问令牌", example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
     private String accessToken;
 
+    @Schema(description = "失效时间，单位：秒")
+    private Long expiresIn;
+
 }

@@ -7,10 +7,12 @@ import com.rfid.platform.common.AccountContext;
 import com.rfid.platform.common.PlatformConstant;
 import com.rfid.platform.entity.TagStorageOrderBean;
 import com.rfid.platform.mapper.TagStorageOrderMapper;
+import com.rfid.platform.persistence.storage.DevInventoryOrderQueryRequestDTO;
+import com.rfid.platform.persistence.storage.DevOutBoundOrderQueryRequestDTO;
 import com.rfid.platform.persistence.storage.InBoundOrderRequestDTO;
 import com.rfid.platform.persistence.storage.InventoryOrderRequestDTO;
 import com.rfid.platform.persistence.storage.OutBoundOrderRequestDTO;
-import com.rfid.platform.persistence.storage.StorageCheckQueryRequestDTO;
+import com.rfid.platform.persistence.storage.DevInBoundOrderQueryRequestDTO;
 import com.rfid.platform.service.TagStorageOrderDetailService;
 import com.rfid.platform.service.TagStorageOrderService;
 import com.rfid.platform.util.TimeUtil;
@@ -183,13 +185,13 @@ public class TagStorageOrderServiceImpl extends ServiceImpl<TagStorageOrderMappe
     }
 
     @Override
-    public List<TagStorageOrderBean> queryActiveInBoundOrders(StorageCheckQueryRequestDTO data) {
+    public List<TagStorageOrderBean> queryActiveInBoundOrders(DevInBoundOrderQueryRequestDTO data) {
         LambdaQueryWrapper<TagStorageOrderBean> queryWrapper = Wrappers.lambdaQuery();
-        queryWrapper.eq(TagStorageOrderBean::getOrderType, PlatformConstant.STORAGE_ORDER_TYPE.IN_BOUND);
+        queryWrapper.eq(TagStorageOrderBean::getType, PlatformConstant.STORAGE_ORDER_TYPE.IN_BOUND);
         queryWrapper.eq(TagStorageOrderBean::getState, PlatformConstant.STORAGE_ORDER_STATUS.SEND)
                 .or().eq(TagStorageOrderBean::getState, PlatformConstant.STORAGE_ORDER_STATUS.EXECUTING);
         if (Objects.nonNull(data)) {
-            queryWrapper.like(TagStorageOrderBean::getOrderNoRms, data.getOrderNo());
+            queryWrapper.like(TagStorageOrderBean::getOrderNoRms, data.getOrderID_RMS());
             queryWrapper.ge(StringUtils.isNotBlank(data.getTimeBegin()), TagStorageOrderBean::getCreateTime, TimeUtil.getDayNoLineTimestamp(data.getTimeBegin()));
             queryWrapper.le(StringUtils.isNotBlank(data.getTimeEnd()), TagStorageOrderBean::getCreateTime, TimeUtil.getDayNoLineTimestamp(data.getTimeEnd()));
         }
@@ -198,13 +200,13 @@ public class TagStorageOrderServiceImpl extends ServiceImpl<TagStorageOrderMappe
 
 
     @Override
-    public List<TagStorageOrderBean> queryActiveOutBoundOrders(StorageCheckQueryRequestDTO data) {
+    public List<TagStorageOrderBean> queryActiveOutBoundOrders(DevOutBoundOrderQueryRequestDTO data) {
         LambdaQueryWrapper<TagStorageOrderBean> queryWrapper = Wrappers.lambdaQuery();
-        queryWrapper.eq(TagStorageOrderBean::getOrderType, PlatformConstant.STORAGE_ORDER_TYPE.OUT_BOUND);
+        queryWrapper.eq(TagStorageOrderBean::getType, PlatformConstant.STORAGE_ORDER_TYPE.OUT_BOUND);
         queryWrapper.eq(TagStorageOrderBean::getState, PlatformConstant.STORAGE_ORDER_STATUS.SEND)
                 .or().eq(TagStorageOrderBean::getState, PlatformConstant.STORAGE_ORDER_STATUS.EXECUTING);
         if (Objects.nonNull(data)) {
-            queryWrapper.like(TagStorageOrderBean::getOrderNoRms, data.getOrderNo());
+            queryWrapper.like(TagStorageOrderBean::getOrderNoRms, data.getOrderID_RMS());
             queryWrapper.ge(StringUtils.isNotBlank(data.getTimeBegin()), TagStorageOrderBean::getCreateTime, TimeUtil.getDayNoLineTimestamp(data.getTimeBegin()));
             queryWrapper.le(StringUtils.isNotBlank(data.getTimeEnd()), TagStorageOrderBean::getCreateTime, TimeUtil.getDayNoLineTimestamp(data.getTimeEnd()));
         }
@@ -213,13 +215,13 @@ public class TagStorageOrderServiceImpl extends ServiceImpl<TagStorageOrderMappe
 
 
     @Override
-    public List<TagStorageOrderBean> queryActiveInventoryOrders(StorageCheckQueryRequestDTO data) {
+    public List<TagStorageOrderBean> queryActiveInventoryOrders(DevInventoryOrderQueryRequestDTO data) {
         LambdaQueryWrapper<TagStorageOrderBean> queryWrapper = Wrappers.lambdaQuery();
-        queryWrapper.eq(TagStorageOrderBean::getOrderType, PlatformConstant.STORAGE_ORDER_TYPE.INVENTORY_BOUND);
+        queryWrapper.eq(TagStorageOrderBean::getType, PlatformConstant.STORAGE_ORDER_TYPE.INVENTORY_BOUND);
         queryWrapper.eq(TagStorageOrderBean::getState, PlatformConstant.STORAGE_ORDER_STATUS.SEND)
                 .or().eq(TagStorageOrderBean::getState, PlatformConstant.STORAGE_ORDER_STATUS.EXECUTING);
         if (Objects.nonNull(data)) {
-            queryWrapper.like(TagStorageOrderBean::getOrderNoRms, data.getOrderNo());
+            queryWrapper.like(TagStorageOrderBean::getOrderNoRms, data.getOrderID_RMS());
             queryWrapper.ge(StringUtils.isNotBlank(data.getTimeBegin()), TagStorageOrderBean::getCreateTime, TimeUtil.getDayNoLineTimestamp(data.getTimeBegin()));
             queryWrapper.le(StringUtils.isNotBlank(data.getTimeEnd()), TagStorageOrderBean::getCreateTime, TimeUtil.getDayNoLineTimestamp(data.getTimeEnd()));
         }
