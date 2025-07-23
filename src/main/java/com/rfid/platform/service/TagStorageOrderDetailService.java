@@ -1,16 +1,25 @@
 package com.rfid.platform.service;
 
 import com.rfid.platform.entity.TagStorageOrderDetailBean;
-import com.rfid.platform.persistence.storage.StorageOrderItemRequestDTO;
+import com.rfid.platform.persistence.storage.InBoundOrderItemRequestDTO;
+import com.rfid.platform.persistence.storage.InventoryOrderItemRequestDTO;
+import com.rfid.platform.persistence.storage.OutBoundOrderItemRequestDTO;
 import java.util.List;
 
 public interface TagStorageOrderDetailService {
 
-    boolean saveStorageOrderDetails(String orderNo, List<StorageOrderItemRequestDTO> items);
+    boolean saveInBoundOrderDetails(String orderNoRms, List<InBoundOrderItemRequestDTO> items);
 
-    List<TagStorageOrderDetailBean> listTagStorageOrderDetails(String orderNo);
+    boolean saveOutBoundOrderDetails(String orderNoRms, List<OutBoundOrderItemRequestDTO> items);
+
+    boolean saveInventoryOrderDetails(String orderNoRms, List<InventoryOrderItemRequestDTO> items);
+
+
+    List<TagStorageOrderDetailBean> listTagStorageOrderDetails(String orderNoRms);
 
     boolean productCodeExistInOrderNo(String orderNo, String productCode);
+
+    String getSkuByOrderNoRmsAndProductCode(String orderNoRms, String productCode);
 
     Integer getQuantityFromTagStorageOrderDetails(String orderNo, String productCode);
 

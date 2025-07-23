@@ -14,11 +14,20 @@ public class TagStorageOrderBean implements Serializable {
     @TableId(value = "ID", type = IdType.AUTO)
     private Long id;
 
-    @TableField(value = "ORDER_NO")
-    private String orderNo;
+    @TableField(value = "ORDER_NO_WMS")
+    private String orderNoWms;
+
+    @TableField(value = "ORDER_NO_ERP")
+    private String orderNoErp;
+
+    @TableField(value = "ORDER_NO_RMS")
+    private String orderNoRms;
 
     @TableField(value = "ORDER_TYPE")
     private String orderType;
+
+    @TableField(value = "WH")
+    private String wh;
 
     @TableField(value = "TYPE")
     private Integer type;

@@ -14,8 +14,8 @@ public class TagStorageOrderResultBean implements Serializable {
     @TableId(value = "ID", type = IdType.AUTO)
     private Long id;
 
-    @TableField(value = "ORDER_NO")
-    private String orderNo;
+    @TableField(value = "ORDER_NO_RMS")
+    private String orderNoRms;
 
     @TableField(value = "PRODUCT_CODE")
     private String productCode;

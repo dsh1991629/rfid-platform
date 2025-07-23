@@ -1,21 +1,28 @@
 package com.rfid.platform.service;
 
 import com.rfid.platform.entity.TagStorageOrderBean;
+import com.rfid.platform.persistence.storage.InBoundOrderRequestDTO;
+import com.rfid.platform.persistence.storage.InventoryOrderRequestDTO;
+import com.rfid.platform.persistence.storage.OutBoundOrderRequestDTO;
 import com.rfid.platform.persistence.storage.StorageCheckQueryRequestDTO;
-import com.rfid.platform.persistence.storage.StorageOrderItemRequestDTO;
+import com.rfid.platform.persistence.storage.InBoundOrderItemRequestDTO;
 import java.util.List;
 
 public interface TagStorageOrderService {
 
-    Long saveInboundTagStorageOrder(String timeStamp, String orderNo, String orderType, List<StorageOrderItemRequestDTO> items);
+    String saveInboundTagStorageOrder(String timeStamp, InBoundOrderRequestDTO inBoundOrderRequestDTO);
 
-    Long saveOutboundTagStorageOrder(String timeStamp, String orderNo, String orderType, List<StorageOrderItemRequestDTO> items);
+    String saveOutboundTagStorageOrder(String timeStamp, OutBoundOrderRequestDTO outBoundOrderRequestDTO);
 
-    Long saveInventoryTagStorageOrder(String timeStamp, String orderNo, List<StorageOrderItemRequestDTO> items);
+    String saveInventoryTagStorageOrder(String timeStamp, InventoryOrderRequestDTO inventoryOrderRequestDTO);
 
-    boolean checkStorageOrderCancelable(String orderNo, Integer orderType);
+    boolean checkStorageOrderCancelable(String orderNoWms, Integer type);
 
-    Long cancelTagStorageOrder(String timeStamp, String orderNo, Integer orderType);
+    boolean checkInventoryOrderCancelable(String orderNoWms, String orderNoRms, Integer type);
+
+    String cancelTagStorageOrder(String timeStamp, String orderNoWms, Integer type);
+
+    String cancelInventoryTagStorageOrder(String timeStamp, String orderNoWms, String orderNoRms, Integer type);
 
     List<TagStorageOrderBean> queryActiveInBoundOrders(StorageCheckQueryRequestDTO data);
 
@@ -25,5 +32,8 @@ public interface TagStorageOrderService {
 
     boolean updateOrderStateByOrderNo(String orderNo, String timeStamp, Integer state);
 
-    TagStorageOrderBean queryTagStorageOrderByNo(String orderNo);
+    TagStorageOrderBean queryTagStorageOrderByNo(String orderNoRms);
+
+
+
 }

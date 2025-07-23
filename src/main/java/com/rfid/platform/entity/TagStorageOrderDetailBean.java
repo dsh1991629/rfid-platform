@@ -14,8 +14,8 @@ public class TagStorageOrderDetailBean implements Serializable {
     @TableId(value = "ID", type = IdType.AUTO)
     private Long id;
 
-    @TableField(value = "ORDER_NO")
-    private String orderNo;
+    @TableField(value = "ORDER_NO_RMS")
+    private String orderNoRms;
 
     @TableField(value = "PRODUCT_CODE")
     private String productCode;
@@ -37,8 +37,4 @@ public class TagStorageOrderDetailBean implements Serializable {
 
     @TableField(value = "BOX_CNT")
     private Integer boxCnt;
-
-    @TableField(value = "BOX_CODES")
-    private String boxCodes;
-
 }

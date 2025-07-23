@@ -7,8 +7,10 @@ import com.rfid.platform.common.AccountContext;
 import com.rfid.platform.common.PlatformConstant;
 import com.rfid.platform.entity.TagStorageOrderBean;
 import com.rfid.platform.mapper.TagStorageOrderMapper;
+import com.rfid.platform.persistence.storage.InBoundOrderRequestDTO;
+import com.rfid.platform.persistence.storage.InventoryOrderRequestDTO;
+import com.rfid.platform.persistence.storage.OutBoundOrderRequestDTO;
 import com.rfid.platform.persistence.storage.StorageCheckQueryRequestDTO;
-import com.rfid.platform.persistence.storage.StorageOrderItemRequestDTO;
 import com.rfid.platform.service.TagStorageOrderDetailService;
 import com.rfid.platform.service.TagStorageOrderService;
 import com.rfid.platform.util.TimeUtil;
@@ -31,48 +33,78 @@ public class TagStorageOrderServiceImpl extends ServiceImpl<TagStorageOrderMappe
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public Long saveInboundTagStorageOrder(String timeStamp, String orderNo, String orderType, List<StorageOrderItemRequestDTO> items) {
+    public String saveInboundTagStorageOrder(String timeStamp, InBoundOrderRequestDTO inBoundOrderRequestDTO) {
+        String orderNoRms = createOrderNoRms(PlatformConstant.STORAGE_ORDER_TYPE.IN_BOUND, inBoundOrderRequestDTO.getOrderType());
         TagStorageOrderBean tagStorageOrderBean = new TagStorageOrderBean();
-        tagStorageOrderBean.setOrderNo(orderNo);
+        tagStorageOrderBean.setOrderNoRms(orderNoRms);
+        tagStorageOrderBean.setOrderNoErp(inBoundOrderRequestDTO.getOrderNoERP());
+        tagStorageOrderBean.setOrderNoWms(inBoundOrderRequestDTO.getOrderNoWMS());
         tagStorageOrderBean.setType(PlatformConstant.STORAGE_ORDER_TYPE.IN_BOUND);
-        tagStorageOrderBean.setOrderType(orderType);
+        tagStorageOrderBean.setOrderType(inBoundOrderRequestDTO.getOrderType());
+        tagStorageOrderBean.setWh(inBoundOrderRequestDTO.getWh());
         tagStorageOrderBean.setState(PlatformConstant.STORAGE_ORDER_STATUS.SEND);
         tagStorageOrderBean.setCreateUser(String.valueOf(AccountContext.getAccountId()));
         tagStorageOrderBean.setCreateDate(timeStamp);
         tagStorageOrderBean.setCreateTime(TimeUtil.localDateTimeToTimestamp(TimeUtil.parseDateFormatterString(timeStamp)));
         super.save(tagStorageOrderBean);
 
-        tagStorageOrderDetailService.saveStorageOrderDetails(orderNo, items);
+        tagStorageOrderDetailService.saveInBoundOrderDetails(orderNoRms, inBoundOrderRequestDTO.getItems());
 
-        return tagStorageOrderBean.getId();
+        return orderNoRms;
     }
 
+    private String createOrderNoRms(Integer type, String orderType) {
+        StringBuilder orderNoRms = new StringBuilder();
+        if (PlatformConstant.STORAGE_ORDER_TYPE.IN_BOUND.equals(type)) {
+            orderNoRms.append("INBOUND_ORDER");
+        }
+        if (PlatformConstant.STORAGE_ORDER_TYPE.IN_BOUND.equals(type)) {
+            orderNoRms.append("OUTBOUND_ORDER");
+        }
+        if (PlatformConstant.STORAGE_ORDER_TYPE.IN_BOUND.equals(type)) {
+            orderNoRms.append("INVENTORY_ORDER");
+        }
+        orderNoRms.append("_");
+        if (StringUtils.isNotBlank(orderNoRms)) {
+            orderNoRms.append(orderType.toUpperCase());
+            orderNoRms.append("_");
+        }
+        orderNoRms.append(TimeUtil.getSecondNoLineString(TimeUtil.getSysDate()));
+        return orderNoRms.toString();
+    }
 
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public Long saveOutboundTagStorageOrder(String timeStamp, String orderNo, String orderType, List<StorageOrderItemRequestDTO> items) {
+    public String saveOutboundTagStorageOrder(String timeStamp, OutBoundOrderRequestDTO outBoundOrderRequestDTO) {
+        String orderNoRms = createOrderNoRms(PlatformConstant.STORAGE_ORDER_TYPE.OUT_BOUND, outBoundOrderRequestDTO.getOrderType());
         TagStorageOrderBean tagStorageOrderBean = new TagStorageOrderBean();
-        tagStorageOrderBean.setOrderNo(orderNo);
+        tagStorageOrderBean.setOrderNoRms(orderNoRms);
+        tagStorageOrderBean.setOrderNoWms(outBoundOrderRequestDTO.getOrderNoWMS());
+        tagStorageOrderBean.setOrderNoErp(outBoundOrderRequestDTO.getOrderNoERP());
         tagStorageOrderBean.setType(PlatformConstant.STORAGE_ORDER_TYPE.OUT_BOUND);
-        tagStorageOrderBean.setOrderType(orderType);
+        tagStorageOrderBean.setOrderType(outBoundOrderRequestDTO.getOrderType());
+        tagStorageOrderBean.setWh(outBoundOrderRequestDTO.getWh());
         tagStorageOrderBean.setState(PlatformConstant.STORAGE_ORDER_STATUS.SEND);
         tagStorageOrderBean.setCreateUser(String.valueOf(AccountContext.getAccountId()));
         tagStorageOrderBean.setCreateDate(timeStamp);
         tagStorageOrderBean.setCreateTime(TimeUtil.localDateTimeToTimestamp(TimeUtil.parseDateFormatterString(timeStamp)));
         super.save(tagStorageOrderBean);
 
-        tagStorageOrderDetailService.saveStorageOrderDetails(orderNo, items);
+        tagStorageOrderDetailService.saveOutBoundOrderDetails(orderNoRms, outBoundOrderRequestDTO.getItems());
 
-        return tagStorageOrderBean.getId();
+        return orderNoRms;
     }
 
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public Long saveInventoryTagStorageOrder(String timeStamp, String orderNo, List<StorageOrderItemRequestDTO> items) {
+    public String saveInventoryTagStorageOrder(String timeStamp, InventoryOrderRequestDTO inventoryOrderRequestDTO) {
+        String orderNoRms = createOrderNoRms(PlatformConstant.STORAGE_ORDER_TYPE.INVENTORY_BOUND, "");
         TagStorageOrderBean tagStorageOrderBean = new TagStorageOrderBean();
-        tagStorageOrderBean.setOrderNo(orderNo);
+        tagStorageOrderBean.setOrderNoRms(orderNoRms);
+        tagStorageOrderBean.setOrderNoWms(inventoryOrderRequestDTO.getOrderNoWMS());
+        tagStorageOrderBean.setOrderNoErp(inventoryOrderRequestDTO.getOrderNoERP());
         tagStorageOrderBean.setType(PlatformConstant.STORAGE_ORDER_TYPE.INVENTORY_BOUND);
         tagStorageOrderBean.setOrderType("");
         tagStorageOrderBean.setState(PlatformConstant.STORAGE_ORDER_STATUS.SEND);
@@ -81,28 +113,42 @@ public class TagStorageOrderServiceImpl extends ServiceImpl<TagStorageOrderMappe
         tagStorageOrderBean.setCreateTime(TimeUtil.localDateTimeToTimestamp(TimeUtil.parseDateFormatterString(timeStamp)));
         super.save(tagStorageOrderBean);
 
-        tagStorageOrderDetailService.saveStorageOrderDetails(orderNo, items);
+        tagStorageOrderDetailService.saveInventoryOrderDetails(orderNoRms, inventoryOrderRequestDTO.getItems());
 
-        return tagStorageOrderBean.getId();
+        return orderNoRms;
     }
 
 
     @Override
-    public boolean checkStorageOrderCancelable(String orderNo, Integer orderType) {
+    public boolean checkStorageOrderCancelable(String orderNoWms, Integer type) {
         LambdaQueryWrapper<TagStorageOrderBean> queryWrapper = Wrappers.lambdaQuery();
-        queryWrapper.eq(TagStorageOrderBean::getOrderNo, orderNo);
+        queryWrapper.eq(TagStorageOrderBean::getOrderNoWms, orderNoWms);
         queryWrapper.eq(TagStorageOrderBean::getState, PlatformConstant.STORAGE_ORDER_STATUS.SEND);
-        queryWrapper.eq(TagStorageOrderBean::getOrderType, orderType);
+        queryWrapper.eq(TagStorageOrderBean::getType, type);
+        return super.exists(queryWrapper);
+    }
+
+    @Override
+    public boolean checkInventoryOrderCancelable(String orderNoWms, String orderNoRms, Integer type) {
+        LambdaQueryWrapper<TagStorageOrderBean> queryWrapper = Wrappers.lambdaQuery();
+        if (StringUtils.isNotBlank(orderNoRms)) {
+            queryWrapper.eq(TagStorageOrderBean::getOrderNoWms, orderNoWms);
+        }
+        if (StringUtils.isNotBlank(orderNoRms)) {
+            queryWrapper.eq(TagStorageOrderBean::getOrderNoRms, orderNoRms);
+        }
+        queryWrapper.eq(TagStorageOrderBean::getState, PlatformConstant.STORAGE_ORDER_STATUS.SEND);
+        queryWrapper.eq(TagStorageOrderBean::getType, type);
         return super.exists(queryWrapper);
     }
 
 
     @Override
-    public Long cancelTagStorageOrder(String timeStamp, String orderNo, Integer orderType) {
+    public String cancelTagStorageOrder(String timeStamp, String orderNoWms, Integer type) {
         LambdaQueryWrapper<TagStorageOrderBean> queryWrapper = Wrappers.lambdaQuery();
-        queryWrapper.eq(TagStorageOrderBean::getOrderNo, orderNo);
+        queryWrapper.eq(TagStorageOrderBean::getOrderNoWms, orderNoWms);
         queryWrapper.eq(TagStorageOrderBean::getState, PlatformConstant.STORAGE_ORDER_STATUS.SEND);
-        queryWrapper.eq(TagStorageOrderBean::getOrderType, orderType);
+        queryWrapper.eq(TagStorageOrderBean::getType, type);
         TagStorageOrderBean tagStorageOrderBean = super.getOne(queryWrapper);
         if (Objects.nonNull(tagStorageOrderBean)) {
             tagStorageOrderBean.setState(PlatformConstant.STORAGE_ORDER_STATUS.CANCELED);
@@ -111,9 +157,30 @@ public class TagStorageOrderServiceImpl extends ServiceImpl<TagStorageOrderMappe
             tagStorageOrderBean.setUpdateTime(TimeUtil.localDateTimeToTimestamp(TimeUtil.parseDateFormatterString(timeStamp)));
             super.updateById(tagStorageOrderBean);
         }
-        return tagStorageOrderBean.getId();
+        return tagStorageOrderBean.getOrderNoRms();
     }
 
+    @Override
+    public String cancelInventoryTagStorageOrder(String timeStamp, String orderNoWms, String orderNoRms, Integer type) {
+        LambdaQueryWrapper<TagStorageOrderBean> queryWrapper = Wrappers.lambdaQuery();
+        if (StringUtils.isNotBlank(orderNoWms)) {
+            queryWrapper.eq(TagStorageOrderBean::getOrderNoWms, orderNoWms);
+        }
+        if (StringUtils.isNotBlank(orderNoRms)) {
+            queryWrapper.eq(TagStorageOrderBean::getOrderNoRms, orderNoRms);
+        }
+        queryWrapper.eq(TagStorageOrderBean::getState, PlatformConstant.STORAGE_ORDER_STATUS.SEND);
+        queryWrapper.eq(TagStorageOrderBean::getType, type);
+        TagStorageOrderBean tagStorageOrderBean = super.getOne(queryWrapper);
+        if (Objects.nonNull(tagStorageOrderBean)) {
+            tagStorageOrderBean.setState(PlatformConstant.STORAGE_ORDER_STATUS.CANCELED);
+            tagStorageOrderBean.setUpdateDate(timeStamp);
+            tagStorageOrderBean.setUpdateUser(String.valueOf(AccountContext.getAccountId()));
+            tagStorageOrderBean.setUpdateTime(TimeUtil.localDateTimeToTimestamp(TimeUtil.parseDateFormatterString(timeStamp)));
+            super.updateById(tagStorageOrderBean);
+        }
+        return tagStorageOrderBean.getOrderNoRms();
+    }
 
     @Override
     public List<TagStorageOrderBean> queryActiveInBoundOrders(StorageCheckQueryRequestDTO data) {
@@ -122,7 +189,7 @@ public class TagStorageOrderServiceImpl extends ServiceImpl<TagStorageOrderMappe
         queryWrapper.eq(TagStorageOrderBean::getState, PlatformConstant.STORAGE_ORDER_STATUS.SEND)
                 .or().eq(TagStorageOrderBean::getState, PlatformConstant.STORAGE_ORDER_STATUS.EXECUTING);
         if (Objects.nonNull(data)) {
-            queryWrapper.like(TagStorageOrderBean::getOrderNo, data.getOrderNo());
+            queryWrapper.like(TagStorageOrderBean::getOrderNoRms, data.getOrderNo());
             queryWrapper.ge(StringUtils.isNotBlank(data.getTimeBegin()), TagStorageOrderBean::getCreateTime, TimeUtil.getDayNoLineTimestamp(data.getTimeBegin()));
             queryWrapper.le(StringUtils.isNotBlank(data.getTimeEnd()), TagStorageOrderBean::getCreateTime, TimeUtil.getDayNoLineTimestamp(data.getTimeEnd()));
         }
@@ -137,7 +204,7 @@ public class TagStorageOrderServiceImpl extends ServiceImpl<TagStorageOrderMappe
         queryWrapper.eq(TagStorageOrderBean::getState, PlatformConstant.STORAGE_ORDER_STATUS.SEND)
                 .or().eq(TagStorageOrderBean::getState, PlatformConstant.STORAGE_ORDER_STATUS.EXECUTING);
         if (Objects.nonNull(data)) {
-            queryWrapper.like(TagStorageOrderBean::getOrderNo, data.getOrderNo());
+            queryWrapper.like(TagStorageOrderBean::getOrderNoRms, data.getOrderNo());
             queryWrapper.ge(StringUtils.isNotBlank(data.getTimeBegin()), TagStorageOrderBean::getCreateTime, TimeUtil.getDayNoLineTimestamp(data.getTimeBegin()));
             queryWrapper.le(StringUtils.isNotBlank(data.getTimeEnd()), TagStorageOrderBean::getCreateTime, TimeUtil.getDayNoLineTimestamp(data.getTimeEnd()));
         }
@@ -152,7 +219,7 @@ public class TagStorageOrderServiceImpl extends ServiceImpl<TagStorageOrderMappe
         queryWrapper.eq(TagStorageOrderBean::getState, PlatformConstant.STORAGE_ORDER_STATUS.SEND)
                 .or().eq(TagStorageOrderBean::getState, PlatformConstant.STORAGE_ORDER_STATUS.EXECUTING);
         if (Objects.nonNull(data)) {
-            queryWrapper.like(TagStorageOrderBean::getOrderNo, data.getOrderNo());
+            queryWrapper.like(TagStorageOrderBean::getOrderNoRms, data.getOrderNo());
             queryWrapper.ge(StringUtils.isNotBlank(data.getTimeBegin()), TagStorageOrderBean::getCreateTime, TimeUtil.getDayNoLineTimestamp(data.getTimeBegin()));
             queryWrapper.le(StringUtils.isNotBlank(data.getTimeEnd()), TagStorageOrderBean::getCreateTime, TimeUtil.getDayNoLineTimestamp(data.getTimeEnd()));
         }
@@ -166,7 +233,7 @@ public class TagStorageOrderServiceImpl extends ServiceImpl<TagStorageOrderMappe
         }
         
         LambdaQueryWrapper<TagStorageOrderBean> queryWrapper = Wrappers.lambdaQuery();
-        queryWrapper.eq(TagStorageOrderBean::getOrderNo, orderNo);
+        queryWrapper.eq(TagStorageOrderBean::getOrderNoRms, orderNo);
         TagStorageOrderBean existsBean = super.getOne(queryWrapper);
         
         if (Objects.isNull(existsBean)) {
@@ -183,9 +250,9 @@ public class TagStorageOrderServiceImpl extends ServiceImpl<TagStorageOrderMappe
 
 
     @Override
-    public TagStorageOrderBean queryTagStorageOrderByNo(String orderNo) {
+    public TagStorageOrderBean queryTagStorageOrderByNo(String orderNoRms) {
         LambdaQueryWrapper<TagStorageOrderBean> queryWrapper = Wrappers.lambdaQuery();
-        queryWrapper.eq(TagStorageOrderBean::getOrderNo, orderNo);
+        queryWrapper.eq(TagStorageOrderBean::getOrderNoRms, orderNoRms);
         return super.getOne(queryWrapper);
     }
 }

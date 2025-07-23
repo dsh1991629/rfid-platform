@@ -230,7 +230,7 @@ public class StorageDeviceUploadController {
             List<TagStorageOrderResultBean> resultBeans = new ArrayList<>();
             for (String epc : epcs) {
                 TagStorageOrderResultBean resultBean = new TagStorageOrderResultBean();
-                resultBean.setOrderNo(orderNo);
+                resultBean.setOrderNoRms(orderNo);
                 resultBean.setProductCode(productCode);
                 resultBean.setEpc(epc);
                 resultBean.setCreateDate(createDate);
@@ -419,7 +419,7 @@ public class StorageDeviceUploadController {
             List<TagStorageOrderResultBean> resultBeans = new ArrayList<>();
             for (String epc : epcs) {
                 TagStorageOrderResultBean resultBean = new TagStorageOrderResultBean();
-                resultBean.setOrderNo(orderNo);
+                resultBean.setOrderNoRms(orderNo);
                 resultBean.setProductCode(productCode);
                 resultBean.setEpc(epc);
                 resultBean.setCreateDate(createDate);
@@ -625,7 +625,7 @@ public class StorageDeviceUploadController {
             List<TagStorageOrderResultBean> resultBeans = new ArrayList<>();
             for (String epc : epcs) {
                 TagStorageOrderResultBean resultBean = new TagStorageOrderResultBean();
-                resultBean.setOrderNo(orderNo);
+                resultBean.setOrderNoRms(orderNo);
                 resultBean.setProductCode(productCode);
                 resultBean.setEpc(epc);
                 resultBean.setCreateDate(createDate);

@@ -16,7 +16,7 @@ public class TagStorageOrderResultServiceImpl extends ServiceImpl<TagStorageOrde
     @Override
     public int countCompletedByOrderNoAndProductCode(String orderNo, String productCode) {
         LambdaQueryWrapper<TagStorageOrderResultBean> queryWrapper = Wrappers.lambdaQuery();
-        queryWrapper.eq(TagStorageOrderResultBean::getOrderNo, orderNo);
+        queryWrapper.eq(TagStorageOrderResultBean::getOrderNoRms, orderNo);
         queryWrapper.eq(TagStorageOrderResultBean::getProductCode, productCode);
         return Math.toIntExact(super.count(queryWrapper));
     }
@@ -29,7 +29,7 @@ public class TagStorageOrderResultServiceImpl extends ServiceImpl<TagStorageOrde
     @Override
     public Integer countCompletedBoxByOrderNo(String orderNo) {
         LambdaQueryWrapper<TagStorageOrderResultBean> queryWrapper = Wrappers.lambdaQuery();
-        queryWrapper.eq(TagStorageOrderResultBean::getOrderNo, orderNo)
+        queryWrapper.eq(TagStorageOrderResultBean::getOrderNoRms, orderNo)
                    .select(TagStorageOrderResultBean::getBoxCode)
                    .groupBy(TagStorageOrderResultBean::getBoxCode);
         
@@ -40,15 +40,15 @@ public class TagStorageOrderResultServiceImpl extends ServiceImpl<TagStorageOrde
     @Override
     public Integer countCompletedRfidByOrderNo(String orderNo) {
         LambdaQueryWrapper<TagStorageOrderResultBean> queryWrapper = Wrappers.lambdaQuery();
-        queryWrapper.eq(TagStorageOrderResultBean::getOrderNo, orderNo);
+        queryWrapper.eq(TagStorageOrderResultBean::getOrderNoRms, orderNo);
         return Math.toIntExact(super.count(queryWrapper));
     }
 
 
     @Override
-    public List<TagStorageOrderResultBean> listTagStorageOrderResults(String orderNo) {
+    public List<TagStorageOrderResultBean> listTagStorageOrderResults(String orderNoRms) {
         LambdaQueryWrapper<TagStorageOrderResultBean> queryWrapper = Wrappers.lambdaQuery();
-        queryWrapper.eq(TagStorageOrderResultBean::getOrderNo, orderNo);
+        queryWrapper.eq(TagStorageOrderResultBean::getOrderNoRms, orderNoRms);
         return super.list(queryWrapper);
     }
 }
