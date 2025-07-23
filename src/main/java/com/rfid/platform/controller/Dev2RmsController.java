@@ -251,7 +251,7 @@ public class Dev2RmsController {
     }
 
 
-    @ApiOperation(value = "查询入库通知单", notes = "设备查询入库通知单及其详情")
+    @Operation(summary = "查询入库通知单", description = "设备查询入库通知单及其详情")
     @PostMapping(value = "/dev/getinboundorder")
     public RfidApiResponseDTO<DevInBoundOrderQueryResponseDTO> getInBoundOrder(
             @Parameter(description = "入库通知单查询请求", required = true)
