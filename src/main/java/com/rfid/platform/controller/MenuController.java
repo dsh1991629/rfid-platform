@@ -2,17 +2,18 @@ package com.rfid.platform.controller;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.rfid.platform.common.BaseResult;
-import com.rfid.platform.common.PlatformConstant;
 import com.rfid.platform.entity.MenuBean;
 import com.rfid.platform.persistence.MenuCreateDTO;
 import com.rfid.platform.persistence.MenuDeleteDTO;
 import com.rfid.platform.persistence.MenuTreeDTO;
 import com.rfid.platform.persistence.MenuUpdateDTO;
+import com.rfid.platform.persistence.RfidApiRequestDTO;
+import com.rfid.platform.persistence.RfidApiResponseDTO;
 import com.rfid.platform.service.MenuService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.Objects;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -39,19 +40,25 @@ public class MenuController {
 
     /**
      * 创建菜单
-     * @param menuCreateDTO 菜单创建参数
+     * @param requestDTO 菜单创建参数
      * @return 创建结果，包含菜单ID
      */
     @Operation(summary = "创建菜单", description = "创建新的菜单项")
     @PostMapping("/create")
-    public BaseResult<Long> createMenu(
+    public RfidApiResponseDTO<Long> createMenu(
             @Parameter(description = "菜单创建参数", required = true)
-            @RequestBody MenuCreateDTO menuCreateDTO) {
-        BaseResult<Long> result = new BaseResult<>();
+            @RequestBody RfidApiRequestDTO<MenuCreateDTO> requestDTO) {
+        RfidApiResponseDTO<Long> result = RfidApiResponseDTO.success();
+        if (Objects.isNull(requestDTO) || Objects.isNull(requestDTO.getData())) {
+            result.setStatus(false);
+            result.setMessage("请求数据不能为空");
+            return result;
+        }
         try {
+            MenuCreateDTO menuCreateDTO = requestDTO.getData();
             // 参数校验
             if (StringUtils.isBlank(menuCreateDTO.getName())) {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("菜单名称不能为空");
                 return result;
             }
@@ -62,7 +69,7 @@ public class MenuController {
             Boolean existingMenus = menuService.existMenu(nameCheckWrapper);
 
             if (existingMenus) {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("菜单名称已存在，不能重复");
                 return result;
             }
@@ -73,11 +80,11 @@ public class MenuController {
             if (success) {
                 result.setData(menuBean.getId());
             } else {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("创建菜单失败");
             }
         } catch (Exception e) {
-            result.setCode(PlatformConstant.RET_CODE.FAILED);
+            result.setStatus(false);
             result.setMessage("创建菜单异常: " + e.getMessage());
         }
         return result;
@@ -85,19 +92,25 @@ public class MenuController {
 
     /**
      * 删除菜单
-     * @param menuDeleteDTO 菜单删除参数
+     * @param requestDTO 菜单删除参数
      * @return 删除结果
      */
     @Operation(summary = "删除菜单", description = "根据菜单ID删除菜单")
     @PostMapping("/delete")
-    public BaseResult<Boolean> deleteMenu(
+    public RfidApiResponseDTO<Boolean> deleteMenu(
             @Parameter(description = "菜单删除参数", required = true)
-            @RequestBody MenuDeleteDTO menuDeleteDTO) {
-        BaseResult<Boolean> result = new BaseResult<>();
+            @RequestBody RfidApiRequestDTO<MenuDeleteDTO> requestDTO) {
+        RfidApiResponseDTO<Boolean> result = RfidApiResponseDTO.success();
+        if (Objects.isNull(requestDTO) || Objects.isNull(requestDTO.getData())) {
+            result.setStatus(false);
+            result.setMessage("请求数据不能为空");
+            return result;
+        }
         try {
+            MenuDeleteDTO menuDeleteDTO = requestDTO.getData();
             // 参数校验
             if (menuDeleteDTO.getId() == null) {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("菜单ID不能为空");
                 return result;
             }
@@ -105,11 +118,11 @@ public class MenuController {
             boolean success = menuService.removeMenuByPk(menuDeleteDTO.getId());
             result.setData(success);
             if (!success) {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("删除菜单失败");
             }
         } catch (Exception e) {
-            result.setCode(PlatformConstant.RET_CODE.FAILED);
+            result.setStatus(false);
             result.setMessage("删除菜单异常: " + e.getMessage());
         }
         return result;
@@ -117,19 +130,25 @@ public class MenuController {
 
     /**
      * 更新菜单
-     * @param menuUpdateDTO 菜单更新参数
+     * @param requestDTO 菜单更新参数
      * @return 更新结果
      */
     @Operation(summary = "更新菜单", description = "根据菜单ID更新菜单信息")
     @PostMapping("/update")
-    public BaseResult<Boolean> updateMenu(
+    public RfidApiResponseDTO<Boolean> updateMenu(
             @Parameter(description = "菜单更新参数", required = true)
-            @RequestBody MenuUpdateDTO menuUpdateDTO) {
-        BaseResult<Boolean> result = new BaseResult<>();
+            @RequestBody RfidApiRequestDTO<MenuUpdateDTO> requestDTO) {
+        RfidApiResponseDTO<Boolean> result = RfidApiResponseDTO.success();
+        if (Objects.isNull(requestDTO) || Objects.isNull(requestDTO.getData())) {
+            result.setStatus(false);
+            result.setMessage("请求数据不能为空");
+            return result;
+        }
         try {
+            MenuUpdateDTO menuUpdateDTO = requestDTO.getData();
             // 参数校验
             if (menuUpdateDTO.getId() == null) {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("菜单ID不能为空");
                 return result;
             }
@@ -140,7 +159,7 @@ public class MenuController {
             Boolean existMenus = menuService.existMenu(nameCheckWrapper);
 
             if (existMenus) {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("菜单名称已存在，不能重复");
                 return result;
             }
@@ -150,11 +169,11 @@ public class MenuController {
             boolean success = menuService.updateMenuByPk(menuBean);
             result.setData(success);
             if (!success) {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("更新菜单失败");
             }
         } catch (Exception e) {
-            result.setCode(PlatformConstant.RET_CODE.FAILED);
+            result.setStatus(false);
             result.setMessage("更新菜单异常: " + e.getMessage());
         }
         return result;
@@ -166,8 +185,8 @@ public class MenuController {
      */
     @Operation(summary = "获取菜单树", description = "获取完整的菜单树形结构")
     @PostMapping("/tree")
-    public BaseResult<List<MenuTreeDTO>> menuTree() {
-        BaseResult<List<MenuTreeDTO>> result = new BaseResult<>();
+    public RfidApiResponseDTO<List<MenuTreeDTO>> menuTree() {
+        RfidApiResponseDTO<List<MenuTreeDTO>> result = RfidApiResponseDTO.success();
         try {
             // 查询所有菜单
             LambdaQueryWrapper<MenuBean> queryWrapper = new LambdaQueryWrapper<>();
@@ -178,7 +197,7 @@ public class MenuController {
             List<MenuTreeDTO> menuTreeList = buildMenuTree(allMenus, null);
             result.setData(menuTreeList);
         } catch (Exception e) {
-            result.setCode(PlatformConstant.RET_CODE.FAILED);
+            result.setStatus(false);
             result.setMessage("查询菜单树异常: " + e.getMessage());
         }
         return result;

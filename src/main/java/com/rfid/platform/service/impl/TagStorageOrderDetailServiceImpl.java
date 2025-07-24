@@ -204,12 +204,4 @@ public class TagStorageOrderDetailServiceImpl extends ServiceImpl<TagStorageOrde
         return Objects.nonNull(tagStorageOrderDetailBean) ? tagStorageOrderDetailBean.getQuantity() : 0;
     }
 
-
-    @Override
-    public List<TagStorageOrderDetailBean> listTagStorageOrderDetailsByNoAndProductCode(String orderNoRms, String productCode) {
-        LambdaQueryWrapper<TagStorageOrderDetailBean> queryWrapper = Wrappers.lambdaQuery();
-        queryWrapper.eq(TagStorageOrderDetailBean::getOrderNoRms, orderNoRms);
-        queryWrapper.eq(TagStorageOrderDetailBean::getProductCode, productCode);
-        return super.list(queryWrapper);
-    }
 }

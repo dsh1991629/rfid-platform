@@ -14,7 +14,6 @@ public interface TagStorageOrderDetailService {
 
     boolean saveInventoryOrderDetails(String orderNoRms, List<InventoryOrderItemRequestDTO> items);
 
-
     List<TagStorageOrderDetailBean> listTagStorageOrderDetails(String orderNoRms);
 
     boolean productCodeExistInOrderNo(String orderNoRms, String productCode);
@@ -23,5 +22,4 @@ public interface TagStorageOrderDetailService {
 
     Integer getQuantityFromTagStorageOrderDetails(String orderNoRms, String productCode);
 
-    List<TagStorageOrderDetailBean> listTagStorageOrderDetailsByNoAndProductCode(String orderNo, String productCode);
 }

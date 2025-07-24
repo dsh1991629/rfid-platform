@@ -2,9 +2,9 @@ package com.rfid.platform.controller;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.rfid.platform.common.BaseResult;
-import com.rfid.platform.common.PlatformConstant;
 import com.rfid.platform.entity.RoleBean;
+import com.rfid.platform.persistence.RfidApiRequestDTO;
+import com.rfid.platform.persistence.RfidApiResponseDTO;
 import com.rfid.platform.persistence.RoleCreateDTO;
 import com.rfid.platform.persistence.RoleDeleteDTO;
 import com.rfid.platform.persistence.RoleSelectDTO;
@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -38,19 +39,25 @@ public class RoleController {
 
     /**
      * 创建角色
-     * @param roleCreateDTO 角色创建数据传输对象
+     * @param requestDTO 角色创建数据传输对象
      * @return 创建结果，包含角色ID
      */
     @PostMapping(value = "/create")
     @Operation(summary = "创建角色", description = "创建新的角色信息")
-    public BaseResult<Long> createRole(
+    public RfidApiResponseDTO<Long> createRole(
             @Parameter(description = "角色创建信息", required = true)
-            @RequestBody RoleCreateDTO roleCreateDTO) {
-        BaseResult<Long> result = new BaseResult<>();
+            @RequestBody RfidApiRequestDTO<RoleCreateDTO> requestDTO) {
+        RfidApiResponseDTO<Long> result = RfidApiResponseDTO.success();
+        if (Objects.isNull(requestDTO) || Objects.isNull(requestDTO.getData())) {
+            result.setStatus(false);
+            result.setMessage("请求数据不能为空");
+            return result;
+        }
         try {
+            RoleCreateDTO roleCreateDTO = requestDTO.getData();
             // 参数校验
             if (StringUtils.isBlank(roleCreateDTO.getName())) {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("角色名称不能为空");
                 return result;
             }
@@ -61,7 +68,7 @@ public class RoleController {
             Boolean existingRoles = roleService.existRole(nameCheckWrapper);
 
             if (existingRoles) {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("角色名称已存在，不能重复");
                 return result;
             }
@@ -75,11 +82,11 @@ public class RoleController {
                 result.setData(roleBean.getId());
                 result.setMessage("创建成功");
             } else {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("创建失败");
             }
         } catch (Exception e) {
-            result.setCode(PlatformConstant.RET_CODE.FAILED);
+            result.setStatus(false);
             result.setMessage("系统异常：" + e.getMessage());
         }
         return result;
@@ -87,19 +94,25 @@ public class RoleController {
 
     /**
      * 删除角色
-     * @param roleDeleteDTO 角色删除数据传输对象
+     * @param requestDTO 角色删除数据传输对象
      * @return 删除结果
      */
     @PostMapping(value = "/delete")
     @Operation(summary = "删除角色", description = "根据角色ID删除角色信息")
-    public BaseResult<Boolean> deleteRole(
+    public RfidApiResponseDTO<Boolean> deleteRole(
             @Parameter(description = "角色删除信息", required = true)
-            @RequestBody RoleDeleteDTO roleDeleteDTO) {
-        BaseResult<Boolean> result = new BaseResult<>();
+            @RequestBody RfidApiRequestDTO<RoleDeleteDTO> requestDTO) {
+        RfidApiResponseDTO<Boolean> result = RfidApiResponseDTO.success();
+        if (Objects.isNull(requestDTO) || Objects.isNull(requestDTO.getData())) {
+            result.setStatus(false);
+            result.setMessage("请求数据不能为空");
+            return result;
+        }
         try {
+            RoleDeleteDTO roleDeleteDTO = requestDTO.getData();
             // 参数校验
             if (roleDeleteDTO.getId() == null) {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("角色ID不能为空");
                 return result;
             }
@@ -110,11 +123,11 @@ public class RoleController {
             if (success) {
                 result.setMessage("删除成功");
             } else {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("删除失败");
             }
         } catch (Exception e) {
-            result.setCode(PlatformConstant.RET_CODE.FAILED);
+            result.setStatus(false);
             result.setMessage("系统异常：" + e.getMessage());
         }
         return result;
@@ -122,19 +135,25 @@ public class RoleController {
 
     /**
      * 更新角色
-     * @param roleUpdateDTO 角色更新数据传输对象
+     * @param requestDTO 角色更新数据传输对象
      * @return 更新结果
      */
     @PostMapping(value = "/update")
     @Operation(summary = "更新角色", description = "更新角色信息")
-    public BaseResult<Boolean> updateRole(
+    public RfidApiResponseDTO<Boolean> updateRole(
             @Parameter(description = "角色更新信息", required = true)
-            @RequestBody RoleUpdateDTO roleUpdateDTO) {
-        BaseResult<Boolean> result = new BaseResult<>();
+            @RequestBody RfidApiRequestDTO<RoleUpdateDTO> requestDTO) {
+        RfidApiResponseDTO<Boolean> result = RfidApiResponseDTO.success();
+        if (Objects.isNull(requestDTO) || Objects.isNull(requestDTO.getData())) {
+            result.setStatus(false);
+            result.setMessage("请求数据不能为空");
+            return result;
+        }
         try {
+            RoleUpdateDTO roleUpdateDTO = requestDTO.getData();
             // 参数校验
             if (roleUpdateDTO.getId() == null) {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("角色ID不能为空");
                 return result;
             }
@@ -145,7 +164,7 @@ public class RoleController {
             Boolean existRoles = roleService.existRole(nameCheckWrapper);
 
             if (existRoles) {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("角色名称已存在，不能重复");
                 result.setData(false);
                 return result;
@@ -160,12 +179,12 @@ public class RoleController {
             if (success) {
                 result.setMessage("更新成功");
             } else {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("更新失败");
                 result.setData(false);
             }
         } catch (Exception e) {
-            result.setCode(PlatformConstant.RET_CODE.FAILED);
+            result.setStatus(false);
             result.setMessage("系统异常：" + e.getMessage());
             result.setData(false);
         }
@@ -176,8 +195,8 @@ public class RoleController {
 
     @PostMapping(value = "/select")
     @Operation(summary = "角色下拉列表", description = "角色下拉列表")
-    public BaseResult<List<RoleSelectDTO>> queryRoleSelect() {
-        BaseResult<List<RoleSelectDTO>> result = new BaseResult<>();
+    public RfidApiResponseDTO<List<RoleSelectDTO>> queryRoleSelect() {
+        RfidApiResponseDTO<List<RoleSelectDTO>> result = RfidApiResponseDTO.success();
         try {
             List<RoleBean> roleBeans = roleService.listRole(null);
             List<RoleSelectDTO> roleSelects = new ArrayList<>();
@@ -192,7 +211,7 @@ public class RoleController {
             result.setData(roleSelects);
             result.setMessage("查询成功");
         } catch (Exception e) {
-            result.setCode(PlatformConstant.RET_CODE.FAILED);
+            result.setStatus(false);
             result.setMessage("系统异常：" + e.getMessage());
         }
         return result;

@@ -4,9 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.rfid.platform.common.BaseResult;
 import com.rfid.platform.common.PageResult;
-import com.rfid.platform.common.PlatformConstant;
 import com.rfid.platform.entity.DeviceHeartbeatBean;
 import com.rfid.platform.entity.DeviceInfoBean;
 import com.rfid.platform.enums.DeviceHeartbeatTypeEnum;
@@ -21,6 +19,8 @@ import com.rfid.platform.persistence.DeviceHeartbeatDTO;
 import com.rfid.platform.persistence.DeviceHeartbeatQueryDTO;
 import com.rfid.platform.persistence.DevicePageQueryDTO;
 import com.rfid.platform.persistence.DeviceUpdateDTO;
+import com.rfid.platform.persistence.RfidApiRequestDTO;
+import com.rfid.platform.persistence.RfidApiResponseDTO;
 import com.rfid.platform.service.AccountService;
 import com.rfid.platform.service.DeviceAccountRelService;
 import com.rfid.platform.service.DeviceHeartbeatService;
@@ -63,25 +63,32 @@ public class DeviceController {
 
     @Operation(summary = "创建设备", description = "创建新的设备，设备编码不能重复")
     @PostMapping(value = "/create")
-    public BaseResult<Long> createDevice(@Parameter(description = "设备创建参数", required = true)
-                                         @RequestBody DeviceCreateDTO deviceCreateDTO) {
-        BaseResult<Long> result = new BaseResult<>();
+    public RfidApiResponseDTO<Long> createDevice(@Parameter(description = "设备创建参数", required = true)
+                                                 @RequestBody RfidApiRequestDTO<DeviceCreateDTO> requestDTO) {
+        RfidApiResponseDTO<Long> result = RfidApiResponseDTO.success();
         try {
+            if (Objects.isNull(requestDTO) || Objects.isNull(requestDTO.getData())) {
+                result.setStatus(false);
+                result.setMessage("设备数据不能为空");
+                return result;
+            }
+
+            DeviceCreateDTO deviceCreateDTO = requestDTO.getData();
             // 参数校验
             if (StringUtils.isBlank(deviceCreateDTO.getDeviceType())) {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("设备类型不能为空");
                 return result;
             }
 
             if (StringUtils.isBlank(deviceCreateDTO.getDeviceModel())) {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("设备型号不能为空");
                 return result;
             }
 
             if (StringUtils.isBlank(deviceCreateDTO.getDeviceCode())) {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("设备编码不能为空");
                 return result;
             }
@@ -92,7 +99,7 @@ public class DeviceController {
             Boolean existingDepartments = deviceInfoService.existDevice(nameCheckWrapper);
 
             if (existingDepartments) {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("设备编码已存在，不能重复");
                 return result;
             }
@@ -106,11 +113,11 @@ public class DeviceController {
                 result.setData(deviceInfoBean.getId());
                 result.setMessage("创建成功");
             } else {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("创建失败");
             }
         } catch (Exception e) {
-            result.setCode(PlatformConstant.RET_CODE.FAILED);
+            result.setStatus(false);
             result.setMessage("系统异常：" + e.getMessage());
         }
 
@@ -120,32 +127,39 @@ public class DeviceController {
 
     @Operation(summary = "更新设备", description = "更新设备")
     @PostMapping(value = "/update")
-    public BaseResult<Boolean> updateDevice(@Parameter(description = "设备更新参数", required = true)
-                                            @RequestBody DeviceUpdateDTO deviceUpdateDTO) {
-        BaseResult<Boolean> result = new BaseResult<>();
+    public RfidApiResponseDTO<Boolean> updateDevice(@Parameter(description = "设备更新参数", required = true)
+                                                    @RequestBody RfidApiRequestDTO<DeviceUpdateDTO> requestDTO) {
+        RfidApiResponseDTO<Boolean> result = RfidApiResponseDTO.success();
         try {
+            if (Objects.isNull(requestDTO) || Objects.isNull(requestDTO.getData())) {
+                result.setStatus(false);
+                result.setMessage("设备数据不能为空");
+                return result;
+            }
+
+            DeviceUpdateDTO deviceUpdateDTO = requestDTO.getData();
             // 参数校验
             if (Objects.isNull(deviceUpdateDTO.getId())) {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("设备ID不能为空");
                 return result;
             }
 
             // 参数校验
             if (StringUtils.isBlank(deviceUpdateDTO.getDeviceName())) {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("设备名称不能为空");
                 return result;
             }
 
             if (StringUtils.isBlank(deviceUpdateDTO.getDeviceModel())) {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("设备类型不能为空");
                 return result;
             }
 
             if (StringUtils.isBlank(deviceUpdateDTO.getDeviceCode())) {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("设备编码不能为空");
                 return result;
             }
@@ -157,7 +171,7 @@ public class DeviceController {
             Boolean existingDepartments = deviceInfoService.existDevice(nameCheckWrapper);
 
             if (existingDepartments) {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("设备编码已存在，不能重复");
                 return result;
             }
@@ -170,11 +184,11 @@ public class DeviceController {
                 result.setMessage("更新成功");
             } else {
                 result.setData(false);
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("更新失败");
             }
         } catch (Exception e) {
-            result.setCode(PlatformConstant.RET_CODE.FAILED);
+            result.setStatus(false);
             result.setMessage("系统异常：" + e.getMessage());
         }
 
@@ -184,13 +198,20 @@ public class DeviceController {
 
     @Operation(summary = "删除设备", description = "删除设备")
     @PostMapping(value = "/delete")
-    public BaseResult<Boolean> deleteDevice(@Parameter(description = "设备删除参数", required = true)
-                                            @RequestBody DeviceDeleteDTO deviceDeleteDTO) {
-        BaseResult<Boolean> result = new BaseResult<>();
+    public RfidApiResponseDTO<Boolean> deleteDevice(@Parameter(description = "设备删除参数", required = true)
+                                                    @RequestBody RfidApiRequestDTO<DeviceDeleteDTO> requestDTO) {
+        RfidApiResponseDTO<Boolean> result = RfidApiResponseDTO.success();
         try {
+            if (Objects.isNull(requestDTO) || Objects.isNull(requestDTO.getData())) {
+                result.setStatus(false);
+                result.setMessage("设备数据不能为空");
+                return result;
+            }
+
+            DeviceDeleteDTO deviceDeleteDTO = requestDTO.getData();
             // 参数校验
             if (Objects.isNull(deviceDeleteDTO.getId())) {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("设备ID不能为空");
                 return result;
             }
@@ -202,11 +223,11 @@ public class DeviceController {
                 result.setMessage("删除成功");
             } else {
                 result.setData(false);
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("删除失败");
             }
         } catch (Exception e) {
-            result.setCode(PlatformConstant.RET_CODE.FAILED);
+            result.setStatus(false);
             result.setMessage("系统异常：" + e.getMessage());
         }
 
@@ -219,29 +240,33 @@ public class DeviceController {
             description = "根据查询条件分页获取设备列表，支持按设备编码、类型、名称等条件进行筛选查询。"
     )
     @PostMapping(value = "/page")
-    public BaseResult<PageResult<DeviceDTO>> accountPage(
+    public RfidApiResponseDTO<PageResult<DeviceDTO>> accountPage(
             @Parameter(description = "设备分页查询条件", required = true)
-            @RequestBody DevicePageQueryDTO devicePageQueryDTO,
+            @RequestBody RfidApiRequestDTO<DevicePageQueryDTO> requestDTO,
             @Parameter(description = "页码，从1开始", example = "1")
             @RequestParam(defaultValue = "1") Integer pageNum,
             @Parameter(description = "每页大小", example = "10")
             @RequestParam(defaultValue = "10") Integer pageSize) {
-        BaseResult<PageResult<DeviceDTO>> result = new BaseResult<>();
+        RfidApiResponseDTO<PageResult<DeviceDTO>> result = RfidApiResponseDTO.success();
         try {
             Page<DeviceInfoBean> page = new Page<>(pageNum, pageSize);
             LambdaQueryWrapper<DeviceInfoBean> queryWrapper = new LambdaQueryWrapper<>();
 
-            // 构建查询条件
-            if (StringUtils.isNotBlank(devicePageQueryDTO.getDeviceCode())) {
-                queryWrapper.like(DeviceInfoBean::getDeviceCode, devicePageQueryDTO.getDeviceCode());
-            }
-            if (StringUtils.isNotBlank(devicePageQueryDTO.getDeviceType())) {
-                queryWrapper.like(DeviceInfoBean::getDeviceType, devicePageQueryDTO.getDeviceType());
+            if (Objects.nonNull(requestDTO.getData())) {
+                DevicePageQueryDTO devicePageQueryDTO = requestDTO.getData();
+                // 构建查询条件
+                if (StringUtils.isNotBlank(devicePageQueryDTO.getDeviceCode())) {
+                    queryWrapper.like(DeviceInfoBean::getDeviceCode, devicePageQueryDTO.getDeviceCode());
+                }
+                if (StringUtils.isNotBlank(devicePageQueryDTO.getDeviceType())) {
+                    queryWrapper.like(DeviceInfoBean::getDeviceType, devicePageQueryDTO.getDeviceType());
+                }
+
+                if (StringUtils.isNotBlank(devicePageQueryDTO.getDeviceModel())) {
+                    queryWrapper.like(DeviceInfoBean::getDeviceModel, devicePageQueryDTO.getDeviceModel());
+                }
             }
 
-            if (StringUtils.isNotBlank(devicePageQueryDTO.getDeviceModel())) {
-                queryWrapper.like(DeviceInfoBean::getDeviceModel, devicePageQueryDTO.getDeviceModel());
-            }
             queryWrapper.orderByDesc(DeviceInfoBean::getCreateTime);
 
             IPage<DeviceInfoBean> pageResult = deviceInfoService.pageDevice(page, queryWrapper);
@@ -267,7 +292,7 @@ public class DeviceController {
             result.setData(pageResultDTO);
             result.setMessage("查询成功");
         } catch (Exception e) {
-            result.setCode(PlatformConstant.RET_CODE.FAILED);
+            result.setStatus(false);
             result.setMessage("分页查询异常: " + e.getMessage());
         }
         return result;
@@ -276,13 +301,20 @@ public class DeviceController {
 
     @Operation(summary = "查询设备关联的账户", description = "根据设备ID查询关联的账户列表")
     @PostMapping(value = "/account/rel/list")
-    public BaseResult<List<DeviceAccountRepeatDTO>> deviceRelatedAccountQuery(@Parameter(description = "设备账户关联查询参数", required = true)
-                                                                              @RequestBody DeviceAccountRelQueryDTO deviceAccountRelQueryDTO) {
-        BaseResult<List<DeviceAccountRepeatDTO>> result = new BaseResult<>();
+    public RfidApiResponseDTO<List<DeviceAccountRepeatDTO>> deviceRelatedAccountQuery(@Parameter(description = "设备账户关联查询参数", required = true)
+                                                                                      @RequestBody RfidApiRequestDTO<DeviceAccountRelQueryDTO> requestDTO) {
+        RfidApiResponseDTO<List<DeviceAccountRepeatDTO>> result = RfidApiResponseDTO.success();
         try {
+            if (Objects.isNull(requestDTO) || Objects.isNull(requestDTO.getData())) {
+                result.setStatus(false);
+                result.setMessage("设备数据不能为空");
+                return result;
+            }
+
+            DeviceAccountRelQueryDTO deviceAccountRelQueryDTO = requestDTO.getData();
             // 参数校验
             if (Objects.isNull(deviceAccountRelQueryDTO.getId())) {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("设备ID不能为空");
                 return result;
             }
@@ -315,7 +347,7 @@ public class DeviceController {
             result.setData(accounts);
             result.setMessage("查询成功");
         } catch (Exception e) {
-            result.setCode(PlatformConstant.RET_CODE.FAILED);
+            result.setStatus(false);
             result.setMessage("查询异常: " + e.getMessage());
         }
         return result;
@@ -324,13 +356,20 @@ public class DeviceController {
 
     @Operation(summary = "删除设备关联的账户", description = "删除设备ID查询关联的账户列表")
     @PostMapping(value = "/account/rel/delete")
-    public BaseResult<Boolean> deviceRelatedAccountDelete(@Parameter(description = "设备账户关联删除参数", required = true)
-                                                          @RequestBody DeviceAccountRelDeleteDTO deviceAccountRelDeleteDTO) {
-        BaseResult<Boolean> result = new BaseResult<>();
+    public RfidApiResponseDTO<Boolean> deviceRelatedAccountDelete(@Parameter(description = "设备账户关联删除参数", required = true)
+                                                                  @RequestBody RfidApiRequestDTO<DeviceAccountRelDeleteDTO> requestDTO) {
+        RfidApiResponseDTO<Boolean> result = RfidApiResponseDTO.success();
         try {
+            if (Objects.isNull(requestDTO) || Objects.isNull(requestDTO.getData())) {
+                result.setStatus(false);
+                result.setMessage("设备数据不能为空");
+                return result;
+            }
+
+            DeviceAccountRelDeleteDTO deviceAccountRelDeleteDTO = requestDTO.getData();
             // 参数校验
             if (Objects.isNull(deviceAccountRelDeleteDTO.getId())) {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("设备ID不能为空");
                 return result;
             }
@@ -348,11 +387,11 @@ public class DeviceController {
                 result.setMessage("删除成功");
             } else {
                 result.setData(false);
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("删除失败");
             }
         } catch (Exception e) {
-            result.setCode(PlatformConstant.RET_CODE.FAILED);
+            result.setStatus(false);
             result.setMessage("查询异常: " + e.getMessage());
         }
         return result;
@@ -360,13 +399,20 @@ public class DeviceController {
 
     @Operation(summary = "更新设备关联的账户", description = "更新设备ID查询关联的账户列表")
     @PostMapping(value = "/account/rel/update")
-    public BaseResult<Boolean> deviceRelatedAccountUpdate(@Parameter(description = "设备账户关联更新参数", required = true)
-                                                          @RequestBody DeviceAccountRelUpdateDTO deviceAccountRelUpdateDTO) {
-        BaseResult<Boolean> result = new BaseResult<>();
+    public RfidApiResponseDTO<Boolean> deviceRelatedAccountUpdate(@Parameter(description = "设备账户关联更新参数", required = true)
+                                                                  @RequestBody RfidApiRequestDTO<DeviceAccountRelUpdateDTO> requestDTO) {
+        RfidApiResponseDTO<Boolean> result = RfidApiResponseDTO.success();
         try {
+            if (Objects.isNull(requestDTO) || Objects.isNull(requestDTO.getData())) {
+                result.setStatus(false);
+                result.setMessage("设备数据不能为空");
+                return result;
+            }
+
+            DeviceAccountRelUpdateDTO deviceAccountRelUpdateDTO = requestDTO.getData();
             // 参数校验
             if (Objects.isNull(deviceAccountRelUpdateDTO.getId())) {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("设备ID不能为空");
                 return result;
             }
@@ -385,11 +431,11 @@ public class DeviceController {
                 result.setMessage("更新成功");
             } else {
                 result.setData(false);
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("更新失败");
             }
         } catch (Exception e) {
-            result.setCode(PlatformConstant.RET_CODE.FAILED);
+            result.setStatus(false);
             result.setMessage("查询异常: " + e.getMessage());
         }
         return result;
@@ -401,26 +447,29 @@ public class DeviceController {
             description = "根据查询条件分页获取账户列表，支持按账户编码、名称、部门、角色等条件进行筛选查询。"
     )
     @PostMapping(value = "/heartbeat/page")
-    public BaseResult<PageResult<DeviceHeartbeatDTO>> heartbeatPage(
+    public RfidApiResponseDTO<PageResult<DeviceHeartbeatDTO>> heartbeatPage(
             @Parameter(description = "账户分页查询条件", required = true)
-            @RequestBody DeviceHeartbeatQueryDTO deviceHeartbeatQueryDTO,
+            @RequestBody RfidApiRequestDTO<DeviceHeartbeatQueryDTO> requestDTO,
             @Parameter(description = "页码，从1开始", example = "1")
             @RequestParam(defaultValue = "1") Integer pageNum,
             @Parameter(description = "每页大小", example = "10")
             @RequestParam(defaultValue = "10") Integer pageSize) {
-        BaseResult<PageResult<DeviceHeartbeatDTO>> result = new BaseResult<>();
+        RfidApiResponseDTO<PageResult<DeviceHeartbeatDTO>> result = RfidApiResponseDTO.success();
         try {
             Page<DeviceHeartbeatBean> page = new Page<>(pageNum, pageSize);
             LambdaQueryWrapper<DeviceHeartbeatBean> queryWrapper = new LambdaQueryWrapper<>();
 
             // 构建查询条件
-            DeviceInfoBean deviceInfoBean;
-            if (StringUtils.isNotBlank(deviceHeartbeatQueryDTO.getDeviceCode())) {
-                queryWrapper.eq(DeviceHeartbeatBean::getDeviceCode, deviceHeartbeatQueryDTO.getDeviceCode());
-                deviceInfoBean = deviceInfoService.queryDeviceInfoByCode(deviceHeartbeatQueryDTO.getDeviceCode());
-            } else {
-                deviceInfoBean = null;
+            DeviceInfoBean deviceInfoBean = null;
+            if (Objects.nonNull(requestDTO.getData())) {
+                DeviceHeartbeatQueryDTO deviceHeartbeatQueryDTO = requestDTO.getData();
+                if (StringUtils.isNotBlank(deviceHeartbeatQueryDTO.getDeviceCode())) {
+                    queryWrapper.eq(DeviceHeartbeatBean::getDeviceCode, deviceHeartbeatQueryDTO.getDeviceCode());
+                    deviceInfoBean = deviceInfoService.queryDeviceInfoByCode(deviceHeartbeatQueryDTO.getDeviceCode());
+                }
             }
+
+
 
             IPage<DeviceHeartbeatBean> pageResult = deviceHeartbeatService.pageDeviceHeartbeat(page, queryWrapper);
 
@@ -431,11 +480,12 @@ public class DeviceController {
             pageResultDTO.setTotal(pageResult.getTotal());
             pageResultDTO.setPages(pageResult.getPages());
 
+            DeviceInfoBean finalDeviceInfoBean = deviceInfoBean;
             List<DeviceHeartbeatDTO> dtoList = pageResult.getRecords().stream()
                     .map(bean -> {
                         DeviceHeartbeatDTO dto = BeanUtil.copyProperties(bean, DeviceHeartbeatDTO.class);
-                        if (Objects.nonNull(deviceInfoBean)) {
-                            dto.setDeviceType(deviceInfoBean.getDeviceType());
+                        if (Objects.nonNull(finalDeviceInfoBean)) {
+                            dto.setDeviceType(finalDeviceInfoBean.getDeviceType());
                         }
                         dto.setType(changeType(bean.getType()));
                         return dto;
@@ -446,7 +496,7 @@ public class DeviceController {
             result.setData(pageResultDTO);
             result.setMessage("查询成功");
         } catch (Exception e) {
-            result.setCode(PlatformConstant.RET_CODE.FAILED);
+            result.setStatus(false);
             result.setMessage("分页查询异常: " + e.getMessage());
         }
         return result;

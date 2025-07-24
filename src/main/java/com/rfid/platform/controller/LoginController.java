@@ -1,7 +1,6 @@
 package com.rfid.platform.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.rfid.platform.common.BaseResult;
 import com.rfid.platform.common.PlatformConstant;
 import com.rfid.platform.config.RfidPlatformProperties;
 import com.rfid.platform.entity.AccountBean;
@@ -12,6 +11,8 @@ import com.rfid.platform.persistence.ResetPasswordReqDTO;
 import com.rfid.platform.persistence.LoginReqDTO;
 import com.rfid.platform.persistence.LoginRetDTO;
 import com.rfid.platform.persistence.MenuDTO;
+import com.rfid.platform.persistence.RfidApiRequestDTO;
+import com.rfid.platform.persistence.RfidApiResponseDTO;
 import com.rfid.platform.persistence.RoleDTO;
 import com.rfid.platform.service.AccountService;
 import com.rfid.platform.service.DepartmentService;
@@ -96,8 +97,8 @@ public class LoginController {
     
     @Operation(summary = "获取验证码", description = "生成图形验证码，用于登录时的安全验证")
     @PostMapping(value = "/captcha")
-    public BaseResult<CaptchaDTO> captcha() {
-        BaseResult<CaptchaDTO> response = new BaseResult<>();
+    public RfidApiResponseDTO<CaptchaDTO> captcha() {
+        RfidApiResponseDTO<CaptchaDTO> response = RfidApiResponseDTO.success();
         SpecCaptcha specCaptcha = new SpecCaptcha(130, 48, rfidPlatformProperties.getCaptchaBit());
         String captcha = specCaptcha.text().toLowerCase();
         String key = UUID.randomUUID().toString();
@@ -116,17 +117,22 @@ public class LoginController {
 
     @Operation(summary = "用户登录", description = "验证用户账号密码，登录成功后返回访问令牌和用户基本信息")
     @PostMapping(value = "/login")
-    public BaseResult<LoginRetDTO> login(
+    public RfidApiResponseDTO<LoginRetDTO> login(
             @Parameter(description = "登录请求参数", required = true)
-            @RequestBody LoginReqDTO loginReqDTO) {
-        BaseResult<LoginRetDTO> response = new BaseResult<>(); 
+            @RequestBody RfidApiRequestDTO<LoginReqDTO> requestDTO) {
+        RfidApiResponseDTO<LoginRetDTO> response = RfidApiResponseDTO.success();
         String clientIp = RequestUtil.getClientIpAddress();
-        
-        try {
+        if (Objects.isNull(requestDTO) || Objects.isNull(requestDTO.getData())) {
+            response.setStatus(false);
+            response.setMessage("登录数据不能为空");
+            return response;
+        }
 
+        try {
+            LoginReqDTO loginReqDTO = requestDTO.getData();
             // 验证参数
             if (StringUtils.isBlank(loginReqDTO.getCaptchaCode())) {
-                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setStatus(false);
                 response.setMessage("验证码不能为空");
                 return response;
             }
@@ -135,13 +141,13 @@ public class LoginController {
             String captchaKey = PlatformConstant.CACHE_KEY.CAPTCHA_KEY + loginReqDTO.getCaptchaKey();
             String cachedCaptcha = (String) redisTemplate.opsForValue().get(captchaKey);
             if (StringUtils.isBlank(cachedCaptcha)) {
-                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setStatus(false);
                 response.setMessage("验证码已失效");
                 return response;
             }
 
             if (!loginReqDTO.getCaptchaCode().equalsIgnoreCase(cachedCaptcha)) {
-                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setStatus(false);
                 response.setMessage("验证码不匹配");
                 return response;
             }
@@ -151,13 +157,13 @@ public class LoginController {
 
             // 验证参数
             if (StringUtils.isBlank(loginReqDTO.getAccount())) {
-                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setStatus(false);
                 response.setMessage("账号不能为空");
                 return response;
             }
 
             if (StringUtils.isBlank(loginReqDTO.getPassword())) {
-                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setStatus(false);
                 response.setMessage("密码不能为空");
                 return response;
             }
@@ -167,7 +173,7 @@ public class LoginController {
             String lockKey = PlatformConstant.CACHE_KEY.ACCOUNT_LOCK + loginReqDTO.getAccount();
             Object lockTime = redisTemplate.opsForValue().get(lockKey);
             if (lockTime != null) {
-                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setStatus(false);
                 response.setMessage("账号已被锁定，请30分钟后再试");
                 // 异步记录登录日志
                 loginLogService.recordLoginLogAsync(null, loginReqDTO.getAccount(), clientIp,
@@ -181,7 +187,7 @@ public class LoginController {
             List<AccountBean> accounts = accountService.listAccount(queryWrapper);
             
             if (CollectionUtils.isEmpty(accounts)) {
-                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setStatus(false);
                 response.setMessage("用户不存在");
                 // 异步记录登录日志
                 loginLogService.recordLoginLogAsync(null, loginReqDTO.getAccount(), clientIp,
@@ -190,7 +196,7 @@ public class LoginController {
             }
             AccountBean account = accounts.get(0);
             if (account.getState() != null && account.getState() == 0) {
-                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setStatus(false);
                 response.setMessage("用户已被禁用");
                 // 异步记录登录日志
                 loginLogService.recordLoginLogAsync(account.getId(), loginReqDTO.getAccount(), clientIp,
@@ -211,14 +217,14 @@ public class LoginController {
                         PlatformConstant.LOGIN_CONFIG.LOCK_DURATION_MINUTES, TimeUnit.MINUTES);
                     redisTemplate.delete(failCountKey); // 清除失败次数
                     
-                    response.setCode(PlatformConstant.RET_CODE.FAILED);
+                    response.setStatus(false);
                     response.setMessage("密码错误次数过多，账号已被锁定30分钟");
                     // 异步记录登录日志
                     loginLogService.recordLoginLogAsync(account.getId(), loginReqDTO.getAccount(), clientIp,
                         PlatformConstant.LOGIN_STATUS.LOCKED, "密码错误次数过多，账号被锁定", null);
                 } else {
                     redisTemplate.opsForValue().set(failCountKey, failCount, 30, TimeUnit.MINUTES);
-                    response.setCode(PlatformConstant.RET_CODE.FAILED);
+                    response.setStatus(false);
                     response.setMessage("密码错误，还可尝试" + (PlatformConstant.LOGIN_CONFIG.MAX_LOGIN_FAIL_COUNT - failCount) + "次");
                     // 异步记录登录日志
                     loginLogService.recordLoginLogAsync(account.getId(), loginReqDTO.getAccount(), clientIp,
@@ -270,16 +276,16 @@ public class LoginController {
             response.setMessage("登录成功");
             
         } catch (AuthenticationException e) {
-            response.setCode(PlatformConstant.RET_CODE.FAILED);
+            response.setStatus(false);
             response.setMessage("认证失败: " + e.getMessage());
             // 异步记录登录日志
-            loginLogService.recordLoginLogAsync(null, loginReqDTO.getAccount(), clientIp,
+            loginLogService.recordLoginLogAsync(null, requestDTO.getData().getAccount(), clientIp,
                 PlatformConstant.LOGIN_STATUS.FAILED, "认证失败: " + e.getMessage(), null);
         } catch (Exception e) {
-            response.setCode(PlatformConstant.RET_CODE.FAILED);
+            response.setStatus(false);
             response.setMessage("登录失败: " + e.getMessage());
             // 异步记录登录日志
-            loginLogService.recordLoginLogAsync(null, loginReqDTO.getAccount(), clientIp,
+            loginLogService.recordLoginLogAsync(null, requestDTO.getData().getAccount(), clientIp,
                 PlatformConstant.LOGIN_STATUS.FAILED, "登录失败: " + e.getMessage(), null);
         }
         
@@ -290,32 +296,38 @@ public class LoginController {
      * 忘记密码 - 发送重置密码邮件
      * 用户忘记密码时，通过邮箱发送重置密码链接
      * 
-     * @param forgotPasswordReqDTO 忘记密码请求参数
+     * @param requestDTO 忘记密码请求参数
      * @return 重置密码token
      */
     @Operation(summary = "忘记密码", description = "用户忘记密码时，验证身份后生成重置密码token")
     @PostMapping(value = "/forgotPassword")
-    public BaseResult<String> forgotPassword(
+    public RfidApiResponseDTO<String> forgotPassword(
             @Parameter(description = "忘记密码请求参数", required = true)
-            @RequestBody ForgotPasswordReqDTO forgotPasswordReqDTO) {
-        BaseResult<String> response = new BaseResult<>();
-        
+            @RequestBody RfidApiRequestDTO<ForgotPasswordReqDTO> requestDTO) {
+        RfidApiResponseDTO<String> response = RfidApiResponseDTO.success();
+        if (Objects.isNull(requestDTO) || Objects.isNull(requestDTO.getData())) {
+            response.setStatus(false);
+            response.setMessage("请求数据不能为空");
+            return response;
+        }
+
         try {
+            ForgotPasswordReqDTO forgotPasswordReqDTO = requestDTO.getData();
             // 验证参数
             if (StringUtils.isBlank(forgotPasswordReqDTO.getAccount())) {
-                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setStatus(false);
                 response.setMessage("账号不能为空");
                 return response;
             }
             
             if (StringUtils.isBlank(forgotPasswordReqDTO.getCaptchaCode())) {
-                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setStatus(false);
                 response.setMessage("验证码不能为空");
                 return response;
             }
             
             if (StringUtils.isBlank(forgotPasswordReqDTO.getCaptchaKey())) {
-                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setStatus(false);
                 response.setMessage("验证码key不能为空");
                 return response;
             }
@@ -325,13 +337,13 @@ public class LoginController {
             String cachedCaptcha = (String) redisTemplate.opsForValue().get(captchaKey);
             
             if (StringUtils.isBlank(cachedCaptcha)) {
-                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setStatus(false);
                 response.setMessage("验证码已过期");
                 return response;
             }
 
             if (!cachedCaptcha.equalsIgnoreCase(forgotPasswordReqDTO.getCaptchaCode())) {
-                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setStatus(false);
                 response.setMessage("验证码错误");
                 return response;
             }
@@ -347,14 +359,14 @@ public class LoginController {
             List<AccountBean> accounts = accountService.listAccount(queryWrapper);
             
             if (CollectionUtils.isEmpty(accounts)) {
-                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setStatus(false);
                 response.setMessage("用户不存在");
                 return response;
             }
             
             AccountBean account = accounts.get(0);
             if (account.getState() != null && account.getState() == 0) {
-                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setStatus(false);
                 response.setMessage("用户已被禁用");
                 return response;
             }
@@ -370,7 +382,7 @@ public class LoginController {
             response.setData(resetToken);
             
         } catch (Exception e) {
-            response.setCode(PlatformConstant.RET_CODE.FAILED);
+            response.setStatus(false);
             response.setMessage("操作失败: " + e.getMessage());
         }
         
@@ -381,45 +393,50 @@ public class LoginController {
      * 忘记密码重置密码
      * 通过重置token重新设置用户密码
      * 
-     * @param resetPasswordReqDTO 重置密码请求参数
+     * @param requestDTO 重置密码请求参数
      * @return 重置结果
      */
     @Operation(summary = "重置密码", description = "通过重置token重新设置用户密码")
     @PostMapping(value = "/forgetResetPassword")
-    public BaseResult<Boolean> resetPassword(
+    public RfidApiResponseDTO<Boolean> resetPassword(
             @Parameter(description = "重置密码请求参数", required = true)
-            @RequestBody ResetPasswordReqDTO resetPasswordReqDTO) {
-        BaseResult<Boolean> response = new BaseResult<>();
-        
+            @RequestBody RfidApiRequestDTO<ResetPasswordReqDTO> requestDTO) {
+        RfidApiResponseDTO<Boolean> response = RfidApiResponseDTO.success();
+        if (Objects.isNull(requestDTO) || Objects.isNull(requestDTO.getData())) {
+            response.setStatus(false);
+            response.setMessage("请求数据不能为空");
+            return response;
+        }
         try {
+            ResetPasswordReqDTO resetPasswordReqDTO = requestDTO.getData();
             // 验证参数
             if (StringUtils.isBlank(resetPasswordReqDTO.getResetToken())) {
-                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setStatus(false);
                 response.setMessage("重置token不能为空");
                 return response;
             }
             
             if (StringUtils.isBlank(resetPasswordReqDTO.getNewPassword())) {
-                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setStatus(false);
                 response.setMessage("新密码不能为空");
                 return response;
             }
             
             if (StringUtils.isBlank(resetPasswordReqDTO.getConfirmPassword())) {
-                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setStatus(false);
                 response.setMessage("确认密码不能为空");
                 return response;
             }
             
             if (!resetPasswordReqDTO.getNewPassword().equals(resetPasswordReqDTO.getConfirmPassword())) {
-                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setStatus(false);
                 response.setMessage("两次输入的密码不一致");
                 return response;
             }
             
             // 验证密码强度（可选）
             if (resetPasswordReqDTO.getNewPassword().length() < 6) {
-                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setStatus(false);
                 response.setMessage("密码长度不能少于6位");
                 return response;
             }
@@ -429,7 +446,7 @@ public class LoginController {
             Object accountIdObj = redisTemplate.opsForValue().get(resetTokenKey);
             
             if (accountIdObj == null) {
-                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setStatus(false);
                 response.setMessage("重置token已过期或无效");
                 return response;
             }
@@ -439,13 +456,13 @@ public class LoginController {
             // 获取用户信息
             AccountBean account = accountService.getAccountByPk(accountId);
             if (account == null) {
-                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setStatus(false);
                 response.setMessage("用户不存在");
                 return response;
             }
             
             if (account.getState() != null && account.getState() == 0) {
-                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setStatus(false);
                 response.setMessage("用户已被禁用");
                 return response;
             }
@@ -458,7 +475,7 @@ public class LoginController {
             boolean updateResult = accountService.updateAccountByPk(account, null, null);
             
             if (!updateResult) {
-                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setStatus(false);
                 response.setMessage("密码重置失败");
                 return response;
             }
@@ -470,7 +487,7 @@ public class LoginController {
             response.setData(true);
             
         } catch (Exception e) {
-            response.setCode(PlatformConstant.RET_CODE.FAILED);
+            response.setStatus(false);
             response.setMessage("操作失败: " + e.getMessage());
         }
         
@@ -481,51 +498,56 @@ public class LoginController {
      * 已登录状态下修改密码
      * 用户在已登录状态下修改自己的密码
      * 
-     * @param changePasswordReqDTO 修改密码请求参数
+     * @param requestDTO 修改密码请求参数
      * @return 修改结果
      */
     @Operation(summary = "修改密码", description = "用户在已登录状态下修改自己的密码")
     @PostMapping(value = "/changePassword")
-    public BaseResult<String> changePassword(
+    public RfidApiResponseDTO<String> changePassword(
             @Parameter(description = "修改密码请求参数", required = true)
-            @RequestBody ChangePasswordReqDTO changePasswordReqDTO) {
-        BaseResult<String> response = new BaseResult<>();
-        
+            @RequestBody RfidApiRequestDTO<ChangePasswordReqDTO> requestDTO) {
+        RfidApiResponseDTO<String> response = RfidApiResponseDTO.success();
+        if (Objects.isNull(requestDTO) || Objects.isNull(requestDTO.getData())) {
+            response.setStatus(false);
+            response.setMessage("请求数据不能为空");
+            return response;
+        }
         try {
+            ChangePasswordReqDTO changePasswordReqDTO = requestDTO.getData();
             // 验证参数
             if (StringUtils.isBlank(changePasswordReqDTO.getOldPassword())) {
-                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setStatus(false);
                 response.setMessage("原密码不能为空");
                 return response;
             }
             
             if (StringUtils.isBlank(changePasswordReqDTO.getNewPassword())) {
-                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setStatus(false);
                 response.setMessage("新密码不能为空");
                 return response;
             }
             
             if (StringUtils.isBlank(changePasswordReqDTO.getConfirmPassword())) {
-                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setStatus(false);
                 response.setMessage("确认密码不能为空");
                 return response;
             }
             
             if (!changePasswordReqDTO.getNewPassword().equals(changePasswordReqDTO.getConfirmPassword())) {
-                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setStatus(false);
                 response.setMessage("两次输入的新密码不一致");
                 return response;
             }
             
             if (changePasswordReqDTO.getOldPassword().equals(changePasswordReqDTO.getNewPassword())) {
-                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setStatus(false);
                 response.setMessage("新密码不能与原密码相同");
                 return response;
             }
             
             // 验证新密码强度
             if (changePasswordReqDTO.getNewPassword().length() < 6) {
-                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setStatus(false);
                 response.setMessage("新密码长度不能少于6位");
                 return response;
             }
@@ -533,7 +555,7 @@ public class LoginController {
             // 通过工具类获取token
             String accessToken = RequestUtil.getTokenFromHeader();
             if (StringUtils.isBlank(accessToken)) {
-                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setStatus(false);
                 response.setMessage("未登录或登录已过期");
                 return response;
             }
@@ -543,7 +565,7 @@ public class LoginController {
             try {
                 accountId = jwtUtil.getUserIdFromToken(accessToken);
             } catch (Exception e) {
-                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setStatus(false);
                 response.setMessage("token解析失败，请重新登录");
                 return response;
             }
@@ -551,20 +573,20 @@ public class LoginController {
             // 获取用户信息
             AccountBean account = accountService.getAccountByPk(accountId);
             if (account == null) {
-                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setStatus(false);
                 response.setMessage("用户不存在");
                 return response;
             }
             
             if (account.getState() != null && account.getState() == 0) {
-                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setStatus(false);
                 response.setMessage("用户已被禁用");
                 return response;
             }
             
             // 验证原密码
             if (!passwordEncoder.matches(changePasswordReqDTO.getOldPassword(), account.getPassword())) {
-                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setStatus(false);
                 response.setMessage("原密码错误");
                 return response;
             }
@@ -577,7 +599,7 @@ public class LoginController {
             boolean updateResult = accountService.updateAccountByPk(account, null, null);
             
             if (!updateResult) {
-                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setStatus(false);
                 response.setMessage("密码修改失败");
                 return response;
             }
@@ -586,7 +608,7 @@ public class LoginController {
             response.setData("密码修改成功");
             
         } catch (Exception e) {
-            response.setCode(PlatformConstant.RET_CODE.FAILED);
+            response.setStatus(false);
             response.setMessage("操作失败: " + e.getMessage());
         }
         
@@ -599,8 +621,8 @@ public class LoginController {
      */
     @Operation(summary = "用户登出", description = "用户登出")
     @PostMapping(value = "/logout")
-    public BaseResult<Boolean> logout() {
-        BaseResult<Boolean> response = new BaseResult<>();
+    public RfidApiResponseDTO<Boolean> logout() {
+        RfidApiResponseDTO<Boolean> response = RfidApiResponseDTO.success();
     
         try {
             // 通过工具类获取token
@@ -609,13 +631,13 @@ public class LoginController {
             // 验证token格式
             try {
                 if (!jwtUtil.validateToken(accessToken)) {
-                    response.setCode(PlatformConstant.RET_CODE.FAILED);
+                    response.setStatus(false);
                     response.setMessage("token无效");
                     response.setData(false);
                     return response;
                 }
             } catch (Exception e) {
-                response.setCode(PlatformConstant.RET_CODE.FAILED);
+                response.setStatus(false);
                 response.setMessage("token解析失败");
                 response.setData(false);
                 return response;
@@ -632,7 +654,7 @@ public class LoginController {
             response.setData(true);
     
         } catch (Exception e) {
-            response.setCode(PlatformConstant.RET_CODE.FAILED);
+            response.setStatus(false);
             response.setMessage("退出登录失败: " + e.getMessage());
             response.setData(false);
         }

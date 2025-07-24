@@ -22,11 +22,6 @@ public class TagStorageBoxServiceImpl extends ServiceImpl<TagStorageBoxMapper, T
 
 
     @Override
-    public boolean updateTagStorageBox(TagStorageBoxBean tagStorageBoxBean) {
-        return super.updateById(tagStorageBoxBean);
-    }
-
-    @Override
     public boolean addTagStorageBoxes(List<TagStorageBoxBean> tagStorageBoxBeans) {
         return super.saveBatch(tagStorageBoxBeans);
     }

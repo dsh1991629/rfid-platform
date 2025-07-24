@@ -5,9 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.rfid.platform.common.BaseResult;
 import com.rfid.platform.common.PageResult;
-import com.rfid.platform.common.PlatformConstant;
 import com.rfid.platform.entity.AccountBean;
 import com.rfid.platform.entity.AccountDepartmentRelBean;
 import com.rfid.platform.persistence.AccountCreateDTO;
@@ -18,6 +16,8 @@ import com.rfid.platform.persistence.AccountPageQueryDTO;
 import com.rfid.platform.persistence.AccountUpdateDTO;
 import com.rfid.platform.persistence.DepartmentDTO;
 import com.rfid.platform.persistence.MenuDTO;
+import com.rfid.platform.persistence.RfidApiRequestDTO;
+import com.rfid.platform.persistence.RfidApiResponseDTO;
 import com.rfid.platform.persistence.RoleDTO;
 import com.rfid.platform.service.AccountDepartRelService;
 import com.rfid.platform.service.AccountService;
@@ -72,7 +72,7 @@ public class AccountController {
      * 创建新账户
      * 根据提供的账户信息创建新的用户账户，包括账户编码、名称、部门和角色等信息
      * 
-     * @param accountCreateDTO 账户创建数据传输对象，包含创建账户所需的所有信息
+     * @param requestDTO 账户创建数据传输对象，包含创建账户所需的所有信息
      * @return 返回创建结果，成功时包含新创建账户的ID
      */
     @Operation(
@@ -80,20 +80,27 @@ public class AccountController {
         description = "创建新的用户账户，需要提供账户编码、名称、部门和角色等基本信息。账户编码不能重复。"
     )
     @PostMapping(value = "/create")
-    public BaseResult<Long> addAccount(
-        @Parameter(description = "账户创建信息", required = true)
-        @RequestBody AccountCreateDTO accountCreateDTO) {
-        BaseResult<Long> result = new BaseResult<>();
+    public RfidApiResponseDTO<Long> addAccount(
+            @Parameter(description = "账户创建信息", required = true)
+        @RequestBody RfidApiRequestDTO<AccountCreateDTO> requestDTO) {
+        RfidApiResponseDTO<Long> result = RfidApiResponseDTO.success();
         try {
+            if (Objects.isNull(requestDTO) || Objects.isNull(requestDTO.getData())) {
+                result.setStatus(false);
+                result.setMessage("账户数据不能为空");
+                return result;
+            }
+
+            AccountCreateDTO accountCreateDTO = requestDTO.getData();
             // 参数校验
             if (StringUtils.isBlank(accountCreateDTO.getCode())) {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("账户编码不能为空");
                 return result;
             }
 
             if (StringUtils.isBlank(accountCreateDTO.getName())) {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("账户名称不能为空");
                 return result;
             }
@@ -104,7 +111,7 @@ public class AccountController {
             Boolean existingAccounts = accountService.existAccount(nameCheckWrapper);
 
             if (existingAccounts) {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("账户已存在，不能重复");
                 return result;
             }
@@ -115,11 +122,11 @@ public class AccountController {
                 result.setData(accountBean.getId());
                 result.setMessage("账户创建成功");
             } else {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("账户创建失败");
             }
         } catch (Exception e) {
-            result.setCode(PlatformConstant.RET_CODE.FAILED);
+            result.setStatus(false);
             result.setMessage("账户创建异常: " + e.getMessage());
         }
         return result;
@@ -129,7 +136,7 @@ public class AccountController {
      * 删除账户
      * 根据账户ID删除指定的用户账户
      * 
-     * @param accountDeleteDTO 账户删除数据传输对象，包含要删除的账户ID
+     * @param requestDTO 账户删除数据传输对象，包含要删除的账户ID
      * @return 返回删除操作的结果
      */
     @Operation(
@@ -137,13 +144,20 @@ public class AccountController {
         description = "根据账户ID删除指定的用户账户，删除操作不可逆，请谨慎操作。"
     )
     @PostMapping(value = "/delete")
-    public BaseResult<Boolean> deleteAccount(
+    public RfidApiResponseDTO<Boolean> deleteAccount(
         @Parameter(description = "账户删除信息", required = true)
-        @RequestBody AccountDeleteDTO accountDeleteDTO) {
-        BaseResult<Boolean> result = new BaseResult<>();
+        @RequestBody RfidApiRequestDTO<AccountDeleteDTO> requestDTO) {
+        RfidApiResponseDTO<Boolean> result = RfidApiResponseDTO.success();
         try {
+            if (Objects.isNull(requestDTO) || Objects.isNull(requestDTO.getData())) {
+                result.setStatus(false);
+                result.setMessage("账户数据不能为空");
+                return result;
+            }
+
+            AccountDeleteDTO accountDeleteDTO = requestDTO.getData();
             if (accountDeleteDTO.getId() == null) {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("账户ID不能为空");
                 result.setData(false);
                 return result;
@@ -153,11 +167,11 @@ public class AccountController {
             if (success) {
                 result.setMessage("账户删除成功");
             } else {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("账户删除失败");
             }
         } catch (Exception e) {
-            result.setCode(PlatformConstant.RET_CODE.FAILED);
+            result.setStatus(false);
             result.setMessage("账户删除异常: " + e.getMessage());
             result.setData(false);
         }
@@ -168,7 +182,7 @@ public class AccountController {
      * 更新账户信息
      * 根据账户ID更新账户的基本信息，包括名称、部门、角色等
      * 
-     * @param accountUpdateDTO 账户更新数据传输对象，包含要更新的账户信息
+     * @param requestDTO 账户更新数据传输对象，包含要更新的账户信息
      * @return 返回更新操作的结果
      */
     @Operation(
@@ -176,13 +190,20 @@ public class AccountController {
         description = "根据账户ID更新账户的基本信息，包括账户名称、部门、角色等信息。账户编码不能与其他账户重复。"
     )
     @PostMapping(value = "/update")
-    public BaseResult<Boolean> updateAccount(
+    public RfidApiResponseDTO<Boolean> updateAccount(
         @Parameter(description = "账户更新信息", required = true)
-        @RequestBody AccountUpdateDTO accountUpdateDTO) {
-        BaseResult<Boolean> result = new BaseResult<>();
+        @RequestBody RfidApiRequestDTO<AccountUpdateDTO> requestDTO) {
+        RfidApiResponseDTO<Boolean> result = RfidApiResponseDTO.success();
         try {
+            if (Objects.isNull(requestDTO) || Objects.isNull(requestDTO.getData())) {
+                result.setStatus(false);
+                result.setMessage("账户数据不能为空");
+                return result;
+            }
+
+            AccountUpdateDTO accountUpdateDTO = requestDTO.getData();
             if (accountUpdateDTO.getId() == null) {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("账户ID不能为空");
                 result.setData(false);
                 return result;
@@ -194,7 +215,7 @@ public class AccountController {
             Boolean existAccount = accountService.existAccount(nameCheckWrapper);
 
             if (existAccount) {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("账户编码已存在，不能重复");
                 return result;
             }
@@ -205,11 +226,11 @@ public class AccountController {
             if (success) {
                 result.setMessage("账户更新成功");
             } else {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("账户更新失败");
             }
         } catch (Exception e) {
-            result.setCode(PlatformConstant.RET_CODE.FAILED);
+            result.setStatus(false);
             result.setMessage("账户更新异常: " + e.getMessage());
             result.setData(false);
         }
@@ -220,7 +241,7 @@ public class AccountController {
      * 分页查询账户列表
      * 根据查询条件分页获取账户列表，支持按账户编码、名称、部门、角色等条件进行筛选
      * 
-     * @param accountPageQueryDTO 账户分页查询条件
+     * @param requestDTO 账户分页查询条件
      * @param pageNum 页码，默认为1
      * @param pageSize 每页大小，默认为10
      * @return 返回分页查询结果，包含账户列表和分页信息
@@ -230,34 +251,37 @@ public class AccountController {
         description = "根据查询条件分页获取账户列表，支持按账户编码、名称、部门、角色等条件进行筛选查询。"
     )
     @PostMapping(value = "/page")
-    public BaseResult<PageResult<AccountDTO>> accountPage(
+    public RfidApiResponseDTO<PageResult<AccountDTO>> accountPage(
         @Parameter(description = "账户分页查询条件", required = true)
-        @RequestBody AccountPageQueryDTO accountPageQueryDTO,
+        @RequestBody RfidApiRequestDTO<AccountPageQueryDTO> requestDTO,
         @Parameter(description = "页码，从1开始", example = "1")
         @RequestParam(defaultValue = "1") Integer pageNum,
         @Parameter(description = "每页大小", example = "10")
         @RequestParam(defaultValue = "10") Integer pageSize) {
-        BaseResult<PageResult<AccountDTO>> result = new BaseResult<>();
+        RfidApiResponseDTO<PageResult<AccountDTO>> result = RfidApiResponseDTO.success();
         try {
             Page<AccountBean> page = new Page<>(pageNum, pageSize);
             LambdaQueryWrapper<AccountBean> queryWrapper = new LambdaQueryWrapper<>();
 
-            // 构建查询条件
-            if (StringUtils.isNotBlank(accountPageQueryDTO.getCode())) {
-                queryWrapper.like(AccountBean::getCode, accountPageQueryDTO.getCode());
-            }
-            if (StringUtils.isNotBlank(accountPageQueryDTO.getName())) {
-                queryWrapper.like(AccountBean::getName, accountPageQueryDTO.getName());
-            }
-
             Long departmentId = null;
-            if (Objects.nonNull(accountPageQueryDTO.getDepartment()) && Objects.nonNull(accountPageQueryDTO.getDepartment().getId())) {
-                departmentId = accountPageQueryDTO.getDepartment().getId();
-            }
-
             Long roleId = null;
-            if (Objects.nonNull(accountPageQueryDTO.getRole()) && Objects.nonNull(accountPageQueryDTO.getRole().getId())) {
-                roleId = accountPageQueryDTO.getRole().getId();
+            if (Objects.nonNull(requestDTO.getData())) {
+                AccountPageQueryDTO accountPageQueryDTO = requestDTO.getData();
+                // 构建查询条件
+                if (StringUtils.isNotBlank(accountPageQueryDTO.getCode())) {
+                    queryWrapper.like(AccountBean::getCode, accountPageQueryDTO.getCode());
+                }
+                if (StringUtils.isNotBlank(accountPageQueryDTO.getName())) {
+                    queryWrapper.like(AccountBean::getName, accountPageQueryDTO.getName());
+                }
+
+                if (Objects.nonNull(accountPageQueryDTO.getDepartment()) && Objects.nonNull(accountPageQueryDTO.getDepartment().getId())) {
+                    departmentId = accountPageQueryDTO.getDepartment().getId();
+                }
+
+                if (Objects.nonNull(accountPageQueryDTO.getRole()) && Objects.nonNull(accountPageQueryDTO.getRole().getId())) {
+                    roleId = accountPageQueryDTO.getRole().getId();
+                }
             }
 
             IPage<AccountBean> pageResult = accountService.pageAccount(page, queryWrapper, departmentId, roleId);
@@ -296,7 +320,7 @@ public class AccountController {
             result.setData(pageResultDTO);
             result.setMessage("查询成功");
         } catch (Exception e) {
-            result.setCode(PlatformConstant.RET_CODE.FAILED);
+            result.setStatus(false);
             result.setMessage("分页查询异常: " + e.getMessage());
         }
         return result;
@@ -306,7 +330,7 @@ public class AccountController {
      * 根据部门查询账户列表
      * 获取指定部门下的所有账户信息，包括账户的基本信息、角色和权限等
      * 
-     * @param accountDepartmentQueryDTO 部门账户查询条件，包含部门ID
+     * @param requestDTO 部门账户查询条件，包含部门ID
      * @return 返回指定部门下的账户列表
      */
     @Operation(
@@ -314,13 +338,21 @@ public class AccountController {
         description = "获取指定部门下的所有账户信息，包括账户的基本信息、所属角色和相关权限菜单。"
     )
     @PostMapping(value = "/list/department")
-    public BaseResult<List<AccountDTO>> accountByDepartment(
+    public RfidApiResponseDTO<List<AccountDTO>> accountByDepartment(
         @Parameter(description = "部门账户查询条件", required = true)
-        @RequestBody AccountDepartmentQueryDTO accountDepartmentQueryDTO) {
-        BaseResult<List<AccountDTO>> result = new BaseResult<>();
+        @RequestBody RfidApiRequestDTO<AccountDepartmentQueryDTO> requestDTO) {
+        RfidApiResponseDTO<List<AccountDTO>> result = RfidApiResponseDTO.success();
+
+        if (Objects.isNull(requestDTO) || Objects.isNull(requestDTO.getData())) {
+            result.setStatus(false);
+            result.setMessage("账户数据不能为空");
+            return result;
+        }
+
+        AccountDepartmentQueryDTO accountDepartmentQueryDTO = requestDTO.getData();
         try {
             if (accountDepartmentQueryDTO.getDepartment() == null || accountDepartmentQueryDTO.getDepartment().getId() == null) {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("部门ID不能为空");
                 return result;
             }
@@ -362,7 +394,7 @@ public class AccountController {
             result.setMessage("查询成功");
             return result;
         } catch (Exception e) {
-            result.setCode(PlatformConstant.RET_CODE.FAILED);
+            result.setStatus(false);
             result.setMessage("查询异常: " + e.getMessage());
         }
         return result;

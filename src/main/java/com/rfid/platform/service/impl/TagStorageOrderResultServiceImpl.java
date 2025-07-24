@@ -26,24 +26,6 @@ public class TagStorageOrderResultServiceImpl extends ServiceImpl<TagStorageOrde
         return super.saveBatch(resultBeans, 50);
     }
 
-    @Override
-    public Integer countCompletedBoxByOrderNo(String orderNo) {
-        LambdaQueryWrapper<TagStorageOrderResultBean> queryWrapper = Wrappers.lambdaQuery();
-        queryWrapper.eq(TagStorageOrderResultBean::getOrderNoRms, orderNo)
-                   .select(TagStorageOrderResultBean::getBoxCode)
-                   .groupBy(TagStorageOrderResultBean::getBoxCode);
-        
-        List<TagStorageOrderResultBean> distinctBoxCodes = super.list(queryWrapper);
-        return distinctBoxCodes.size();
-    }
-
-    @Override
-    public Integer countCompletedRfidByOrderNo(String orderNo) {
-        LambdaQueryWrapper<TagStorageOrderResultBean> queryWrapper = Wrappers.lambdaQuery();
-        queryWrapper.eq(TagStorageOrderResultBean::getOrderNoRms, orderNo);
-        return Math.toIntExact(super.count(queryWrapper));
-    }
-
 
     @Override
     public List<TagStorageOrderResultBean> listTagStorageOrderResults(String orderNoRms) {

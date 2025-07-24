@@ -2,18 +2,19 @@ package com.rfid.platform.controller;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.rfid.platform.common.BaseResult;
-import com.rfid.platform.common.PlatformConstant;
 import com.rfid.platform.entity.DepartmentBean;
 import com.rfid.platform.persistence.DepartmentCreateDTO;
 import com.rfid.platform.persistence.DepartmentDeleteDTO;
 import com.rfid.platform.persistence.DepartmentTreeDTO;
 import com.rfid.platform.persistence.DepartmentUpdateDTO;
+import com.rfid.platform.persistence.RfidApiRequestDTO;
+import com.rfid.platform.persistence.RfidApiResponseDTO;
 import com.rfid.platform.service.AccountService;
 import com.rfid.platform.service.DepartmentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.Objects;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -41,19 +42,26 @@ public class DepartmentController {
 
     /**
      * 创建部门
-     * @param departmentCreateDTO 部门创建请求参数
+     * @param requestDTO 部门创建请求参数
      * @return 创建结果，包含新创建部门的ID
      */
     @Operation(summary = "创建部门", description = "创建新的部门，部门名称不能重复")
     @PostMapping(value = "/create")
-    public BaseResult<Long> createDepartment(
+    public RfidApiResponseDTO<Long> createDepartment(
             @Parameter(description = "部门创建参数", required = true)
-            @RequestBody DepartmentCreateDTO departmentCreateDTO) {
-        BaseResult<Long> result = new BaseResult<>();
+            @RequestBody RfidApiRequestDTO<DepartmentCreateDTO> requestDTO) {
+        RfidApiResponseDTO<Long> result = RfidApiResponseDTO.success();
         try {
+            if (Objects.isNull(requestDTO) || Objects.isNull(requestDTO.getData())) {
+                result.setStatus(false);
+                result.setMessage("部门数据不能为空");
+                return result;
+            }
+
+            DepartmentCreateDTO departmentCreateDTO = requestDTO.getData();
             // 参数校验
             if (StringUtils.isBlank(departmentCreateDTO.getName())) {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("部门名称不能为空");
                 return result;
             }
@@ -64,7 +72,7 @@ public class DepartmentController {
             Boolean existingDepartments = departmentService.existDepartment(nameCheckWrapper);
 
             if (existingDepartments) {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("部门名称已存在，不能重复");
                 return result;
             }
@@ -78,11 +86,11 @@ public class DepartmentController {
                 result.setData(departmentBean.getId());
                 result.setMessage("创建成功");
             } else {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("创建失败");
             }
         } catch (Exception e) {
-            result.setCode(PlatformConstant.RET_CODE.FAILED);
+            result.setStatus(false);
             result.setMessage("系统异常：" + e.getMessage());
         }
         return result;
@@ -90,19 +98,26 @@ public class DepartmentController {
 
     /**
      * 删除部门
-     * @param departmentDeleteDTO 部门删除请求参数
+     * @param requestDTO 部门删除请求参数
      * @return 删除结果，会级联删除所有子部门
      */
     @Operation(summary = "删除部门", description = "删除指定部门，会级联删除所有子部门")
     @PostMapping(value = "/delete")
-    public BaseResult<Boolean> deleteDepartment(
+    public RfidApiResponseDTO<Boolean> deleteDepartment(
             @Parameter(description = "部门删除参数", required = true)
-            @RequestBody DepartmentDeleteDTO departmentDeleteDTO) {
-        BaseResult<Boolean> result = new BaseResult<>();
+            @RequestBody RfidApiRequestDTO<DepartmentDeleteDTO> requestDTO) {
+        RfidApiResponseDTO<Boolean> result = RfidApiResponseDTO.success();
         try {
+            if (Objects.isNull(requestDTO) || Objects.isNull(requestDTO.getData())) {
+                result.setStatus(false);
+                result.setMessage("部门数据不能为空");
+                return result;
+            }
+
+            DepartmentDeleteDTO departmentDeleteDTO = requestDTO.getData();
             // 参数校验
             if (departmentDeleteDTO.getId() == null) {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("部门ID不能为空");
                 return result;
             }
@@ -110,7 +125,7 @@ public class DepartmentController {
             // 检查部门是否存在
             DepartmentBean existingDepartment = departmentService.getDepartmentByPk(departmentDeleteDTO.getId());
             if (existingDepartment == null) {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("部门不存在");
                 return result;
             }
@@ -121,11 +136,11 @@ public class DepartmentController {
             if (success) {
                 result.setMessage("删除成功（包含所有子部门）");
             } else {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("删除失败");
             }
         } catch (Exception e) {
-            result.setCode(PlatformConstant.RET_CODE.FAILED);
+            result.setStatus(false);
             result.setMessage("系统异常：" + e.getMessage());
         }
         return result;
@@ -133,19 +148,26 @@ public class DepartmentController {
 
     /**
      * 更新部门信息
-     * @param departmentUpdateDTO 部门更新请求参数
+     * @param requestDTO 部门更新请求参数
      * @return 更新结果
      */
     @Operation(summary = "更新部门", description = "更新部门信息，部门名称不能与其他部门重复")
     @PostMapping(value = "/update")
-    public BaseResult<Boolean> updateDepartment(
+    public RfidApiResponseDTO<Boolean> updateDepartment(
             @Parameter(description = "部门更新参数", required = true)
-            @RequestBody DepartmentUpdateDTO departmentUpdateDTO) {
-        BaseResult<Boolean> result = new BaseResult<>();
+            @RequestBody RfidApiRequestDTO<DepartmentUpdateDTO> requestDTO) {
+        RfidApiResponseDTO<Boolean> result = RfidApiResponseDTO.success();
         try {
+            if (Objects.isNull(requestDTO) || Objects.isNull(requestDTO.getData())) {
+                result.setStatus(false);
+                result.setMessage("部门数据不能为空");
+                return result;
+            }
+
+            DepartmentUpdateDTO departmentUpdateDTO = requestDTO.getData();
             // 参数校验
             if (departmentUpdateDTO.getId() == null) {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("部门ID不能为空");
                 return result;
             }
@@ -156,7 +178,7 @@ public class DepartmentController {
             Boolean existingDepartments = departmentService.existDepartment(nameCheckWrapper);
 
             if (existingDepartments) {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("部门名称已存在，不能重复");
                 return result;
             }
@@ -170,11 +192,11 @@ public class DepartmentController {
             if (success) {
                 result.setMessage("更新成功");
             } else {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("更新失败");
             }
         } catch (Exception e) {
-            result.setCode(PlatformConstant.RET_CODE.FAILED);
+            result.setStatus(false);
             result.setMessage("系统异常：" + e.getMessage());
             result.setData(false);
         }
@@ -187,8 +209,8 @@ public class DepartmentController {
      */
     @Operation(summary = "获取部门树", description = "获取所有部门的树形结构")
     @PostMapping(value = "/tree")
-    public BaseResult<DepartmentTreeDTO> departmentTree() {
-        BaseResult<DepartmentTreeDTO> result = new BaseResult<>();
+    public RfidApiResponseDTO<DepartmentTreeDTO> departmentTree() {
+        RfidApiResponseDTO<DepartmentTreeDTO> result = RfidApiResponseDTO.success();
         try {
             // 查询所有部门
             LambdaQueryWrapper<DepartmentBean> queryWrapper = new LambdaQueryWrapper<>();
@@ -200,15 +222,15 @@ public class DepartmentController {
             
             if (treeRoot != null) {
                 result.setData(treeRoot);
-                result.setCode(PlatformConstant.RET_CODE.SUCCESS);
+                result.setStatus(false);
                 result.setMessage("查询成功");
             } else {
-                result.setCode(PlatformConstant.RET_CODE.FAILED);
+                result.setStatus(false);
                 result.setMessage("未找到根部门");
             }
 
         } catch (Exception e) {
-            result.setCode(PlatformConstant.RET_CODE.FAILED);
+            result.setStatus(false);
             result.setMessage("系统异常：" + e.getMessage());
         }
         return result;

@@ -2,17 +2,15 @@ package com.rfid.platform.controller;
 
 import com.alibaba.excel.EasyExcel;
 import com.rfid.platform.annotation.InterfaceLog;
-import com.rfid.platform.common.BaseResult;
 import com.rfid.platform.common.ExecNoContext;
-import com.rfid.platform.common.PlatformConstant;
 import com.rfid.platform.entity.TagImportInfoBean;
 import com.rfid.platform.entity.TagInfoBean;
+import com.rfid.platform.persistence.RfidApiResponseDTO;
 import com.rfid.platform.persistence.TagImportExcelDTO;
 import com.rfid.platform.service.TagImportInfoService;
 import com.rfid.platform.service.TagInfoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
@@ -56,29 +54,21 @@ public class TagImportController {
     @InterfaceLog(type = 1, description = "标签导入")
     @Operation(
         summary = "批量导入RFID标签",
-        description = "通过上传Excel文件批量导入RFID标签信息，文件格式要求包含EPC码和SKU码列",
-        requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-            description = "包含标签信息的Excel文件",
-            required = true,
-            content = @Content(
-                mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
-                schema = @Schema(type = "string", format = "binary")
-            )
-        )
+        description = "通过上传Excel文件批量导入RFID标签信息，文件格式要求包含EPC码和SKU码列"
     )
-    public BaseResult<String> importTags(
+    public RfidApiResponseDTO<String> importTags(
         @Parameter(
             description = "Excel文件，包含EPC码和SKU码等标签信息",
             required = true,
             schema = @Schema(type = "string", format = "binary")
         )
         @RequestParam("file") MultipartFile file) {
-        
-        BaseResult<String> baseResult = new BaseResult<>();
+
+        RfidApiResponseDTO<String> baseResult = RfidApiResponseDTO.success();
         
         // 验证文件是否为空
         if (file.isEmpty()) {
-            baseResult.setCode(PlatformConstant.RET_CODE.FAILED);
+            baseResult.setStatus(false);
             baseResult.setMessage("文件为空");
             return baseResult;
         }
@@ -154,12 +144,12 @@ public class TagImportController {
             
         } catch (IOException e) {
             log.error("[{}] 文件读取失败: {}", execNo, e.getMessage());
-            baseResult.setCode(PlatformConstant.RET_CODE.FAILED);
+            baseResult.setStatus(false);
             baseResult.setMessage("文件读取失败：" + e.getMessage());
             return baseResult;
         } catch (Exception e) {
             log.error("[{}] 导入过程发生异常: {}", execNo, e.getMessage());
-            baseResult.setCode(PlatformConstant.RET_CODE.FAILED);
+            baseResult.setStatus(false);
             baseResult.setMessage("导入失败：" + e.getMessage());
             return baseResult;
         }
