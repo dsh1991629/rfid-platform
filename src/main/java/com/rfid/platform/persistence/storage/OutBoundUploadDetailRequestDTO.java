@@ -9,10 +9,13 @@ import lombok.Data;
 @Data
 public class OutBoundUploadDetailRequestDTO implements Serializable {
 
-    @Schema(description = "箱外码")
-    private String boxCode;
+    @Schema(description = "SKU码")
+    private String sku;
 
-    @Schema(description = "箱内商品明细")
-    private List<OutBoundUploadDetailItemRequestDTO> boxItems;
+    @Schema(description = "款式码")
+    private String productCode;
+
+    @Schema(description = "RFID码")
+    private List<String> rfids;
 
 }

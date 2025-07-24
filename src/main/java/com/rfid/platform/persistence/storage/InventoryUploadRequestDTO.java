@@ -15,15 +15,6 @@ public class InventoryUploadRequestDTO implements Serializable {
     @Schema(description = "仓库编号")
     private String wh;
 
-    @Schema(description = "操作员编号")
-    private String userNo;
-
-    @Schema(description = "件数")
-    private Integer quantity;
-
-    @Schema(description = "箱数")
-    private Integer boxCnt;
-
     @Schema(description = "盘点数据明细")
     private List<InventoryUploadDetailRequestDTO> boxDetails;
 

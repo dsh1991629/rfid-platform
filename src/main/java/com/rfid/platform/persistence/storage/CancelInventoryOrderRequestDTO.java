@@ -14,4 +14,8 @@ public class CancelInventoryOrderRequestDTO implements Serializable {
     @Schema(description = "RMS出库通知单号, RMS自建的盘点单")
     private String orderNoRMS;
 
+    @Schema(description = "仓库编码")
+    private String wh;
+
+
 }

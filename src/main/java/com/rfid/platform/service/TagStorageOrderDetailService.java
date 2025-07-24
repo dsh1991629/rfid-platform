@@ -19,7 +19,7 @@ public interface TagStorageOrderDetailService {
 
     boolean productCodeExistInOrderNo(String orderNo, String productCode);
 
-    String getSkuByOrderNoRmsAndProductCode(String orderNoRms, String productCode);
+    TagStorageOrderDetailBean getSkuByOrderNoRmsAndProductCode(String orderNoRms, String productCode);
 
     Integer getQuantityFromTagStorageOrderDetails(String orderNo, String productCode);
 

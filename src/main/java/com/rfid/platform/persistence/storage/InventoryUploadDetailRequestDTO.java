@@ -22,5 +22,8 @@ public class InventoryUploadDetailRequestDTO implements Serializable {
     @Schema(description = "RFID码")
     private List<String> rfids;
 
+    @Schema(description = "库位")
+    private String binLocation;
+
 
 }

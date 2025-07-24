@@ -15,6 +15,9 @@ public class InventoryOrderRequestDTO implements Serializable {
     @Schema(description = "ERP系统入库通知单号，如果是RMS自建盘点单没有值")
     private String orderNoERP;
 
+    @Schema(description = "仓库编码")
+    private String wh;
+
     @Schema(description = "盘点通知单数据详情")
     private List<InventoryOrderItemRequestDTO> items;
 

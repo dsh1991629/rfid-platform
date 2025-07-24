@@ -8,7 +8,7 @@ import lombok.Data;
 @Schema(description = "出库通知单详情数据传输对象")
 public class OutBoundOrderItemRequestDTO implements Serializable {
 
-    @Schema(description = "PRODUCT_CODE")
+    @Schema(description = "款式码")
     private String productCode;
 
     @Schema(description = "SKU")
@@ -16,5 +16,8 @@ public class OutBoundOrderItemRequestDTO implements Serializable {
 
     @Schema(description = "件数")
     private Integer qty;
+
+    @Schema(description = "货物当前库位")
+    private String binLocation;
 
 }

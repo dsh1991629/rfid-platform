@@ -68,7 +68,6 @@ public class Wms2RmsController {
     private TagStorageOrderService tagStorageOrderService;
 
 
-
     @Operation(summary = "WMS登录", description = "账号密码，登录成功后返回访问令牌")
     @PostMapping(value = "/wms-login")
     public RfidApiResponseDTO<WmsLoginRetDTO> login(
@@ -110,7 +109,6 @@ public class Wms2RmsController {
                         PlatformConstant.LOGIN_STATUS.LOCKED, "账号已被锁定", null);
                 return response;
             }
-
 
 
             // 查询用户信息
@@ -203,12 +201,11 @@ public class Wms2RmsController {
     }
 
 
-
     @Operation(summary = "发送入库通知单", description = "WMS发送入库通知单到RMS系统")
     @PostMapping(value = "/send-inboundorder")
     public RfidApiResponseDTO<InBoundOrderResponseDTO> sendInBoundOrder(
             @Parameter(description = "入库通知单请求数据", required = true)
-            @RequestBody RfidApiRequestDTO<InBoundOrderRequestDTO> requestDTO){
+            @RequestBody RfidApiRequestDTO<InBoundOrderRequestDTO> requestDTO) {
         RfidApiResponseDTO<InBoundOrderResponseDTO> response = RfidApiResponseDTO.success();
 
         if (Objects.isNull(requestDTO) || Objects.isNull(requestDTO.getData())) {
@@ -254,7 +251,7 @@ public class Wms2RmsController {
     @PostMapping(value = "/cancel-inboundorder")
     public RfidApiResponseDTO<CancelInBoundOrderResponseDTO> cancelInBoundOrder(
             @Parameter(description = "取消入库通知单请求数据", required = true)
-            @RequestBody RfidApiRequestDTO<CancelInBoundOrderRequestDTO> requestDTO){
+            @RequestBody RfidApiRequestDTO<CancelInBoundOrderRequestDTO> requestDTO) {
         RfidApiResponseDTO<CancelInBoundOrderResponseDTO> response = RfidApiResponseDTO.success();
 
         if (Objects.isNull(requestDTO) || Objects.isNull(requestDTO.getData())) {
@@ -292,7 +289,7 @@ public class Wms2RmsController {
     @PostMapping(value = "/send-outboundorder")
     public RfidApiResponseDTO<OutBoundOrderResponseDTO> sendOutBoundOrder(
             @Parameter(description = "出库通知单请求数据", required = true)
-            @RequestBody RfidApiRequestDTO<OutBoundOrderRequestDTO> requestDTO){
+            @RequestBody RfidApiRequestDTO<OutBoundOrderRequestDTO> requestDTO) {
         RfidApiResponseDTO<OutBoundOrderResponseDTO> response = RfidApiResponseDTO.success();
 
         if (Objects.isNull(requestDTO) || Objects.isNull(requestDTO.getData())) {
@@ -338,7 +335,7 @@ public class Wms2RmsController {
     @PostMapping(value = "/cancel-outboundorder")
     public RfidApiResponseDTO<CancelOutBoundOrderResponseDTO> cancelOutBoundOrder(
             @Parameter(description = "取消出库通知单请求数据", required = true)
-            @RequestBody RfidApiRequestDTO<CancelOutBoundOrderRequestDTO> requestDTO){
+            @RequestBody RfidApiRequestDTO<CancelOutBoundOrderRequestDTO> requestDTO) {
         RfidApiResponseDTO<CancelOutBoundOrderResponseDTO> response = RfidApiResponseDTO.success();
 
         if (Objects.isNull(requestDTO) || Objects.isNull(requestDTO.getData())) {
@@ -371,12 +368,11 @@ public class Wms2RmsController {
     }
 
 
-
     @Operation(summary = "发送盘点通知单", description = "创建并发送盘点通知单到RMS系统")
     @PostMapping(value = "/send-inventoryorder")
     public RfidApiResponseDTO<InventoryOrderResponseDTO> sendInventoryOrder(
             @Parameter(description = "盘点通知单请求数据", required = true)
-            @RequestBody RfidApiRequestDTO<InventoryOrderRequestDTO> requestDTO){
+            @RequestBody RfidApiRequestDTO<InventoryOrderRequestDTO> requestDTO) {
         RfidApiResponseDTO<InventoryOrderResponseDTO> response = RfidApiResponseDTO.success();
 
         if (Objects.isNull(requestDTO) || Objects.isNull(requestDTO.getData())) {
@@ -397,7 +393,7 @@ public class Wms2RmsController {
     @PostMapping(value = "/cancel-inventoryorder")
     public RfidApiResponseDTO<CancelInventoryOrderResponseDTO> cancelInventoryOrder(
             @Parameter(description = "取消盘点通知单请求数据", required = true)
-            @RequestBody RfidApiRequestDTO<CancelInventoryOrderRequestDTO> requestDTO){
+            @RequestBody RfidApiRequestDTO<CancelInventoryOrderRequestDTO> requestDTO) {
         RfidApiResponseDTO<CancelInventoryOrderResponseDTO> response = RfidApiResponseDTO.success();
 
         if (Objects.isNull(requestDTO) || Objects.isNull(requestDTO.getData())) {

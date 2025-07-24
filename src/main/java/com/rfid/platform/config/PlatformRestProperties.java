@@ -23,6 +23,10 @@ public class PlatformRestProperties {
 
     private String inventoryUploadUrl = "";
 
+    private String whPackDetailsUploadUrl = "";
+
+    private String b2cDetailsUploadUrl = "";
+
     private String getSkuDetailUrl = "/rfid/getskudetails";
 
     private String getShippingInfoUrl = "/rfid/getshippinginfo";

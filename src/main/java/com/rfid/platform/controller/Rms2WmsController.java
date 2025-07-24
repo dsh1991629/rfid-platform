@@ -1,26 +1,29 @@
 package com.rfid.platform.controller;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.rfid.platform.common.AccountContext;
 import com.rfid.platform.common.PlatformConstant;
 import com.rfid.platform.config.PlatformRestProperties;
-import com.rfid.platform.entity.AccountBean;
 import com.rfid.platform.entity.TagStorageOrderBean;
 import com.rfid.platform.entity.TagStorageOrderDetailBean;
 import com.rfid.platform.entity.TagStorageOrderResultBean;
 import com.rfid.platform.persistence.OrderUploadRequestDTO;
 import com.rfid.platform.persistence.RfidApiRequestDTO;
 import com.rfid.platform.persistence.RfidApiResponseDTO;
+import com.rfid.platform.persistence.storage.B2CDetailsRequestDTO;
+import com.rfid.platform.persistence.storage.B2CDetailsResponseDTO;
 import com.rfid.platform.persistence.storage.InBoundUploadDetailRequestDTO;
 import com.rfid.platform.persistence.storage.InBoundUploadRequestDTO;
 import com.rfid.platform.persistence.storage.InBoundUploadResponseDTO;
 import com.rfid.platform.persistence.storage.InventoryUploadDetailRequestDTO;
 import com.rfid.platform.persistence.storage.InventoryUploadRequestDTO;
 import com.rfid.platform.persistence.storage.InventoryUploadResponseDTO;
-import com.rfid.platform.persistence.storage.OutBoundUploadDetailItemRequestDTO;
 import com.rfid.platform.persistence.storage.OutBoundUploadDetailRequestDTO;
 import com.rfid.platform.persistence.storage.OutBoundUploadRequestDTO;
 import com.rfid.platform.persistence.storage.OutBoundUploadResponseDTO;
+import com.rfid.platform.persistence.storage.ShippingRequestDTO;
+import com.rfid.platform.persistence.storage.ShippingResponseDTO;
+import com.rfid.platform.persistence.storage.WhPackDetailsRequestDTO;
+import com.rfid.platform.persistence.storage.WhPackDetailsResponseDTO;
 import com.rfid.platform.service.AccountService;
 import com.rfid.platform.service.TagRestService;
 import com.rfid.platform.service.TagStorageOrderDetailService;
@@ -28,6 +31,7 @@ import com.rfid.platform.service.TagStorageOrderResultService;
 import com.rfid.platform.service.TagStorageOrderService;
 import com.rfid.platform.util.TimeUtil;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.ArrayList;
 import java.util.List;
@@ -68,7 +72,9 @@ public class Rms2WmsController {
 
     @Operation(summary = "上传入库明细", description = "RMS发送入库明细到WMS系统")
     @PostMapping(value = "/upload-inbounddetails")
-    public RfidApiResponseDTO<InBoundUploadResponseDTO> uploadInBoundOrderDetail(@RequestBody RfidApiRequestDTO<OrderUploadRequestDTO> requestDTO){
+    public RfidApiResponseDTO<InBoundUploadResponseDTO> uploadInBoundOrderDetail(
+            @Parameter(description = "上传入库明细请求数据", required = true)
+            @RequestBody RfidApiRequestDTO<OrderUploadRequestDTO> requestDTO) {
         RfidApiResponseDTO<InBoundUploadResponseDTO> responseDTO = RfidApiResponseDTO.success();
         if (Objects.isNull(responseDTO) || Objects.isNull(responseDTO.getData())) {
             responseDTO.setStatus(false);
@@ -113,7 +119,8 @@ public class Rms2WmsController {
         uploadReqDTO.setData(inBoundUploadRequestDTO);
 
         responseDTO = tagRestService.executeRestPostOptions(url, uploadReqDTO,
-                new TypeReference<RfidApiResponseDTO<InBoundUploadResponseDTO>>() {}
+                new TypeReference<RfidApiResponseDTO<InBoundUploadResponseDTO>>() {
+                }
         );
 
         return responseDTO;
@@ -134,7 +141,7 @@ public class Rms2WmsController {
             // 按boxCode分组
             Map<String, List<TagStorageOrderResultBean>> groupedByBoxCode = storageOrderResultBeans.stream()
                     .collect(Collectors.groupingBy(TagStorageOrderResultBean::getBoxCode));
-            
+
 
             // 遍历groupedByBoxCode
             for (Map.Entry<String, List<TagStorageOrderResultBean>> boxEntry : groupedByBoxCode.entrySet()) {
@@ -149,9 +156,10 @@ public class Rms2WmsController {
                     inBoundUploadDetailRequestDTO.setProductCode(boxResults.get(0).getProductCode());
 
 
-                    String sku = tagStorageOrderDetailService.getSkuByOrderNoRmsAndProductCode(tagStorageOrderBean.getOrderNoRms(), productCode);
-                    if (StringUtils.isNotBlank(sku)) {
-                        inBoundUploadDetailRequestDTO.setSku(sku);
+                    TagStorageOrderDetailBean tagStorageOrderDetailBean = tagStorageOrderDetailService.getSkuByOrderNoRmsAndProductCode(tagStorageOrderBean.getOrderNoRms(), productCode);
+                    if (Objects.nonNull(tagStorageOrderDetailBean)) {
+                        inBoundUploadDetailRequestDTO.setSku(tagStorageOrderDetailBean.getSku());
+                        inBoundUploadDetailRequestDTO.setBinLocation(tagStorageOrderDetailBean.getBinLocation());
                     }
 
                     // 收集所有rfid
@@ -172,10 +180,11 @@ public class Rms2WmsController {
     }
 
 
-
     @Operation(summary = "上传出库明细", description = "RMS发送出库明细到WMS系统")
     @PostMapping(value = "/upload-outbounddetails")
-    public RfidApiResponseDTO<OutBoundUploadResponseDTO> uploadOutBoundOrderDetail(@RequestBody RfidApiRequestDTO<OrderUploadRequestDTO> requestDTO){
+    public RfidApiResponseDTO<OutBoundUploadResponseDTO> uploadOutBoundOrderDetail(
+            @Parameter(description = "上传出库明细请求数据", required = true)
+            @RequestBody RfidApiRequestDTO<OrderUploadRequestDTO> requestDTO) {
         RfidApiResponseDTO<OutBoundUploadResponseDTO> responseDTO = RfidApiResponseDTO.success();
         if (Objects.isNull(responseDTO) || Objects.isNull(responseDTO.getData())) {
             responseDTO.setStatus(false);
@@ -220,7 +229,8 @@ public class Rms2WmsController {
         uploadReqDTO.setData(inBoundUploadRequestDTO);
 
         responseDTO = tagRestService.executeRestPostOptions(url, uploadReqDTO,
-                new TypeReference<RfidApiResponseDTO<OutBoundUploadResponseDTO>>() {}
+                new TypeReference<RfidApiResponseDTO<OutBoundUploadResponseDTO>>() {
+                }
         );
 
         return responseDTO;
@@ -235,54 +245,38 @@ public class Rms2WmsController {
 
         List<TagStorageOrderResultBean> storageOrderResultBeans =
                 tagStorageOrderResultService.listTagStorageOrderResults(tagStorageOrderBean.getOrderNoRms());
+
         if (CollectionUtils.isNotEmpty(storageOrderResultBeans)) {
-            // 按boxCode分组
-            Map<String, List<TagStorageOrderResultBean>> groupedByBoxCode = storageOrderResultBeans.stream()
-                    .collect(Collectors.groupingBy(TagStorageOrderResultBean::getBoxCode));
+            // 按productCode分组
+            Map<String, List<TagStorageOrderResultBean>> groupedByProductCode = storageOrderResultBeans.stream()
+                    .collect(Collectors.groupingBy(TagStorageOrderResultBean::getProductCode));
 
             List<OutBoundUploadDetailRequestDTO> outBoundUploadDetailRequestDTOS = new ArrayList<>();
 
             // 遍历groupedByBoxCode
-            for (Map.Entry<String, List<TagStorageOrderResultBean>> boxEntry : groupedByBoxCode.entrySet()) {
+            for (Map.Entry<String, List<TagStorageOrderResultBean>> productCodeEntry : groupedByProductCode.entrySet()) {
                 OutBoundUploadDetailRequestDTO outBoundUploadDetailRequestDTO = new OutBoundUploadDetailRequestDTO();
 
-                String boxCode = boxEntry.getKey();
-                outBoundUploadDetailRequestDTO.setBoxCode(boxCode);
+                String productCode = productCodeEntry.getKey();
+                outBoundUploadDetailRequestDTO.setProductCode(productCode);
 
-                List<TagStorageOrderResultBean> boxResults = boxEntry.getValue();
+                List<TagStorageOrderResultBean> productResults = productCodeEntry.getValue();
 
-                // 根据productCode分组
-                Map<String, List<TagStorageOrderResultBean>> groupedByProductCode = boxResults.stream()
-                        .collect(Collectors.groupingBy(TagStorageOrderResultBean::getProductCode));
-
-                List<OutBoundUploadDetailItemRequestDTO> outBoundUploadDetailItemRequestDTOS = new ArrayList<>();
-                // 遍历productCode分组
-                for (Map.Entry<String, List<TagStorageOrderResultBean>> productEntry : groupedByProductCode.entrySet()) {
-                    OutBoundUploadDetailItemRequestDTO outBoundUploadDetailItemRequestDTO = new OutBoundUploadDetailItemRequestDTO();
-
-                    String productCode = productEntry.getKey();
-                    outBoundUploadDetailItemRequestDTO.setProductCode(productCode);
-
-                    List<TagStorageOrderResultBean> productResults = productEntry.getValue();
-
-                    // 设置sku
-                    if (CollectionUtils.isNotEmpty(productResults)) {
-                        String sku = tagStorageOrderDetailService.getSkuByOrderNoRmsAndProductCode(tagStorageOrderBean.getOrderNoRms(), productCode);
-                        if (StringUtils.isNotBlank(sku)) {
-                            outBoundUploadDetailItemRequestDTO.setSku(sku);
-                        }
+                // 设置sku
+                if (CollectionUtils.isNotEmpty(productResults)) {
+                    TagStorageOrderDetailBean tagStorageOrderDetailBean = tagStorageOrderDetailService.getSkuByOrderNoRmsAndProductCode(tagStorageOrderBean.getOrderNoRms(), productCode);
+                    if (Objects.nonNull(tagStorageOrderDetailBean)) {
+                        outBoundUploadDetailRequestDTO.setSku(tagStorageOrderDetailBean.getSku());
                     }
-
-                    // 收集所有rfid
-                    List<String> rfids = productResults.stream()
-                            .map(TagStorageOrderResultBean::getEpc)
-                            .collect(Collectors.toList());
-
-                    outBoundUploadDetailItemRequestDTO.setRfids(rfids);
-                    outBoundUploadDetailItemRequestDTOS.add(outBoundUploadDetailItemRequestDTO);
                 }
 
-                outBoundUploadDetailRequestDTO.setBoxItems(outBoundUploadDetailItemRequestDTOS);
+                // 收集所有rfid
+                List<String> rfids = productResults.stream()
+                        .map(TagStorageOrderResultBean::getEpc)
+                        .collect(Collectors.toList());
+
+                outBoundUploadDetailRequestDTO.setRfids(rfids);
+
                 outBoundUploadDetailRequestDTOS.add(outBoundUploadDetailRequestDTO);
 
             }
@@ -294,10 +288,11 @@ public class Rms2WmsController {
     }
 
 
-
     @Operation(summary = "上传盘点明细", description = "RMS发送盘点明细到WMS系统")
     @PostMapping(value = "/upload-inventorydetails")
-    public RfidApiResponseDTO<InventoryUploadResponseDTO> uploadInventoryOrderDetail(@RequestBody RfidApiRequestDTO<OrderUploadRequestDTO> requestDTO){
+    public RfidApiResponseDTO<InventoryUploadResponseDTO> uploadInventoryOrderDetail(
+            @Parameter(description = "上传盘点明细请求数据", required = true)
+            @RequestBody RfidApiRequestDTO<OrderUploadRequestDTO> requestDTO) {
         RfidApiResponseDTO<InventoryUploadResponseDTO> responseDTO = RfidApiResponseDTO.success();
         if (Objects.isNull(responseDTO) || Objects.isNull(responseDTO.getData())) {
             responseDTO.setStatus(false);
@@ -342,7 +337,8 @@ public class Rms2WmsController {
         uploadReqDTO.setData(inventoryUploadRequestDTO);
 
         responseDTO = tagRestService.executeRestPostOptions(url, uploadReqDTO,
-                new TypeReference<RfidApiResponseDTO<InventoryUploadResponseDTO>>() {}
+                new TypeReference<RfidApiResponseDTO<InventoryUploadResponseDTO>>() {
+                }
         );
 
         return responseDTO;
@@ -354,25 +350,6 @@ public class Rms2WmsController {
         String orderNoWms = tagStorageOrderBean.getOrderNoWms();
         inventoryUploadRequestDTO.setOrderNoWMS(orderNoWms);
         inventoryUploadRequestDTO.setWh(tagStorageOrderBean.getWh());
-
-        AccountBean accountBean = accountService.getAccountByPk(AccountContext.getAccountId());
-        if (Objects.nonNull(accountBean)) {
-            inventoryUploadRequestDTO.setUserNo(accountBean.getCode());
-        }
-
-        List<TagStorageOrderDetailBean> tagStorageOrderDetailBeans = tagStorageOrderDetailService.listTagStorageOrderDetails(tagStorageOrderBean.getOrderNoRms());
-        if (CollectionUtils.isNotEmpty(tagStorageOrderDetailBeans)) {
-            // 累加所有明细的quantity和boxCnt
-            Integer totalQuantity = tagStorageOrderDetailBeans.stream()
-                    .mapToInt(detail -> detail.getQuantity() != null ? detail.getQuantity() : 0)
-                    .sum();
-            Integer totalBoxCnt = tagStorageOrderDetailBeans.stream()
-                    .mapToInt(detail -> detail.getBoxCnt() != null ? detail.getBoxCnt() : 0)
-                    .sum();
-            
-            inventoryUploadRequestDTO.setQuantity(totalQuantity);
-            inventoryUploadRequestDTO.setBoxCnt(totalBoxCnt);
-        }
 
         List<TagStorageOrderResultBean> storageOrderResultBeans =
                 tagStorageOrderResultService.listTagStorageOrderResults(tagStorageOrderBean.getOrderNoRms());
@@ -398,9 +375,10 @@ public class Rms2WmsController {
                     inventoryUploadDetailRequestDTO.setProductCode(boxResults.get(0).getProductCode());
 
 
-                    String sku = tagStorageOrderDetailService.getSkuByOrderNoRmsAndProductCode(tagStorageOrderBean.getOrderNoRms(), productCode);
-                    if (StringUtils.isNotBlank(sku)) {
-                        inventoryUploadDetailRequestDTO.setSku(sku);
+                    TagStorageOrderDetailBean tagStorageOrderDetailBean = tagStorageOrderDetailService.getSkuByOrderNoRmsAndProductCode(tagStorageOrderBean.getOrderNoRms(), productCode);
+                    if (Objects.nonNull(tagStorageOrderDetailBean)) {
+                        inventoryUploadDetailRequestDTO.setSku(tagStorageOrderDetailBean.getSku());
+                        inventoryUploadDetailRequestDTO.setBinLocation(tagStorageOrderDetailBean.getBinLocation());
                     }
 
                     // 收集所有rfid
@@ -433,6 +411,192 @@ public class Rms2WmsController {
             url = platformRestProperties.getInventoryUploadUrl();
         }
         return url;
+    }
+
+
+    @Operation(summary = "上传库内装箱明细", description = "RMS发送库内装箱明细到WMS系统")
+    @PostMapping(value = "/upload-whpackdetails")
+    public RfidApiResponseDTO<WhPackDetailsResponseDTO> whPackDetails(
+            @Parameter(description = "上传库内装箱明细请求数据", required = true)
+            @RequestBody RfidApiRequestDTO<OrderUploadRequestDTO> requestDTO) {
+
+        RfidApiResponseDTO<WhPackDetailsResponseDTO> responseDTO = RfidApiResponseDTO.success();
+        if (Objects.isNull(responseDTO) || Objects.isNull(responseDTO.getData())) {
+            responseDTO.setStatus(false);
+            responseDTO.setMessage("RMS库内装箱单不存在");
+            return responseDTO;
+        }
+
+        OrderUploadRequestDTO orderUploadRequestDTO = requestDTO.getData();
+        String orderNoRms = orderUploadRequestDTO.getOrderNoRMS();
+        if (StringUtils.isBlank(orderNoRms)) {
+            responseDTO.setStatus(false);
+            responseDTO.setMessage("RMS库内装箱单号不存在");
+            return responseDTO;
+        }
+
+        TagStorageOrderBean tagStorageOrderBean = tagStorageOrderService.queryTagStorageOrderByNo(orderNoRms);
+        if (Objects.isNull(tagStorageOrderBean)) {
+            responseDTO.setStatus(false);
+            responseDTO.setMessage("库内装箱单数据不存在");
+            return responseDTO;
+        }
+
+        Integer orderState = tagStorageOrderBean.getState();
+        if (!PlatformConstant.STORAGE_ORDER_STATUS.COMPLETED.equals(orderState)) {
+            responseDTO.setStatus(false);
+            responseDTO.setMessage("库内装箱单未完成");
+            return responseDTO;
+        }
+
+        String url = platformRestProperties.getWhPackDetailsUploadUrl();
+        if (StringUtils.isBlank(url)) {
+            responseDTO.setStatus(false);
+            responseDTO.setMessage("库内装箱上传WMS地址未配置");
+            return responseDTO;
+        }
+
+        RfidApiRequestDTO<WhPackDetailsRequestDTO> uploadReqDTO = new RfidApiRequestDTO<>();
+        uploadReqDTO.setVersion(platformRestProperties.getVersion());
+        uploadReqDTO.setTimeStamp(TimeUtil.getDateFormatterString(TimeUtil.getSysDate()));
+        WhPackDetailsRequestDTO whPackUploadDetailRequestDTO = createWhPackDetailRequestDTO(tagStorageOrderBean);
+        uploadReqDTO.setData(whPackUploadDetailRequestDTO);
+
+        responseDTO = tagRestService.executeRestPostOptions(url, uploadReqDTO,
+                new TypeReference<RfidApiResponseDTO<WhPackDetailsResponseDTO>>() {
+                }
+        );
+
+        return responseDTO;
+    }
+
+    private WhPackDetailsRequestDTO createWhPackDetailRequestDTO(TagStorageOrderBean tagStorageOrderBean) {
+        // todo
+        return null;
+    }
+
+
+    @Operation(summary = "上传B2C发货明细", description = "RMS发送B2C发货明细明细到WMS系统")
+    @PostMapping(value = "/upload-b2cdetails")
+    public RfidApiResponseDTO<B2CDetailsResponseDTO> b2cDetails(
+            @Parameter(description = "上传B2C发货明细请求数据", required = true)
+            @RequestBody RfidApiRequestDTO<OrderUploadRequestDTO> requestDTO) {
+
+        RfidApiResponseDTO<B2CDetailsResponseDTO> responseDTO = RfidApiResponseDTO.success();
+        if (Objects.isNull(responseDTO) || Objects.isNull(responseDTO.getData())) {
+            responseDTO.setStatus(false);
+            responseDTO.setMessage("RMS库内装箱单不存在");
+            return responseDTO;
+        }
+
+        OrderUploadRequestDTO orderUploadRequestDTO = requestDTO.getData();
+        String orderNoRms = orderUploadRequestDTO.getOrderNoRMS();
+        if (StringUtils.isBlank(orderNoRms)) {
+            responseDTO.setStatus(false);
+            responseDTO.setMessage("RMS库内装箱单号不存在");
+            return responseDTO;
+        }
+
+        TagStorageOrderBean tagStorageOrderBean = tagStorageOrderService.queryTagStorageOrderByNo(orderNoRms);
+        if (Objects.isNull(tagStorageOrderBean)) {
+            responseDTO.setStatus(false);
+            responseDTO.setMessage("库内装箱单数据不存在");
+            return responseDTO;
+        }
+
+        Integer orderState = tagStorageOrderBean.getState();
+        if (!PlatformConstant.STORAGE_ORDER_STATUS.COMPLETED.equals(orderState)) {
+            responseDTO.setStatus(false);
+            responseDTO.setMessage("库内装箱单未完成");
+            return responseDTO;
+        }
+
+        String url = platformRestProperties.getB2cDetailsUploadUrl();
+        if (StringUtils.isBlank(url)) {
+            responseDTO.setStatus(false);
+            responseDTO.setMessage("B2C发货明细上传WMS地址未配置");
+            return responseDTO;
+        }
+
+        RfidApiRequestDTO<B2CDetailsRequestDTO> uploadReqDTO = new RfidApiRequestDTO<>();
+        uploadReqDTO.setVersion(platformRestProperties.getVersion());
+        uploadReqDTO.setTimeStamp(TimeUtil.getDateFormatterString(TimeUtil.getSysDate()));
+        B2CDetailsRequestDTO b2CDetailsRequestDTO = createB2CDetailRequestDTO(tagStorageOrderBean);
+        uploadReqDTO.setData(b2CDetailsRequestDTO);
+
+        responseDTO = tagRestService.executeRestPostOptions(url, uploadReqDTO,
+                new TypeReference<RfidApiResponseDTO<B2CDetailsResponseDTO>>() {
+                }
+        );
+
+        return responseDTO;
+    }
+
+    private B2CDetailsRequestDTO createB2CDetailRequestDTO(TagStorageOrderBean tagStorageOrderBean) {
+        // todo
+        return null;
+    }
+
+
+    @Operation(summary = "物流下单", description = "RMS发送物流下单明细到WMS系统")
+    @PostMapping(value = "/send-shippingrequest")
+    public RfidApiResponseDTO<ShippingResponseDTO> shippingRequest(
+            @Parameter(description = "物流下单请求数据", required = true)
+            @RequestBody RfidApiRequestDTO<OrderUploadRequestDTO> requestDTO) {
+
+        RfidApiResponseDTO<ShippingResponseDTO> responseDTO = RfidApiResponseDTO.success();
+        if (Objects.isNull(responseDTO) || Objects.isNull(responseDTO.getData())) {
+            responseDTO.setStatus(false);
+            responseDTO.setMessage("RMS库内装箱单不存在");
+            return responseDTO;
+        }
+
+        OrderUploadRequestDTO orderUploadRequestDTO = requestDTO.getData();
+        String orderNoRms = orderUploadRequestDTO.getOrderNoRMS();
+        if (StringUtils.isBlank(orderNoRms)) {
+            responseDTO.setStatus(false);
+            responseDTO.setMessage("RMS库内装箱单号不存在");
+            return responseDTO;
+        }
+
+        TagStorageOrderBean tagStorageOrderBean = tagStorageOrderService.queryTagStorageOrderByNo(orderNoRms);
+        if (Objects.isNull(tagStorageOrderBean)) {
+            responseDTO.setStatus(false);
+            responseDTO.setMessage("库内装箱单数据不存在");
+            return responseDTO;
+        }
+
+        Integer orderState = tagStorageOrderBean.getState();
+        if (!PlatformConstant.STORAGE_ORDER_STATUS.COMPLETED.equals(orderState)) {
+            responseDTO.setStatus(false);
+            responseDTO.setMessage("库内装箱单未完成");
+            return responseDTO;
+        }
+
+        String url = platformRestProperties.getB2cDetailsUploadUrl();
+        if (StringUtils.isBlank(url)) {
+            responseDTO.setStatus(false);
+            responseDTO.setMessage("B2C发货明细上传WMS地址未配置");
+            return responseDTO;
+        }
+
+        RfidApiRequestDTO<ShippingRequestDTO> uploadReqDTO = new RfidApiRequestDTO<>();
+        uploadReqDTO.setVersion(platformRestProperties.getVersion());
+        uploadReqDTO.setTimeStamp(TimeUtil.getDateFormatterString(TimeUtil.getSysDate()));
+        ShippingRequestDTO shippingRequestDTO = createShippingRequestDTO(tagStorageOrderBean);
+        uploadReqDTO.setData(shippingRequestDTO);
+
+        responseDTO = tagRestService.executeRestPostOptions(url, uploadReqDTO,
+                new TypeReference<RfidApiResponseDTO<ShippingResponseDTO>>() {
+                }
+        );
+
+        return responseDTO;
+    }
+
+    private ShippingRequestDTO createShippingRequestDTO(TagStorageOrderBean tagStorageOrderBean) {
+        // todo
+        return null;
     }
 
 

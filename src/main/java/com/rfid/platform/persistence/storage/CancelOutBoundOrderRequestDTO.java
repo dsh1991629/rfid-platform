@@ -11,4 +11,7 @@ public class CancelOutBoundOrderRequestDTO implements Serializable {
     @Schema(description = "WMS出库通知单号")
     private String orderNoWMS;
 
+    @Schema(description = "仓库编码")
+    private String wh;
+
 }

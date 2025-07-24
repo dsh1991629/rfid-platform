@@ -62,6 +62,7 @@ public class TagStorageOrderDetailServiceImpl extends ServiceImpl<TagStorageOrde
         detailBean.setOrderNoRms(orderNoRms);
         detailBean.setSku(item.getSku());
         detailBean.setQuantity(item.getQty());
+        detailBean.setBinLocation(item.getBinLocation());
         // 去erp查productCode
         RfidApiRequestDTO<Rms2ErpSkuDetailReqDTO> requestDTO = new RfidApiRequestDTO<>();
         requestDTO.setTimeStamp(TimeUtil.getDateFormatterString(TimeUtil.getSysDate()));
@@ -100,8 +101,9 @@ public class TagStorageOrderDetailServiceImpl extends ServiceImpl<TagStorageOrde
         detailBean.setOrderNoRms(orderNoRms);
         detailBean.setProductCode(item.getProductCode());
         detailBean.setSku(item.getSku());
+        detailBean.setBinLocation(item.getBinLocation());
         detailBean.setQuantity(item.getQty());
-        if (StringUtils.isNotBlank(item.getSku())) {
+        if (StringUtils.isNotBlank(item.getSku()) && StringUtils.isBlank(item.getProductCode())) {
             // 去erp查productCode
             RfidApiRequestDTO<Rms2ErpSkuDetailReqDTO> requestDTO = new RfidApiRequestDTO<>();
             requestDTO.setTimeStamp(TimeUtil.getDateFormatterString(TimeUtil.getSysDate()));
@@ -143,8 +145,9 @@ public class TagStorageOrderDetailServiceImpl extends ServiceImpl<TagStorageOrde
         detailBean.setProductCode(item.getProductCode());
         detailBean.setSku(item.getSku());
         detailBean.setQuantity(item.getQty());
+        detailBean.setBinLocation(item.getBinLocation());
         detailBean.setBoxCnt(item.getBoxCnt());
-        if (StringUtils.isNotBlank(item.getSku())) {
+        if (StringUtils.isNotBlank(item.getSku()) && StringUtils.isBlank(item.getProductCode())) {
             // 去erp查productCode
             RfidApiRequestDTO<Rms2ErpSkuDetailReqDTO> requestDTO = new RfidApiRequestDTO<>();
             requestDTO.setTimeStamp(TimeUtil.getDateFormatterString(TimeUtil.getSysDate()));
@@ -179,7 +182,7 @@ public class TagStorageOrderDetailServiceImpl extends ServiceImpl<TagStorageOrde
     }
 
     @Override
-    public String getSkuByOrderNoRmsAndProductCode(String orderNoRms, String productCode) {
+    public TagStorageOrderDetailBean getSkuByOrderNoRmsAndProductCode(String orderNoRms, String productCode) {
         LambdaQueryWrapper<TagStorageOrderDetailBean> queryWrapper = Wrappers.lambdaQuery();
         queryWrapper.eq(TagStorageOrderDetailBean::getOrderNoRms, orderNoRms);
         queryWrapper.eq(TagStorageOrderDetailBean::getProductCode, productCode);
@@ -187,9 +190,9 @@ public class TagStorageOrderDetailServiceImpl extends ServiceImpl<TagStorageOrde
         super.page(page, queryWrapper);
         if (CollectionUtils.isNotEmpty(page.getRecords())) {
             TagStorageOrderDetailBean tagStorageOrderDetailBean = page.getRecords().get(0);
-            return tagStorageOrderDetailBean.getSku();
+            return tagStorageOrderDetailBean;
         }
-        return "";
+        return null;
     }
 
     @Override

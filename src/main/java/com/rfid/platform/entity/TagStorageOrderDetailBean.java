@@ -32,6 +32,9 @@ public class TagStorageOrderDetailBean implements Serializable {
     @TableField(value = "SKU")
     private String sku;
 
+    @TableField(value = "BIN_LOCATION")
+    private String binLocation;
+
     @TableField(value = "QUANTITY")
     private Integer quantity;
 

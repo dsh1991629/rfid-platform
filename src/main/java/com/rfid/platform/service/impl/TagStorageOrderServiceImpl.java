@@ -105,6 +105,7 @@ public class TagStorageOrderServiceImpl extends ServiceImpl<TagStorageOrderMappe
         String orderNoRms = createOrderNoRms(PlatformConstant.STORAGE_ORDER_TYPE.INVENTORY_BOUND, "");
         TagStorageOrderBean tagStorageOrderBean = new TagStorageOrderBean();
         tagStorageOrderBean.setOrderNoRms(orderNoRms);
+        tagStorageOrderBean.setWh(inventoryOrderRequestDTO.getWh());
         tagStorageOrderBean.setOrderNoWms(inventoryOrderRequestDTO.getOrderNoWMS());
         tagStorageOrderBean.setOrderNoErp(inventoryOrderRequestDTO.getOrderNoERP());
         tagStorageOrderBean.setType(PlatformConstant.STORAGE_ORDER_TYPE.INVENTORY_BOUND);

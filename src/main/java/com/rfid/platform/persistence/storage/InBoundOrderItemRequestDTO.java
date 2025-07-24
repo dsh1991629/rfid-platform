@@ -10,10 +10,10 @@ import lombok.Data;
 @Schema(description = "入库通知单详情数据传输对象")
 public class InBoundOrderItemRequestDTO implements Serializable {
 
-    @Schema(description = "PRODUCT_CODE")
-    private String productCode;
+    @Schema(description = "入库后放置的库位")
+    private String binLocation;
 
-    @Schema(description = "SKU")
+    @Schema(description = "SKU码")
     private String sku;
 
     @Schema(description = "件数")
