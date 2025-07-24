@@ -16,7 +16,4 @@ public class DevInventoryOrderQueryDetailItemProgressResponseDTO implements Seri
     @Schema(description = "已扫描箱数量")
     private Integer boxCnt;
 
-    @Schema(description = "已扫描箱码")
-    private List<String> boxCodes;
-
 }

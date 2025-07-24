@@ -59,4 +59,11 @@ public class TagStorageOrderResultServiceImpl extends ServiceImpl<TagStorageOrde
         queryWrapper.eq(TagStorageOrderResultBean::getProductCode, productCode);
         return super.list(queryWrapper);
     }
+
+    @Override
+    public boolean existResultByBox(String boxCode) {
+        LambdaQueryWrapper<TagStorageOrderResultBean> queryWrapper = Wrappers.lambdaQuery();
+        queryWrapper.eq(TagStorageOrderResultBean::getBoxCode, boxCode);
+        return super.exists(queryWrapper);
+    }
 }

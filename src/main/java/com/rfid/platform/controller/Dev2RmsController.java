@@ -1,9 +1,12 @@
 package com.rfid.platform.controller;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.rfid.platform.common.PlatformConstant;
+import com.rfid.platform.config.PlatformRestProperties;
 import com.rfid.platform.config.RfidPlatformProperties;
 import com.rfid.platform.entity.AccountBean;
 import com.rfid.platform.entity.DeviceAccountRelBean;
+import com.rfid.platform.entity.TagStorageBoxBean;
 import com.rfid.platform.entity.TagStorageOrderBean;
 import com.rfid.platform.entity.TagStorageOrderDetailBean;
 import com.rfid.platform.entity.TagStorageOrderResultBean;
@@ -11,6 +14,10 @@ import com.rfid.platform.persistence.DeviceLoginReqDTO;
 import com.rfid.platform.persistence.DeviceLoginRetDTO;
 import com.rfid.platform.persistence.RfidApiRequestDTO;
 import com.rfid.platform.persistence.RfidApiResponseDTO;
+import com.rfid.platform.persistence.storage.DevAddBoxRequestDTO;
+import com.rfid.platform.persistence.storage.DevAddBoxResponseDTO;
+import com.rfid.platform.persistence.storage.DevDelBoxRequestDTO;
+import com.rfid.platform.persistence.storage.DevDelBoxResponseDTO;
 import com.rfid.platform.persistence.storage.DevInBoundOrderQueryDetailItemProgressResponseDTO;
 import com.rfid.platform.persistence.storage.DevInventoryOrderQueryDetailItemProgressResponseDTO;
 import com.rfid.platform.persistence.storage.DevInventoryOrderQueryDetailItemResponseDTO;
@@ -22,6 +29,8 @@ import com.rfid.platform.persistence.storage.DevOutBoundOrderQueryDetailItemResp
 import com.rfid.platform.persistence.storage.DevOutBoundOrderQueryDetailResponseDTO;
 import com.rfid.platform.persistence.storage.DevOutBoundOrderQueryRequestDTO;
 import com.rfid.platform.persistence.storage.DevOutBoundOrderQueryResponseDTO;
+import com.rfid.platform.persistence.storage.DevPrintInfoRequestDTO;
+import com.rfid.platform.persistence.storage.DevPrintInfoResponseDTO;
 import com.rfid.platform.persistence.storage.HeartBeatDTO;
 import com.rfid.platform.persistence.storage.DevInBoundOrderQueryDetailResponseDTO;
 import com.rfid.platform.persistence.storage.DevInBoundOrderQueryDetailItemResponseDTO;
@@ -31,13 +40,13 @@ import com.rfid.platform.service.AccountService;
 import com.rfid.platform.service.DeviceAccountRelService;
 import com.rfid.platform.service.DeviceHeartbeatService;
 import com.rfid.platform.service.LoginLogService;
+import com.rfid.platform.service.TagRestService;
+import com.rfid.platform.service.TagStorageBoxService;
 import com.rfid.platform.service.TagStorageOrderDetailService;
 import com.rfid.platform.service.TagStorageOrderResultService;
 import com.rfid.platform.service.TagStorageOrderService;
 import com.rfid.platform.util.JwtUtil;
 import com.rfid.platform.util.RequestUtil;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -65,6 +74,9 @@ public class Dev2RmsController {
 
     @Autowired
     private RfidPlatformProperties rfidPlatformProperties;
+
+    @Autowired
+    private PlatformRestProperties platformRestProperties;
 
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
@@ -95,6 +107,14 @@ public class Dev2RmsController {
 
     @Autowired
     private TagStorageOrderResultService tagStorageOrderResultService;
+
+    @Autowired
+    private TagRestService tagRestService;
+
+    @Autowired
+    private TagStorageBoxService tagStorageBoxService;
+
+
 
 
     @Operation(summary = "设备登录", description = "账号密码设备编码，登录成功后返回访问令牌")
@@ -426,7 +446,6 @@ public class Dev2RmsController {
                                 .collect(Collectors.toList());
 
                         detailItemProgressResponseDTO.setBoxCnt(boxCodes.size());
-                        detailItemProgressResponseDTO.setBoxCodes(boxCodes);
                         detailItemResponseDTO.setProgress(detailItemProgressResponseDTO);
 
                         detailItemDTOS.add(detailItemResponseDTO);
@@ -443,6 +462,143 @@ public class Dev2RmsController {
         response.setData(devInBoundOrderQueryResponseDTO);
         return response;
     }
+
+
+    @Operation(summary = "查询打印信息", description = "查询打印信息")
+    @PostMapping(value = "/dev/getprintinfo")
+    public RfidApiResponseDTO<DevPrintInfoResponseDTO> getPrintInfo(
+            @Parameter(description = "查询打印信息请求", required = true)
+            @RequestBody RfidApiRequestDTO<DevPrintInfoRequestDTO> requestDTO) {
+
+        RfidApiResponseDTO<DevPrintInfoResponseDTO> responseDTO = RfidApiResponseDTO.success();
+
+        if (Objects.isNull(requestDTO) || Objects.isNull(requestDTO.getData())) {
+            responseDTO.setStatus(false);
+            responseDTO.setMessage("打印信息对象不存在");
+            return responseDTO;
+        }
+
+        DevPrintInfoRequestDTO devPrintInfoRequestDTO = requestDTO.getData();
+        if (StringUtils.isBlank(devPrintInfoRequestDTO.getSku())) {
+            responseDTO.setStatus(false);
+            responseDTO.setMessage("SKU码不存在");
+            return responseDTO;
+        }
+
+        String url = platformRestProperties.getGetPrintInfoUrl();
+
+        responseDTO = tagRestService.executeRestPostOptions(url, requestDTO,
+                new TypeReference<RfidApiResponseDTO<DevPrintInfoResponseDTO>>() {
+                }
+        );
+
+        return responseDTO;
+    }
+
+
+
+    @Operation(summary = "创建箱", description = "创建箱")
+    @PostMapping(value = "/dev/addbox")
+    public RfidApiResponseDTO<DevAddBoxResponseDTO> addBox(
+            @Parameter(description = "创建箱请求", required = true)
+            @RequestBody RfidApiRequestDTO<DevAddBoxRequestDTO> requestDTO) {
+
+        RfidApiResponseDTO<DevAddBoxResponseDTO> responseDTO = RfidApiResponseDTO.success();
+
+        if (Objects.isNull(requestDTO) || Objects.isNull(requestDTO.getData())) {
+            responseDTO.setStatus(false);
+            responseDTO.setMessage("创建箱对象不存在");
+            return responseDTO;
+        }
+
+        DevAddBoxRequestDTO devAddBoxRequestDTO = requestDTO.getData();
+        String orderNoRms = devAddBoxRequestDTO.getOrderID_RMS();
+        if (StringUtils.isBlank(orderNoRms)) {
+            responseDTO.setStatus(false);
+            responseDTO.setMessage("RMS单号不存在");
+            return responseDTO;
+        }
+
+        Integer boxCnt = devAddBoxRequestDTO.getBoxCnt();
+        if (Objects.isNull(boxCnt)) {
+            responseDTO.setStatus(false);
+            responseDTO.setMessage("箱数量不存在");
+            return responseDTO;
+        }
+
+        TagStorageOrderBean tagStorageOrderBean = tagStorageOrderService.queryTagStorageOrderByNo(orderNoRms);
+        if (Objects.isNull(tagStorageOrderBean)) {
+            responseDTO.setStatus(false);
+            responseDTO.setMessage("RMS通知单不存在");
+            return responseDTO;
+        }
+
+        int start = 1;
+        List<String> boxCodes = new ArrayList<>();
+        List<TagStorageBoxBean> tagStorageBoxBeans = tagStorageBoxService.queryTagStorageBoxByOrderRmsNo(orderNoRms);
+        if (CollectionUtils.isNotEmpty(tagStorageBoxBeans)) {
+            start = tagStorageBoxBeans.stream().mapToInt(TagStorageBoxBean::getBoxIdx).max().orElse(0) + 1;
+        }
+
+        List<TagStorageBoxBean> addBeans = new ArrayList<>();
+
+        for (int i = start; i < start + boxCnt; i++) {
+            String boxCode = orderNoRms + "_" + i;
+            boxCodes.add(boxCode);
+
+            TagStorageBoxBean addBean = new TagStorageBoxBean();
+            addBean.setOrderNoRms(orderNoRms);
+            addBean.setBoxCode(boxCode);
+            addBean.setBoxIdx(i);
+            addBeans.add(addBean);
+        }
+        tagStorageBoxService.addTagStorageBoxes(addBeans);
+
+        DevAddBoxResponseDTO devAddBoxResponseDTO = new DevAddBoxResponseDTO();
+        devAddBoxResponseDTO.setBoxCodes(boxCodes);
+        responseDTO.setData(devAddBoxResponseDTO);
+        return responseDTO;
+    }
+
+
+    @Operation(summary = "删除箱", description = "删除箱")
+    @PostMapping(value = "/dev/delbox")
+    public RfidApiResponseDTO<DevDelBoxResponseDTO> delBox(
+            @Parameter(description = "删除箱请求", required = true)
+            @RequestBody RfidApiRequestDTO<DevDelBoxRequestDTO> requestDTO) {
+
+        RfidApiResponseDTO<DevDelBoxResponseDTO> responseDTO = RfidApiResponseDTO.success();
+
+        if (Objects.isNull(requestDTO) || Objects.isNull(requestDTO.getData())) {
+            responseDTO.setStatus(false);
+            responseDTO.setMessage("删除箱对象不存在");
+            return responseDTO;
+        }
+
+        DevDelBoxRequestDTO devDelBoxRequestDTO = requestDTO.getData();
+        List<String> boxCodes = devDelBoxRequestDTO.getBoxCodes();
+        if (CollectionUtils.isEmpty(boxCodes)) {
+            responseDTO.setStatus(false);
+            responseDTO.setMessage("箱码不存在");
+            return responseDTO;
+        }
+
+        for (String boxCode : boxCodes) {
+            boolean existResult = tagStorageOrderResultService.existResultByBox(boxCode);
+            if (existResult) {
+                responseDTO.setStatus(false);
+                responseDTO.setMessage("箱码: " +boxCode+ " 有上传记录，不能删除");
+                return responseDTO;
+            }
+        }
+
+        boolean ret = tagStorageBoxService.removeTagStorageBoxes(boxCodes);
+
+        DevDelBoxResponseDTO devDelBoxResponseDTO = new DevDelBoxResponseDTO();
+        responseDTO.setData(devDelBoxResponseDTO);
+        return responseDTO;
+    }
+
 
 
 }

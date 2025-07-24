@@ -33,4 +33,6 @@ public class PlatformRestProperties {
 
     private String getGetOrderInfoUrl = "/rfid/getorderinfo";
 
+    private String getPrintInfoUrl = "";
+
 }

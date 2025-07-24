@@ -22,4 +22,6 @@ public interface TagStorageOrderResultService {
     List<TagStorageOrderResultBean> listTagStorageOrderResults(String orderNoRms);
 
     List<TagStorageOrderResultBean> listTagStorageOrderResultsByOrderRmsAndProductCode(String orderNoRms, String productCode);
+
+    boolean existResultByBox(String boxCode);
 }
