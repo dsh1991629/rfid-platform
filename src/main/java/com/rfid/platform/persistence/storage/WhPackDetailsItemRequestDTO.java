@@ -5,15 +5,9 @@ import java.io.Serializable;
 import java.util.List;
 import lombok.Data;
 
-@Schema(description = "上传库内盘点数据明细请求数据传输对象")
+@Schema(description = "库内装箱数据明细详情数据传输对象")
 @Data
-public class WhPackUploadDetailRequestDTO implements Serializable {
-
-    @Schema(description = "箱外码")
-    private String boxCode;
-
-    @Schema(description = "货物当前库位")
-    private String binLocation;
+public class WhPackDetailsItemRequestDTO implements Serializable {
 
     @Schema(description = "SKU码")
     private String sku;
@@ -23,5 +17,6 @@ public class WhPackUploadDetailRequestDTO implements Serializable {
 
     @Schema(description = "RFID码")
     private List<String> rfids;
+
 
 }

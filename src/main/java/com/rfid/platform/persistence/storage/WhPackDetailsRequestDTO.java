@@ -9,17 +9,11 @@ import lombok.Data;
 @Data
 public class WhPackDetailsRequestDTO implements Serializable {
 
-    @Schema(description = "WMS通知单号")
-    private String orderNoWMS;
+    @Schema(description = "RMS通知单号")
+    private String orderNoRms;
 
     @Schema(description = "仓库编码")
     private String wh;
-
-    @Schema(description = "箱外码")
-    private Integer boxCode;
-
-    @Schema(description = "货物当前库位")
-    private String binLocation;
 
     @Schema(description = "盘点数据明细")
     private List<WhPackUploadDetailRequestDTO> boxDetails;

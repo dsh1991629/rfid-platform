@@ -27,6 +27,8 @@ public class PlatformRestProperties {
 
     private String b2cDetailsUploadUrl = "";
 
+    private String shippingRequestUrl = "";
+
     private String getSkuDetailUrl = "/rfid/getskudetails";
 
     private String getShippingInfoUrl = "/rfid/getshippinginfo";

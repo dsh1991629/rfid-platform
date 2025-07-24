@@ -2,7 +2,6 @@ package com.rfid.platform.persistence.storage;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.io.Serializable;
-import java.util.List;
 import lombok.Data;
 
 @Data
@@ -14,5 +13,6 @@ public class ShippingRequestDTO implements Serializable {
 
     @Schema(description = "仓库编号")
     private String wh;
+
 
 }
