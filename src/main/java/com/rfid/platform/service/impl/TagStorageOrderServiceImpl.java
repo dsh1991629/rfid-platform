@@ -230,13 +230,13 @@ public class TagStorageOrderServiceImpl extends ServiceImpl<TagStorageOrderMappe
     }
 
     @Override
-    public boolean updateOrderStateByOrderNo(String orderNo, String timeStamp, Integer state) {
-        if (StringUtils.isBlank(orderNo)  || Objects.isNull(state)) {
+    public boolean updateOrderStateByOrderNo(String orderNoRms, String timeStamp, Integer state) {
+        if (StringUtils.isBlank(orderNoRms)  || Objects.isNull(state)) {
             return false;
         }
         
         LambdaQueryWrapper<TagStorageOrderBean> queryWrapper = Wrappers.lambdaQuery();
-        queryWrapper.eq(TagStorageOrderBean::getOrderNoRms, orderNo);
+        queryWrapper.eq(TagStorageOrderBean::getOrderNoRms, orderNoRms);
         TagStorageOrderBean existsBean = super.getOne(queryWrapper);
         
         if (Objects.isNull(existsBean)) {

@@ -1,11 +1,13 @@
 package com.rfid.platform.controller;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.rfid.platform.common.AccountContext;
 import com.rfid.platform.common.PlatformConstant;
 import com.rfid.platform.config.PlatformRestProperties;
 import com.rfid.platform.config.RfidPlatformProperties;
 import com.rfid.platform.entity.AccountBean;
 import com.rfid.platform.entity.DeviceAccountRelBean;
+import com.rfid.platform.entity.TagInfoBean;
 import com.rfid.platform.entity.TagStorageBoxBean;
 import com.rfid.platform.entity.TagStorageOrderBean;
 import com.rfid.platform.entity.TagStorageOrderDetailBean;
@@ -18,6 +20,9 @@ import com.rfid.platform.persistence.storage.DevAddBoxRequestDTO;
 import com.rfid.platform.persistence.storage.DevAddBoxResponseDTO;
 import com.rfid.platform.persistence.storage.DevDelBoxRequestDTO;
 import com.rfid.platform.persistence.storage.DevDelBoxResponseDTO;
+import com.rfid.platform.persistence.storage.DevGetBoxDetailResponseDTO;
+import com.rfid.platform.persistence.storage.DevGetBoxRequestDTO;
+import com.rfid.platform.persistence.storage.DevGetBoxResponseDTO;
 import com.rfid.platform.persistence.storage.DevInBoundOrderQueryDetailItemProgressResponseDTO;
 import com.rfid.platform.persistence.storage.DevInventoryOrderQueryDetailItemProgressResponseDTO;
 import com.rfid.platform.persistence.storage.DevInventoryOrderQueryDetailItemResponseDTO;
@@ -31,6 +36,9 @@ import com.rfid.platform.persistence.storage.DevOutBoundOrderQueryRequestDTO;
 import com.rfid.platform.persistence.storage.DevOutBoundOrderQueryResponseDTO;
 import com.rfid.platform.persistence.storage.DevPrintInfoRequestDTO;
 import com.rfid.platform.persistence.storage.DevPrintInfoResponseDTO;
+import com.rfid.platform.persistence.storage.DevUpBoxDetailRequestDTO;
+import com.rfid.platform.persistence.storage.DevUpBoxRequestDTO;
+import com.rfid.platform.persistence.storage.DevUpBoxResponseDTO;
 import com.rfid.platform.persistence.storage.HeartBeatDTO;
 import com.rfid.platform.persistence.storage.DevInBoundOrderQueryDetailResponseDTO;
 import com.rfid.platform.persistence.storage.DevInBoundOrderQueryDetailItemResponseDTO;
@@ -40,6 +48,7 @@ import com.rfid.platform.service.AccountService;
 import com.rfid.platform.service.DeviceAccountRelService;
 import com.rfid.platform.service.DeviceHeartbeatService;
 import com.rfid.platform.service.LoginLogService;
+import com.rfid.platform.service.TagInfoService;
 import com.rfid.platform.service.TagRestService;
 import com.rfid.platform.service.TagStorageBoxService;
 import com.rfid.platform.service.TagStorageOrderDetailService;
@@ -47,9 +56,14 @@ import com.rfid.platform.service.TagStorageOrderResultService;
 import com.rfid.platform.service.TagStorageOrderService;
 import com.rfid.platform.util.JwtUtil;
 import com.rfid.platform.util.RequestUtil;
+import com.rfid.platform.util.TimeUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -114,7 +128,8 @@ public class Dev2RmsController {
     @Autowired
     private TagStorageBoxService tagStorageBoxService;
 
-
+    @Autowired
+    private TagInfoService tagInfoService;
 
 
     @Operation(summary = "设备登录", description = "账号密码设备编码，登录成功后返回访问令牌")
@@ -496,7 +511,6 @@ public class Dev2RmsController {
     }
 
 
-
     @Operation(summary = "创建箱", description = "创建箱")
     @PostMapping(value = "/dev/addbox")
     public RfidApiResponseDTO<DevAddBoxResponseDTO> addBox(
@@ -587,7 +601,7 @@ public class Dev2RmsController {
             boolean existResult = tagStorageOrderResultService.existResultByBox(boxCode);
             if (existResult) {
                 responseDTO.setStatus(false);
-                responseDTO.setMessage("箱码: " +boxCode+ " 有上传记录，不能删除");
+                responseDTO.setMessage("箱码: " + boxCode + " 有上传记录，不能删除");
                 return responseDTO;
             }
         }
@@ -600,5 +614,267 @@ public class Dev2RmsController {
     }
 
 
+    @Operation(summary = "更新箱内明细", description = "更新箱内明细")
+    @PostMapping(value = "/dev/upboxdetails")
+    public RfidApiResponseDTO<DevUpBoxResponseDTO> upBoxDetails(
+            @Parameter(description = "更新箱内明细请求", required = true)
+            @RequestBody RfidApiRequestDTO<DevUpBoxRequestDTO> requestDTO) {
+
+        RfidApiResponseDTO<DevUpBoxResponseDTO> responseDTO = RfidApiResponseDTO.success();
+
+        if (Objects.isNull(requestDTO) || Objects.isNull(requestDTO.getData())) {
+            responseDTO.setStatus(false);
+            responseDTO.setMessage("更新箱内明细对象不存在");
+            return responseDTO;
+        }
+
+        DevUpBoxRequestDTO devUpBoxRequestDTO = requestDTO.getData();
+        String boxCode = devUpBoxRequestDTO.getBoxCode();
+        if (StringUtils.isBlank(boxCode)) {
+            responseDTO.setStatus(false);
+            responseDTO.setMessage("箱码不存在");
+            return responseDTO;
+        }
+
+        String upType = devUpBoxRequestDTO.getUpType();
+        if (StringUtils.isBlank(upType)) {
+            responseDTO.setStatus(false);
+            responseDTO.setMessage("更新类型不存在");
+            return responseDTO;
+        }
+
+        List<DevUpBoxDetailRequestDTO> details = devUpBoxRequestDTO.getDetails();
+        if (CollectionUtils.isEmpty(details)) {
+            responseDTO.setStatus(false);
+            responseDTO.setMessage("明细数据不存在");
+            return responseDTO;
+        }
+
+
+        String orderNoRms = boxCode.substring(0, boxCode.lastIndexOf("_"));
+
+        TagStorageOrderBean tagStorageOrderBean = tagStorageOrderService.queryTagStorageOrderByNo(orderNoRms);
+
+        for (DevUpBoxDetailRequestDTO detail : details) {
+            String productCode = detail.getProductCode();
+            List<String> rfids = detail.getRfids();
+
+            // 1. 根据orderNo查出tagStorageOrderDetail中所有的productCode，过滤重复的值
+            boolean existProductCode = tagStorageOrderDetailService.productCodeExistInOrderNo(orderNoRms, productCode);
+            if (!existProductCode) {
+                responseDTO.setStatus(false);
+                responseDTO.setMessage("款式码不在通知单中");
+                return responseDTO;
+            }
+
+            // 2. 根据orderNo和productCode查询tagStorageOrder中的quantity
+            Integer quantity = tagStorageOrderDetailService.getQuantityFromTagStorageOrderDetails(orderNoRms, productCode);
+
+            // 根据orderNo和productCode查询已有的tagStorageOrderResult中的数量existQuantity
+            int existQuantity = tagStorageOrderResultService.countCompletedByOrderNoAndProductCode(orderNoRms, productCode);
+
+            // rfidCnt+existQuantity > quantity, 返回"盘点数量大于入库通知单数量"
+            if (rfids.size() + existQuantity > quantity) {
+                responseDTO.setStatus(false);
+                responseDTO.setMessage("款式[" + productCode + "]上传数量大于通知单数量");
+                return responseDTO;
+            }
+
+            // 查询tag_info表中存在的EPC记录
+            Set<String> epcSet = new HashSet<>(rfids);
+            List<TagInfoBean> existingTagInfos = tagInfoService.listTagInfoByEpcCodes(epcSet);
+
+            // 提取已存在的EPC码
+            Set<String> existingEpcs = existingTagInfos.stream()
+                    .map(TagInfoBean::getEpc)
+                    .collect(Collectors.toSet());
+
+            // 找出不在tag_info表中的EPC码
+            List<String> invalidEpcs = rfids.stream()
+                    .filter(epc -> !existingEpcs.contains(epc))
+                    .collect(Collectors.toList());
+
+            // 如果有无效的EPC码，返回错误信息
+            if (CollectionUtils.isNotEmpty(invalidEpcs)) {
+                // 根据rfidPlatformProperties中的epcPattern正则表达式，匹配所有invalidEpcs
+                // 如果全部符合，返回不在数据库中的EPC符合规则; 否则返回不在数据库中的EPC不符合规则
+                String epcPattern = rfidPlatformProperties.getEpcPattern();
+                boolean allMatch = true;
+
+                if (StringUtils.isNotBlank(epcPattern)) {
+                    // 检查所有无效EPC是否都符合正则表达式
+                    allMatch = invalidEpcs.stream()
+                            .allMatch(epc -> epc.matches(epcPattern));
+                }
+
+                responseDTO.setStatus(false);
+                if (allMatch) {
+                    responseDTO.setMessage("款式[" + productCode + "]上传的不在数据库中的rfid符合规则");
+                } else {
+                    responseDTO.setMessage("款式[" + productCode + "]上传的不在数据库中的rfid不符合规则");
+                }
+                return responseDTO;
+            }
+
+
+            // 4. 数据库比对，productCode和epc绑定关系是不是全部正确，不正确返回 "款式码和EPC的绑定关系不正确"
+            // 检查每个EPC对应的productCode是否与传入的productCode一致
+            boolean bindingCorrect = existingTagInfos.stream()
+                    .allMatch(tagInfo -> productCode.equals(tagInfo.getProductCode()));
+
+            if (!bindingCorrect) {
+                responseDTO.setStatus(false);
+                responseDTO.setMessage("款式码[" + productCode + "]和rfid的绑定关系不正确");
+                return responseDTO;
+            }
+
+            // 5.EPC状态校验，如果有不是1的，返回 "EPC状态不正确"
+            boolean stateCorrect = existingTagInfos.stream()
+                    .allMatch(tagInfo -> tagInfo.getState() != null && tagInfo.getState() == 1);
+
+            if (!stateCorrect) {
+                responseDTO.setStatus(false);
+                responseDTO.setMessage("rfid状态不正确");
+                return responseDTO;
+            }
+
+            // 6. EPC库存状态校验，如果storageState有不是1的，返回 "EPC库存状态不正确"
+            boolean storageStateCorrect = existingTagInfos.stream()
+                    .allMatch(tagInfo -> tagInfo.getStorageState() != null && tagInfo.getStorageState() == 1);
+
+            if (!storageStateCorrect) {
+                responseDTO.setStatus(false);
+                responseDTO.setMessage("rfid库存状态不正确");
+                return responseDTO;
+            }
+
+            // 将EPC的数据保存到表tag_storage_order_result表
+            LocalDateTime now = TimeUtil.getSysDate();
+            String createDate = TimeUtil.getDateFormatterString(now);
+            Long createTime = TimeUtil.localDateTimeToTimestamp(now);
+            String createUser = String.valueOf(AccountContext.getAccountId());
+
+            List<TagStorageOrderResultBean> resultBeans = new ArrayList<>();
+            for (String epc : rfids) {
+                TagStorageOrderResultBean resultBean = new TagStorageOrderResultBean();
+                resultBean.setOrderNoRms(orderNoRms);
+                resultBean.setProductCode(productCode);
+                resultBean.setEpc(epc);
+                resultBean.setBoxCode(boxCode);
+                resultBean.setCreateDate(createDate);
+                resultBean.setCreateUser(createUser);
+                resultBean.setCreateTime(createTime);
+                resultBeans.add(resultBean);
+            }
+
+            // 批量保存到数据库
+            if ("ADD".equalsIgnoreCase(upType)) {
+                tagStorageOrderResultService.saveStorageOrderResults(resultBeans);
+            }
+            if ("REPLACE".equalsIgnoreCase(upType)) {
+                tagStorageOrderResultService.removeStorageOrderResults(orderNoRms, boxCode);
+                tagStorageOrderResultService.saveStorageOrderResults(resultBeans);
+            }
+        }
+
+        Boolean completed = true;
+        List<TagStorageOrderDetailBean> orderDetails = tagStorageOrderDetailService.listTagStorageOrderDetails(orderNoRms);
+
+        // 遍历orderDetails， 如果所有的requiredQty和uploadQty都相等，completed=true，否则completed=false
+        for (TagStorageOrderDetailBean tagStorageOrderDetailBean : orderDetails) {
+            Integer requiredQty = tagStorageOrderDetailBean.getQuantity();
+            Integer uploadQty = tagStorageOrderResultService.countCompletedByOrderNoAndProductCode(orderNoRms,
+                    tagStorageOrderDetailBean.getProductCode());
+            if (!Objects.equals(requiredQty, uploadQty)) {
+                completed = false;
+                break;
+            }
+        }
+
+        // 更新订单状态
+        if (completed) {
+            // 操作结束，更新订单状态为完成(3)
+            tagStorageOrderService.updateOrderStateByOrderNo(orderNoRms, requestDTO.getTimeStamp(),
+                    PlatformConstant.STORAGE_ORDER_STATUS.COMPLETED);
+
+            // 更新EPC的存储状态为3
+            List<TagStorageOrderResultBean> resultBeanList =
+                    tagStorageOrderResultService.listTagStorageOrderResults(orderNoRms);
+            List<String> epcs = resultBeanList.stream().map(TagStorageOrderResultBean::getEpc).collect(Collectors.toUnmodifiableList());
+            tagInfoService.updateTagInfoStorageStateByEpcs(epcs, changeState(tagStorageOrderBean.getType()));
+        } else {
+            // 操作未结束，更新订单状态为执行中(2)
+            tagStorageOrderService.updateOrderStateByOrderNo(orderNoRms, requestDTO.getTimeStamp(), PlatformConstant.STORAGE_ORDER_STATUS.EXECUTING);
+        }
+
+        DevUpBoxResponseDTO devDelBoxResponseDTO = new DevUpBoxResponseDTO();
+        responseDTO.setData(devDelBoxResponseDTO);
+        return responseDTO;
+    }
+
+    private int changeState(Integer type) {
+        if (PlatformConstant.STORAGE_ORDER_TYPE.IN_BOUND.equals(type)) {
+            return 3;
+        }
+        if (PlatformConstant.STORAGE_ORDER_TYPE.IN_BOUND.equals(type)) {
+            return 5;
+        }
+        return 0;
+    }
+
+
+    @Operation(summary = "查询箱内明细 ", description = "查询箱内明细 ")
+    @PostMapping(value = "/dev/getboxdetails")
+    public RfidApiResponseDTO<DevGetBoxResponseDTO> getBoxDetails(
+            @Parameter(description = "查询箱内明细请求", required = true)
+            @RequestBody RfidApiRequestDTO<DevGetBoxRequestDTO> requestDTO) {
+
+        RfidApiResponseDTO<DevGetBoxResponseDTO> responseDTO = RfidApiResponseDTO.success();
+
+        if (Objects.isNull(requestDTO) || Objects.isNull(requestDTO.getData())) {
+            responseDTO.setStatus(false);
+            responseDTO.setMessage("查询箱内明细对象不存在");
+            return responseDTO;
+        }
+
+        DevGetBoxRequestDTO devGetBoxRequestDTO = requestDTO.getData();
+        String boxCode = devGetBoxRequestDTO.getBoxCode();
+        if (StringUtils.isBlank(boxCode)) {
+            responseDTO.setStatus(false);
+            responseDTO.setMessage("箱码不存在");
+            return responseDTO;
+        }
+
+        DevGetBoxResponseDTO devGetBoxResponseDTO = new DevGetBoxResponseDTO();
+
+        String orderNoRms = boxCode.substring(0, boxCode.lastIndexOf("_"));
+        List<TagStorageOrderResultBean> tagStorageOrderResultBeans = tagStorageOrderResultService.listTagStorageOrderResultsByOrderRmsAndBoxCode(orderNoRms, boxCode);
+        if (CollectionUtils.isNotEmpty(tagStorageOrderResultBeans)) {
+            // 按productCode分组
+            Map<String, List<TagStorageOrderResultBean>> groupedByProductCode = tagStorageOrderResultBeans.stream()
+                    .collect(Collectors.groupingBy(TagStorageOrderResultBean::getProductCode));
+
+            List<DevGetBoxDetailResponseDTO> details = new ArrayList<>();
+            for (Map.Entry<String, List<TagStorageOrderResultBean>> entry : groupedByProductCode.entrySet()) {
+                DevGetBoxDetailResponseDTO devGetBoxDetailResponseDTO = new DevGetBoxDetailResponseDTO();
+                devGetBoxDetailResponseDTO.setProductCode(entry.getKey());
+
+                List<TagStorageOrderResultBean> resultBeans = entry.getValue();
+                if (CollectionUtils.isNotEmpty(resultBeans)) {
+                    TagStorageOrderDetailBean tagStorageOrderDetailBean =
+                            tagStorageOrderDetailService.getSkuByOrderNoRmsAndProductCode(orderNoRms, entry.getKey());
+                    devGetBoxDetailResponseDTO.setSku(tagStorageOrderDetailBean.getSku());
+                    List<String> rfids = resultBeans.stream().map(TagStorageOrderResultBean::getEpc).collect(Collectors.toUnmodifiableList());
+                    devGetBoxDetailResponseDTO.setRfids(rfids);
+                }
+
+                details.add(devGetBoxDetailResponseDTO);
+            }
+            devGetBoxResponseDTO.setDetails(details);
+        }
+        requestDTO.setData(devGetBoxRequestDTO);
+
+        return responseDTO;
+    }
 
 }

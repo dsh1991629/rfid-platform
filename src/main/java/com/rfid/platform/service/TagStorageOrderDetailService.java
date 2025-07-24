@@ -17,11 +17,11 @@ public interface TagStorageOrderDetailService {
 
     List<TagStorageOrderDetailBean> listTagStorageOrderDetails(String orderNoRms);
 
-    boolean productCodeExistInOrderNo(String orderNo, String productCode);
+    boolean productCodeExistInOrderNo(String orderNoRms, String productCode);
 
     TagStorageOrderDetailBean getSkuByOrderNoRmsAndProductCode(String orderNoRms, String productCode);
 
-    Integer getQuantityFromTagStorageOrderDetails(String orderNo, String productCode);
+    Integer getQuantityFromTagStorageOrderDetails(String orderNoRms, String productCode);
 
     List<TagStorageOrderDetailBean> listTagStorageOrderDetailsByNoAndProductCode(String orderNo, String productCode);
 }

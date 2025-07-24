@@ -14,9 +14,9 @@ import java.util.List;
 public class TagStorageOrderResultServiceImpl extends ServiceImpl<TagStorageOrderResultMapper, TagStorageOrderResultBean> implements TagStorageOrderResultService {
     
     @Override
-    public int countCompletedByOrderNoAndProductCode(String orderNo, String productCode) {
+    public int countCompletedByOrderNoAndProductCode(String orderNoRms, String productCode) {
         LambdaQueryWrapper<TagStorageOrderResultBean> queryWrapper = Wrappers.lambdaQuery();
-        queryWrapper.eq(TagStorageOrderResultBean::getOrderNoRms, orderNo);
+        queryWrapper.eq(TagStorageOrderResultBean::getOrderNoRms, orderNoRms);
         queryWrapper.eq(TagStorageOrderResultBean::getProductCode, productCode);
         return Math.toIntExact(super.count(queryWrapper));
     }
@@ -65,5 +65,21 @@ public class TagStorageOrderResultServiceImpl extends ServiceImpl<TagStorageOrde
         LambdaQueryWrapper<TagStorageOrderResultBean> queryWrapper = Wrappers.lambdaQuery();
         queryWrapper.eq(TagStorageOrderResultBean::getBoxCode, boxCode);
         return super.exists(queryWrapper);
+    }
+
+    @Override
+    public boolean removeStorageOrderResults(String orderNoRms, String boxCode) {
+        LambdaQueryWrapper<TagStorageOrderResultBean> queryWrapper = Wrappers.lambdaQuery();
+        queryWrapper.eq(TagStorageOrderResultBean::getOrderNoRms, orderNoRms);
+        queryWrapper.eq(TagStorageOrderResultBean::getBoxCode, boxCode);
+        return super.remove(queryWrapper);
+    }
+
+    @Override
+    public List<TagStorageOrderResultBean> listTagStorageOrderResultsByOrderRmsAndBoxCode(String orderNoRms, String boxCode) {
+        LambdaQueryWrapper<TagStorageOrderResultBean> queryWrapper = Wrappers.lambdaQuery();
+        queryWrapper.eq(TagStorageOrderResultBean::getOrderNoRms, orderNoRms);
+        queryWrapper.eq(TagStorageOrderResultBean::getBoxCode, boxCode);
+        return super.list(queryWrapper);
     }
 }
