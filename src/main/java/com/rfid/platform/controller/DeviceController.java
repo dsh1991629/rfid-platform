@@ -4,6 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.rfid.platform.common.AccountContext;
 import com.rfid.platform.common.PageResult;
 import com.rfid.platform.entity.DeviceHeartbeatBean;
 import com.rfid.platform.entity.DeviceInfoBean;
@@ -108,6 +109,7 @@ public class DeviceController {
             DeviceInfoBean deviceInfoBean = BeanUtil.copyProperties(deviceCreateDTO, DeviceInfoBean.class);
 
             // 保存设备
+            deviceInfoBean.setCreateId(Objects.nonNull(AccountContext.getAccountId()) ? AccountContext.getAccountId() : 0L);
             boolean success = deviceInfoService.saveDevice(deviceInfoBean);
             if (success) {
                 result.setData(deviceInfoBean.getId());
