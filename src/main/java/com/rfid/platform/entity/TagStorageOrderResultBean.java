@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
+import java.time.LocalDateTime;
+
 import lombok.Data;
 
 @Data
@@ -26,12 +28,9 @@ public class TagStorageOrderResultBean implements Serializable {
     @TableField(value = "EPC")
     private String epc;
 
-    @TableField(value = "CREATE_DATE")
-    private String createDate;
-
     @TableField(value = "CREATE_USER")
     private String createUser;
 
     @TableField(value = "CREATE_TIME")
-    private Long createTime;
+    private LocalDateTime createTime;
 }

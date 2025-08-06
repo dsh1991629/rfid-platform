@@ -46,8 +46,7 @@ public class TagStorageOrderServiceImpl extends ServiceImpl<TagStorageOrderMappe
         tagStorageOrderBean.setWh(inBoundOrderRequestDTO.getWh());
         tagStorageOrderBean.setState(PlatformConstant.STORAGE_ORDER_STATUS.SEND);
         tagStorageOrderBean.setCreateUser(String.valueOf(AccountContext.getAccountId()));
-        tagStorageOrderBean.setCreateDate(timeStamp);
-        tagStorageOrderBean.setCreateTime(TimeUtil.localDateTimeToTimestamp(TimeUtil.parseDateFormatterString(timeStamp)));
+        tagStorageOrderBean.setCreateTime(TimeUtil.parseDateFormatterString(timeStamp));
         super.save(tagStorageOrderBean);
 
         tagStorageOrderDetailService.saveInBoundOrderDetails(orderNoRms, inBoundOrderRequestDTO.getItems());
@@ -89,8 +88,7 @@ public class TagStorageOrderServiceImpl extends ServiceImpl<TagStorageOrderMappe
         tagStorageOrderBean.setWh(outBoundOrderRequestDTO.getWh());
         tagStorageOrderBean.setState(PlatformConstant.STORAGE_ORDER_STATUS.SEND);
         tagStorageOrderBean.setCreateUser(String.valueOf(AccountContext.getAccountId()));
-        tagStorageOrderBean.setCreateDate(timeStamp);
-        tagStorageOrderBean.setCreateTime(TimeUtil.localDateTimeToTimestamp(TimeUtil.parseDateFormatterString(timeStamp)));
+        tagStorageOrderBean.setCreateTime(TimeUtil.parseDateFormatterString(timeStamp));
         super.save(tagStorageOrderBean);
 
         tagStorageOrderDetailService.saveOutBoundOrderDetails(orderNoRms, outBoundOrderRequestDTO.getItems());
@@ -112,8 +110,7 @@ public class TagStorageOrderServiceImpl extends ServiceImpl<TagStorageOrderMappe
         tagStorageOrderBean.setOrderType("");
         tagStorageOrderBean.setState(PlatformConstant.STORAGE_ORDER_STATUS.SEND);
         tagStorageOrderBean.setCreateUser(String.valueOf(AccountContext.getAccountId()));
-        tagStorageOrderBean.setCreateDate(timeStamp);
-        tagStorageOrderBean.setCreateTime(TimeUtil.localDateTimeToTimestamp(TimeUtil.parseDateFormatterString(timeStamp)));
+        tagStorageOrderBean.setCreateTime(TimeUtil.parseDateFormatterString(timeStamp));
         super.save(tagStorageOrderBean);
 
         tagStorageOrderDetailService.saveInventoryOrderDetails(orderNoRms, inventoryOrderRequestDTO.getItems());
@@ -155,9 +152,8 @@ public class TagStorageOrderServiceImpl extends ServiceImpl<TagStorageOrderMappe
         TagStorageOrderBean tagStorageOrderBean = super.getOne(queryWrapper);
         if (Objects.nonNull(tagStorageOrderBean)) {
             tagStorageOrderBean.setState(PlatformConstant.STORAGE_ORDER_STATUS.CANCELED);
-            tagStorageOrderBean.setUpdateDate(timeStamp);
             tagStorageOrderBean.setUpdateUser(String.valueOf(AccountContext.getAccountId()));
-            tagStorageOrderBean.setUpdateTime(TimeUtil.localDateTimeToTimestamp(TimeUtil.parseDateFormatterString(timeStamp)));
+            tagStorageOrderBean.setUpdateTime(TimeUtil.parseDateFormatterString(timeStamp));
             super.updateById(tagStorageOrderBean);
         }
         return tagStorageOrderBean.getOrderNoRms();
@@ -177,9 +173,8 @@ public class TagStorageOrderServiceImpl extends ServiceImpl<TagStorageOrderMappe
         TagStorageOrderBean tagStorageOrderBean = super.getOne(queryWrapper);
         if (Objects.nonNull(tagStorageOrderBean)) {
             tagStorageOrderBean.setState(PlatformConstant.STORAGE_ORDER_STATUS.CANCELED);
-            tagStorageOrderBean.setUpdateDate(timeStamp);
             tagStorageOrderBean.setUpdateUser(String.valueOf(AccountContext.getAccountId()));
-            tagStorageOrderBean.setUpdateTime(TimeUtil.localDateTimeToTimestamp(TimeUtil.parseDateFormatterString(timeStamp)));
+            tagStorageOrderBean.setUpdateTime(TimeUtil.parseDateFormatterString(timeStamp));
             super.updateById(tagStorageOrderBean);
         }
         return tagStorageOrderBean.getOrderNoRms();
@@ -245,9 +240,8 @@ public class TagStorageOrderServiceImpl extends ServiceImpl<TagStorageOrderMappe
 
         // 更新订单状态和相关字段
         existsBean.setState(state);
-        existsBean.setUpdateDate(timeStamp);
         existsBean.setUpdateUser(String.valueOf(AccountContext.getAccountId()));
-        existsBean.setUpdateTime(TimeUtil.localDateTimeToTimestamp(TimeUtil.parseDateFormatterString(timeStamp)));
+        existsBean.setUpdateTime(TimeUtil.parseDateFormatterString(timeStamp));
         return super.updateById(existsBean);
     }
 

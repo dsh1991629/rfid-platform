@@ -36,13 +36,12 @@ public class DeviceHeartbeatServiceImpl extends ServiceImpl<DeviceHeartbeatMappe
         LocalDateTime now = TimeUtil.getSysDate();
         // 开始时间等于当前时间now减去超时的秒数deviceTimeout
         LocalDateTime startDate = now.minusSeconds(deviceTimeout);
-        Long startTime = TimeUtil.localDateTimeToTimestamp(startDate);
         
         // 查询设备编码等于deviceCode，createTime大于等于startTime，按access_token分组，分组中不能有type等于3，统计分组的数量
         // 首先查询符合条件的所有记录
         LambdaQueryWrapper<DeviceHeartbeatBean> queryWrapper = Wrappers.lambdaQuery();
         queryWrapper.eq(DeviceHeartbeatBean::getDeviceCode, deviceCode)
-                    .ge(DeviceHeartbeatBean::getCreateTime, startTime);
+                    .ge(DeviceHeartbeatBean::getHeartbeatTime, startDate);
         
         List<DeviceHeartbeatBean> allRecords = super.list(queryWrapper);
         
@@ -72,8 +71,7 @@ public class DeviceHeartbeatServiceImpl extends ServiceImpl<DeviceHeartbeatMappe
         }
         deviceHeartbeatBean.setDeviceCode(deviceCode);
         deviceHeartbeatBean.setAccessToken(accessToken);
-        deviceHeartbeatBean.setCreateDate(timeStamp);
-        deviceHeartbeatBean.setCreateTime(TimeUtil.localDateTimeToTimestamp(TimeUtil.parseDateFormatterString(timeStamp)));
+        deviceHeartbeatBean.setHeartbeatTime(TimeUtil.getSysDate());
         deviceHeartbeatBean.setType(PlatformConstant.DEVICE_HEARTBEAT_TYPE.LOGIN);
         return super.save(deviceHeartbeatBean);
     }
@@ -94,8 +92,7 @@ public class DeviceHeartbeatServiceImpl extends ServiceImpl<DeviceHeartbeatMappe
         deviceLogoutHeartbeatBean.setDeviceModel(deviceHeartbeatBean.getDeviceModel());
         deviceLogoutHeartbeatBean.setDeviceLocation(deviceHeartbeatBean.getDeviceLocation());
         deviceLogoutHeartbeatBean.setAccessToken(accessToken);
-        deviceLogoutHeartbeatBean.setCreateDate(timeStamp);
-        deviceLogoutHeartbeatBean.setCreateTime(TimeUtil.localDateTimeToTimestamp(TimeUtil.parseDateFormatterString(timeStamp)));
+        deviceHeartbeatBean.setHeartbeatTime(TimeUtil.getSysDate());
         deviceLogoutHeartbeatBean.setType(PlatformConstant.DEVICE_HEARTBEAT_TYPE.LOGOUT);
         return super.save(deviceLogoutHeartbeatBean);
     }
@@ -112,8 +109,7 @@ public class DeviceHeartbeatServiceImpl extends ServiceImpl<DeviceHeartbeatMappe
         }
         deviceHeartbeatBean.setDeviceCode(heartBeatDTO.getDevCode());
         deviceHeartbeatBean.setAccessToken(accessToken);
-        deviceHeartbeatBean.setCreateDate(timeStamp);
-        deviceHeartbeatBean.setCreateTime(TimeUtil.localDateTimeToTimestamp(TimeUtil.parseDateFormatterString(timeStamp)));
+        deviceHeartbeatBean.setHeartbeatTime(TimeUtil.getSysDate());
         deviceHeartbeatBean.setType(PlatformConstant.DEVICE_HEARTBEAT_TYPE.HEARTBEAT);
         return super.save(deviceHeartbeatBean);
     }

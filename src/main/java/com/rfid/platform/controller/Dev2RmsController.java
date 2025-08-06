@@ -750,8 +750,6 @@ public class Dev2RmsController {
 
             // 将EPC的数据保存到表tag_storage_order_result表
             LocalDateTime now = TimeUtil.getSysDate();
-            String createDate = TimeUtil.getDateFormatterString(now);
-            Long createTime = TimeUtil.localDateTimeToTimestamp(now);
             String createUser = String.valueOf(AccountContext.getAccountId());
 
             List<TagStorageOrderResultBean> resultBeans = new ArrayList<>();
@@ -761,9 +759,8 @@ public class Dev2RmsController {
                 resultBean.setProductCode(productCode);
                 resultBean.setEpc(epc);
                 resultBean.setBoxCode(boxCode);
-                resultBean.setCreateDate(createDate);
                 resultBean.setCreateUser(createUser);
-                resultBean.setCreateTime(createTime);
+                resultBean.setCreateTime(now);
                 resultBeans.add(resultBean);
             }
 

@@ -21,9 +21,11 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
     @Override
     public void insertFill(MetaObject metaObject) {
         LocalDateTime now = TimeUtil.getSysDate();
-        Long createTime = TimeUtil.localDateTimeToTimestamp(now);
 
-        this.setFieldValByName("createTime", createTime, metaObject);
+        // 只有当createTime字段没有值时才设置
+        if (this.getFieldValByName("createTime", metaObject) == null) {
+            this.setFieldValByName("createTime", now, metaObject);
+        }
         try {
             if (Objects.nonNull(AccountContext.getAccountId())) {
                 this.setFieldValByName("createId", String.valueOf(AccountContext.getAccountId()), metaObject);
@@ -37,9 +39,9 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
     @Override
     public void updateFill(MetaObject metaObject) {
         LocalDateTime now = TimeUtil.getSysDate();
-        Long createTime = TimeUtil.localDateTimeToTimestamp(now);
-
-        this.setFieldValByName("updateTime", createTime, metaObject);
+        if (this.getFieldValByName("updateTime", metaObject) == null) {
+            this.setFieldValByName("updateTime", now, metaObject);
+        }
         try {
             if (Objects.nonNull(AccountContext.getAccountId())) {
                 this.setFieldValByName("updateId", String.valueOf(AccountContext.getAccountId()), metaObject);

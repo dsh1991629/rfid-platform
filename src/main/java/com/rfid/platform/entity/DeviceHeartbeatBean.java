@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
+import java.time.LocalDateTime;
+
 import lombok.Data;
 
 @Data
@@ -22,11 +24,8 @@ public class DeviceHeartbeatBean implements Serializable {
     @TableField(value = "TYPE")
     private Integer type;
 
-    @TableField(value = "CREATE_DATE")
-    private String createDate;
-
-    @TableField(value = "CREATE_TIME")
-    private Long createTime;
+    @TableField(value = "HEARTBEAT_TIME")
+    private LocalDateTime heartbeatTime;
 
     @TableField(value = "DEVICE_TYPE")
     private String deviceType;
