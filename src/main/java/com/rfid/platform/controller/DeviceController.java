@@ -109,7 +109,6 @@ public class DeviceController {
             DeviceInfoBean deviceInfoBean = BeanUtil.copyProperties(deviceCreateDTO, DeviceInfoBean.class);
 
             // 保存设备
-            deviceInfoBean.setCreateId(Objects.nonNull(AccountContext.getAccountId()) ? AccountContext.getAccountId() : 0L);
             boolean success = deviceInfoService.saveDevice(deviceInfoBean);
             if (success) {
                 result.setData(deviceInfoBean.getId());
