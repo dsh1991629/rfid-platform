@@ -29,6 +29,15 @@ public class TagImportInfoBean implements Serializable {
     @TableField(value = "PRODUCT_CODE")
     private String productCode;
 
+    @TableField(value = "PRODUCT_NAME")
+    private String productName;
+
+    @TableField(value = "PRODUCT_SIZE")
+    private String productSize;
+
+    @TableField(value = "PRODUCT_COLOR")
+    private String productColor;
+
     @TableField(value = "IMPORT_TYPE")
     private Integer importType;
 
