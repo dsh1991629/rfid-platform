@@ -1,18 +1,21 @@
 package com.rfid.platform.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.rfid.platform.common.AccountContext;
 import com.rfid.platform.common.PlatformConstant;
 import com.rfid.platform.entity.TagStorageOrderBean;
 import com.rfid.platform.mapper.TagStorageOrderMapper;
+import com.rfid.platform.persistence.storage.DevInBoundOrderQueryRequestDTO;
 import com.rfid.platform.persistence.storage.DevInventoryOrderQueryRequestDTO;
 import com.rfid.platform.persistence.storage.DevOutBoundOrderQueryRequestDTO;
 import com.rfid.platform.persistence.storage.InBoundOrderRequestDTO;
+import com.rfid.platform.persistence.storage.InventoryOrderCreateRequestDTO;
 import com.rfid.platform.persistence.storage.InventoryOrderRequestDTO;
 import com.rfid.platform.persistence.storage.OutBoundOrderRequestDTO;
-import com.rfid.platform.persistence.storage.DevInBoundOrderQueryRequestDTO;
 import com.rfid.platform.service.TagStorageOrderDetailService;
 import com.rfid.platform.service.TagStorageOrderService;
 import com.rfid.platform.util.TimeUtil;
@@ -251,5 +254,31 @@ public class TagStorageOrderServiceImpl extends ServiceImpl<TagStorageOrderMappe
         LambdaQueryWrapper<TagStorageOrderBean> queryWrapper = Wrappers.lambdaQuery();
         queryWrapper.eq(TagStorageOrderBean::getOrderNoRms, orderNoRms);
         return super.getOne(queryWrapper);
+    }
+
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public String createInventoryTagStorageOrder(String timeStamp, InventoryOrderCreateRequestDTO inventoryOrderCreateRequestDTO) {
+        String orderNoRms = createOrderNoRms(PlatformConstant.STORAGE_ORDER_TYPE.INVENTORY_BOUND, "");
+        TagStorageOrderBean tagStorageOrderBean = new TagStorageOrderBean();
+        tagStorageOrderBean.setOrderNoRms(orderNoRms);
+        tagStorageOrderBean.setWh(inventoryOrderCreateRequestDTO.getWh());
+        tagStorageOrderBean.setType(PlatformConstant.STORAGE_ORDER_TYPE.INVENTORY_BOUND);
+        tagStorageOrderBean.setOrderType("");
+        tagStorageOrderBean.setState(PlatformConstant.STORAGE_ORDER_STATUS.SEND);
+        tagStorageOrderBean.setCreateUser(String.valueOf(AccountContext.getAccountId()));
+        tagStorageOrderBean.setCreateTime(TimeUtil.parseDateFormatterString(timeStamp));
+        super.save(tagStorageOrderBean);
+
+        tagStorageOrderDetailService.saveInventoryOrderDetails(orderNoRms, inventoryOrderCreateRequestDTO.getItems());
+
+        return orderNoRms;
+    }
+
+
+    @Override
+    public IPage<TagStorageOrderBean> pageTagStorageOrder(Page<TagStorageOrderBean> page, LambdaQueryWrapper<TagStorageOrderBean> queryWrapper) {
+        return super.page(page, queryWrapper);
     }
 }

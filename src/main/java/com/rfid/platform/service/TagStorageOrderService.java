@@ -1,12 +1,16 @@
 package com.rfid.platform.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.rfid.platform.entity.TagStorageOrderBean;
+import com.rfid.platform.persistence.storage.DevInBoundOrderQueryRequestDTO;
 import com.rfid.platform.persistence.storage.DevInventoryOrderQueryRequestDTO;
 import com.rfid.platform.persistence.storage.DevOutBoundOrderQueryRequestDTO;
 import com.rfid.platform.persistence.storage.InBoundOrderRequestDTO;
+import com.rfid.platform.persistence.storage.InventoryOrderCreateRequestDTO;
 import com.rfid.platform.persistence.storage.InventoryOrderRequestDTO;
 import com.rfid.platform.persistence.storage.OutBoundOrderRequestDTO;
-import com.rfid.platform.persistence.storage.DevInBoundOrderQueryRequestDTO;
 
 import java.util.List;
 
@@ -36,6 +40,7 @@ public interface TagStorageOrderService {
 
     TagStorageOrderBean queryTagStorageOrderByNo(String orderNoRms);
 
+    String createInventoryTagStorageOrder(String timeStamp, InventoryOrderCreateRequestDTO inventoryOrderCreateRequestDTO);
 
-
+    IPage<TagStorageOrderBean> pageTagStorageOrder(Page<TagStorageOrderBean> page, LambdaQueryWrapper<TagStorageOrderBean> queryWrapper);
 }

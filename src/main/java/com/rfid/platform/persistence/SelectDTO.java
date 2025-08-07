@@ -17,7 +17,7 @@ public class SelectDTO implements Serializable {
      * 主键ID
      */
     @Schema(description = "主键ID", example = "1")
-    private Long id;
+    private String id;
 
     /**
      * 显示名称

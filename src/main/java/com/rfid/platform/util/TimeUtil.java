@@ -20,6 +20,8 @@ public class TimeUtil {
 
     private static final DateTimeFormatter secondNoLineFormatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
+    private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
     private TimeUtil() {
     }
 
@@ -144,6 +146,13 @@ public class TimeUtil {
         LocalDate lastDay = current.toLocalDate()
                 .withDayOfMonth(current.toLocalDate().lengthOfMonth());
         return LocalDateTime.of(lastDay, LocalTime.MAX);
+    }
+
+    public static LocalDateTime parseDayFormatterString(String dateTime) {
+        if (StringUtils.isNotBlank(dateTime)) {
+            return LocalDateTime.parse(dateTime, dateFormatter);
+        }
+        return null;
     }
 
 }
